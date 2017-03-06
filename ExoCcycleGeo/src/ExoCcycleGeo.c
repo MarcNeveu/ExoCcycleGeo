@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
 	Nu = pow(Ra/Ra_c,0.25);
 
 	//-------------------------------------------------------------------
-	// Calculate surface C flux from volcanic outgassing (Kite et al. 2009)
+	// Calculate surface C flux from volcanic outgassing (Kite et al. 2009) in mol C m-2 s-1
 	//-------------------------------------------------------------------
 
 	// Assumes that all melt generated reaches the surface
@@ -170,13 +170,13 @@ int main(int argc, char *argv[]) {
 	deltaCvolc = deltaCvolcEarth * Rmelt/RmeltEarth; // (mol C s-1) * (m-2 s-1) / (s-1) = mol C m-2 s-1
 
 	//-------------------------------------------------------------------
-	// Calculate surface C flux from continental weathering (Edson et al. 2012)
+	// Calculate surface C flux from continental weathering (Edson et al. 2012) in mol C s-1 // TODO scale by surface
 	//-------------------------------------------------------------------
 
 	deltaCcontw = -L * 0.5*deltaCcontwEarth*r_p*r_p/rEarth/rEarth * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7);
 
 	//-------------------------------------------------------------------
-	// Calculate surface C flux from surface ocean dissolution in top m
+	// Calculate surface C flux from surface ocean dissolution in top m  TODO scale by surface, include kinetics, manage reservoir size
 	//-------------------------------------------------------------------
 
 	printf("xCO2(g) = %g ppm, xCH4(g) = %g ppm, xO2(g) = %g, xN2(g) = %g\n", xgas[0]/1.0e-6, xgas[1]/1.0e-6, xgas[2], xgas[3]);
@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
 	deltaCocean = -(deltaCocean + xgas[0])/Psurf;
 
 	//-------------------------------------------------------------------
-	// Calculate surface C flux from seafloor weathering
+	// Calculate surface C flux from seafloor weathering TODO scale by surface, include kinetics, manage reservoir size
 	//-------------------------------------------------------------------
 
 	deltaCreac = 0.0; // TODO call PHREEQC to get deltaCreac, net mol C leached/precipitated per kg of rock
