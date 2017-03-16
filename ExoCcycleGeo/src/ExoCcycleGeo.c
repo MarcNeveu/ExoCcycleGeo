@@ -24,7 +24,7 @@
 #define TsurfEarth 288                  // Mean equilibrium surface temperature on Earth (K)
 #define RmeltEarth 3.8e-19              // Rate of melt generation on Earth (s-1) Kite et al. 2009 Fig. 15; http://dx.doi.org/10.1088/0004-637X/700/2/1732
 #define deltaCvolcEarth 2.2e5           // Surface C flux from subaerial+submarine volcanic outgassing (mol C s-1) Donnadieu et al. 2006; http://dx.doi.org/10.1029/2006GC001278
-#define deltaCcontwEarth 8.4543e-10*4.0*PI_greek*rEarth*rEarth // Surface C flux from continental weathering on Earth (mol C s-1)
+#define deltaCcontwEarth 8.4543e-10     // Surface C flux from continental weathering on Earth (mol C m-2 s-1)
 
 #define Ra_c 1707.762                   // Critical Rayleigh number for convection, http://home.iitk.ac.in/~sghorai/NOTES/benard/node15.html, see also Koschmieder EL (1993) Benard cells and Taylor vortices, Cambridge U Press, p. 20.
 #define Cp 914.0                        // Specific heat capacity of mantle rock (J kg-1 K-1)
@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
 
 	// TODO Quantities to be computed by thermal/geodynamic model
 	double zCrust = 10.0*km2m;  // Crustal thickness (m)
-	double Tmant = 3000.0;      // Mantle temperature (K)
+	double Tmantle = 3000.0;    // Mantle temperature (K)
 	double Ra = 3000.0;         // Rayleigh number for mantle convection (no dim)
 
 	//-------------------------------------------------------------------
@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
 	r_p = pow(m_p/mEarth,0.27)*rEarth;  // Planet radius (m)
 	gsurf = G*m_p/r_p/r_p;
 	Pf = rhoCrust*gsurf*zCrust;
-	TbaseLid = Tmant - 2.23*Tmant*Tmant/A0;
+	TbaseLid = Tmantle - 2.23*Tmantle*Tmantle/A0;
 	Nu = pow(Ra/Ra_c,0.25);
 
 	//-------------------------------------------------------------------
@@ -165,18 +165,18 @@ int main(int argc, char *argv[]) {
 	//-------------------------------------------------------------------
 
 	// Assumes that all melt generated reaches the surface
-	vConv = 2.0*(Nu-1.0) * (kcrust/(rhoMagma*Cp*(r_p-r_c))) * (Tmant-Tsurf) / (Tmant-TbaseLid);
+	vConv = 2.0*(Nu-1.0) * (kcrust/(rhoMagma*Cp*(r_p-r_c))) * (Tmantle-Tsurf) / (Tmantle-TbaseLid);
 	Rmelt = vConv*rhoMagma/m_p * (rhoCrust*gsurf*zCrust/(Pf-P0)); // m-2 s-1
 	deltaCvolc = deltaCvolcEarth * Rmelt/RmeltEarth; // (mol C s-1) * (m-2 s-1) / (s-1) = mol C m-2 s-1
 
 	//-------------------------------------------------------------------
-	// Calculate surface C flux from continental weathering (Edson et al. 2012) in mol C s-1 // TODO scale by surface
+	// Calculate surface C flux from continental weathering (Edson et al. 2012) in mol C m-2 s-1
 	//-------------------------------------------------------------------
 
-	deltaCcontw = -L * 0.5*deltaCcontwEarth*r_p*r_p/rEarth/rEarth * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7);
+	deltaCcontw = -L * 0.5*deltaCcontwEarth * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7);
 
 	//-------------------------------------------------------------------
-	// Calculate surface C flux from surface ocean dissolution in top m  TODO scale by surface, include kinetics, manage reservoir size
+	// Calculate surface C flux from surface ocean dissolution in top m  TODO include kinetics, manage reservoir size
 	//-------------------------------------------------------------------
 
 	printf("xCO2(g) = %g ppm, xCH4(g) = %g ppm, xO2(g) = %g, xN2(g) = %g\n", xgas[0]/1.0e-6, xgas[1]/1.0e-6, xgas[2], xgas[3]);
@@ -191,15 +191,15 @@ int main(int argc, char *argv[]) {
 	printf("C -IV \t %g\n", xaq[1]);
 	printf("O2 \t %g\n", xaq[2]);
 	printf("N2 \t %g\n", xaq[3]);
-	deltaCocean = -(deltaCocean + xgas[0])/Psurf;
+	deltaCocean = -(deltaCocean + xgas[0])/Psurf / (4.0*PI_greek*r_p*r_p);
 
 	//-------------------------------------------------------------------
-	// Calculate surface C flux from seafloor weathering TODO scale by surface, include kinetics, manage reservoir size
+	// Calculate surface C flux from seafloor weathering TODO include kinetics, manage reservoir size
 	//-------------------------------------------------------------------
 
 	deltaCreac = 0.0; // TODO call PHREEQC to get deltaCreac, net mol C leached/precipitated per kg of rock
 	tcirc = 1.0; // TODO compute tcirc based on Nu(Ra(basal heat flux))
-	deltaCseafw = -(1.0-L) * 4.0/3.0*PI_greek*(pow(r_p,3)-pow(r_p-zCrack,3))/tcirc*deltaCreac*rhoCrust;
+	deltaCseafw = -(1.0-L) * 4.0/3.0*PI_greek*(pow(r_p,3)-pow(r_p-zCrack,3))/tcirc*deltaCreac*rhoCrust / (4.0*PI_greek*r_p*r_p);
 
 	//-------------------------------------------------------------------
 	// Compute net geo C flux
@@ -210,11 +210,11 @@ int main(int argc, char *argv[]) {
 	printf("\n");
 	printf("Net surface C flux from... \t mol C cm-2 s-1\n");
 	printf("-------------------------------------------\n");
-	printf("volcanic outgassing \t \t %g\n", deltaCvolc);
-	printf("continental weathering \t \t %g\n", deltaCcontw);
-	printf("seafloor weathering \t \t %g\n", deltaCseafw);
+	printf("volcanic outgassing \t \t %g\n", deltaCvolc/m2cm/m2cm);
+	printf("continental weathering \t \t %g\n", deltaCcontw/m2cm/m2cm);
+	printf("seafloor weathering \t \t %g\n", deltaCseafw/m2cm/m2cm);
 	printf("-------------------------------------------\n");
-	printf("all geo processes \t \t %g\n", deltaC);
+	printf("all geo processes \t \t %g\n", deltaC/m2cm/m2cm);
 
 	printf("\nExiting ExoCcycleGeo...\n");
 
@@ -317,52 +317,6 @@ int OceanDiss (char path[1024], double T, double P, double *pH, double **xgas, d
 
 	return 0;
 }
-
-//int LoadMolMass (char path[1024], double ***molmass) {
-//
-//	int i = 0;
-//	int j = 0;
-//	int k = 0;
-//
-//	double **molmass_read = (double**) malloc(nmingas*sizeof(double*));  // Data from Molar_masses.txt
-//	if (molmass_read == NULL) printf("ParamExploration_plot: Not enough memory to create molmass_read[nmingas]\n");
-//	for (i=0;i<nmingas;i++) {
-//		molmass_read[i] = (double*) malloc(nelts*sizeof(double));
-//		if (molmass_read[i] == NULL) printf("ParamExploration_plot: Not enough memory to create molmass_read[nmingas][nelts]\n");
-//	}
-//	for (i=0;i<nmingas;i++) {
-//		for (j=0;j<nelts;j++) {
-//			molmass_read[i][j] = 0.0;
-//		}
-//	}
-//
-//	// Read molmass database
-//	molmass_read = read_input(nelts, nmingas, molmass_read, path, "Data/Molar_masses.txt");
-//
-//	// Shift to positions corresponding to simdata
-//	// Gas species
-//	for (i=0;i<ngases;i++) {
-//		for (j=0;j<nelts;j++) {
-//			(*molmass)[naq+2*(nmingas-ngases)+5-1+i][j] = molmass_read[nmingas-ngases+i][j];
-//		}
-//	}
-//	// Solid species
-//	k = naq-1;
-//	for (i=0;i<nmingas-ngases;i++) {
-//		for (j=0;j<nelts;j++) {
-//			(*molmass)[k][j] = molmass_read[i][j];
-//			(*molmass)[k+1][j] = (*molmass)[k][j];
-//		}
-//		k = k+2;
-//	}
-//	// First line with molar masses of elements
-//	for (j=0;j<nelts;j++) (*molmass)[0][j] = molmass_read[0][j];
-//
-//	for (i=0;i<nmingas;i++) free (molmass_read[i]);
-//	free (molmass_read);
-//
-//	return 0;
-//}
 
 /*--------------------------------------------------------------------
  *
