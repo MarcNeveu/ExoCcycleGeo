@@ -12,7 +12,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <R.h>                          // To use the external R software package
+#include <Rdefines.h>
+#include <Rinternals.h>
+#include <Rembedded.h>
 #include <IPhreeqc.h>                   // To use the external PHREEQC geochemical code
+#include "CHNOSZcmds.h"
 
 #define cmdline 0						// If execution from terminal as "./ExoCcycleGeo"
 
@@ -93,7 +98,7 @@ int main(int argc, char *argv[]) {
 	//-------------------------------------------------------------------
 
 	double m_p = 2.0*mEarth;    // Planet mass (kg)
-	double L = 0.3;             // Fraction of planet surface covered by land
+	double L = 0.0;             // Fraction of planet surface covered by land
 
 	// Atmospheric inputs
 	double Tsurf = 288.0;       // Surface temperature (K)
@@ -101,7 +106,7 @@ int main(int argc, char *argv[]) {
 	double runoff = 0.7;        // Atmospheric runoff (mm/day)
 
 	double *xgas = (double*) malloc(nAtmSpecies*sizeof(double));
-	if (xgas == NULL) printf("WaterRock: Not enough memory to create xgas[nAtmSpecies]\n"); // Mixing ratios by number of atmospheric gases
+	if (xgas == NULL) printf("WaterRock: Not enough memory to create xgas[nAtmSpecies]\n"); // Mixing ratios by mole of atmospheric gases
     xgas[0] = 400.0e-6;  // CO2
     xgas[1] = 1.8e-6;    // CH4
     xgas[2] = 0.2;       // O2
@@ -128,7 +133,7 @@ int main(int argc, char *argv[]) {
 
 	printf("\n");
 	printf("-------------------------------------------------------------------\n");
-	printf("ExoCcycleGeo v17.3\n");
+	printf("ExoCcycleGeo v17.4\n");
 	printf("This code is in development and cannot be used for science yet.\n");
 	if (cmdline == 1) printf("Command line mode\n");
 	printf("-------------------------------------------------------------------\n");
@@ -138,6 +143,7 @@ int main(int argc, char *argv[]) {
 	printf("Planet mass \t \t \t \t %g M_Earth\n", m_p/mEarth);
 	printf("Land coverage of planet surface \t %g%%\n", L*100.0);
 	printf("Surface temperature \t \t \t %g K\n", Tsurf);
+	printf("Surface pressure \t \t \t %g K\n", Psurf);
 	printf("Atmospheric CO2 molar mixing ratio \t %g\n", xgas[0]);
 	printf("Atmospheric CH4 molar mixing ratio \t %g\n", xgas[1]);
 	printf("Atmospheric O2 molar mixing ratio \t %g\n", xgas[2]);
@@ -148,6 +154,12 @@ int main(int argc, char *argv[]) {
 
 	printf("\n");
 	printf("Computing geo C fluxes...\n");
+
+	// Initialize the R environment. We do it here, in the main loop, because this can be done only once.
+	// Otherwise, the program crashes at the second initialization.
+	setenv("R_HOME","/Library/Frameworks/R.framework/Resources",1);     // Specify R home directory
+	Rf_initEmbeddedR(argc, argv);                                       // Launch R
+	CHNOSZ_init(1);                                                     // Launch CHNOSZ
 
 	// Get current directory. Works for Mac only! To switch between platforms, see:
 	// http://stackoverflow.com/questions/1023306/finding-current-executables-path-without-proc-self-exe
@@ -229,7 +241,7 @@ int main(int argc, char *argv[]) {
 	//-------------------------------------------------------------------
 
 	deltaCreac = 0.0; // TODO call PHREEQC to get deltaCreac, net mol C leached/precipitated per kg of rock
-	tcirc = 1.0; // TODO compute tcirc based on Nu(Ra(basal heat flux))
+	tcirc = 1.0;      // TODO compute tcirc based on Nu(Ra(basal heat flux))
 	deltaCseafw = -(1.0-L) * 4.0/3.0*PI_greek*(pow(r_p,3)-pow(r_p-zCrack,3))/tcirc*deltaCreac*rhoCrust / (4.0*PI_greek*r_p*r_p);
 
 	//-------------------------------------------------------------------
@@ -253,6 +265,8 @@ int main(int argc, char *argv[]) {
 	free (xgas);
 	free (xaq);
 
+	Rf_endEmbeddedR(0);                                     // Close R and CHNOSZ
+
 	return EXIT_SUCCESS;
 }
 
@@ -262,7 +276,7 @@ int OceanDiss (char path[1024], double T, double P, double *pH, double **xgas, d
 	int i = 0;
 	double pe = 0.0;                                             // pe corresponding to logfO2
 	double logfO2 = log((*xgas)[2])/log(10.0);                   // O2 fugacity
-	double logKO2H2O = 83.10494;                                 // log K for reaction 4 H+ + 4 e- + O2 = 2 H2O, from CHNOSZ: subcrt(c("H+","e-","O2","H2O"),c(-4,-4,-1,2),c("aq","aq","g","liq"),T=25,P=1)
+	double logKO2H2O = 0.0;                                      // log K for reaction 4 H+ + 4 e- + O2 = 2 H2O, from CHNOSZ: subcrt(c("H+","e-","O2","H2O"),c(-4,-4,-1,2),c("aq","aq","g","liq"),T=25,P=1)
 	double mass_water = 0.0;                                     // Mass of water at the end of the PHREEQC simulation
 	double total_mol_gas = 0.0;								     // Moles of gas at the end of the PHREEQC simulation
 
@@ -287,15 +301,15 @@ int OceanDiss (char path[1024], double T, double P, double *pH, double **xgas, d
 
 //	LoadMolMass (path, &molmass);
 
-// Use CHNOSZ to get log fO2 for fayalite-magnetite-quartz (FMQ) buffer at given T and P
-//	logfO2 = -3.0*CHNOSZ_logK("quartz", "cr", T, P, "SUPCRT92")
-//		     -2.0*CHNOSZ_logK("magnetite", "cr", T, P, "SUPCRT92")
-//	         +3.0*CHNOSZ_logK("fayalite", "cr", T, P, "SUPCRT92")
-//		     +1.0*CHNOSZ_logK("O2", "g", T, P, "SUPCRT92");
-//	logKO2H2O = -4.0*CHNOSZ_logK("H+", "aq", T, P, "SUPCRT92")
-//				-4.0*CHNOSZ_logK("e-", "aq", T, P, "SUPCRT92")
-//				-1.0*CHNOSZ_logK("O2", "g", T, P, "SUPCRT92")
-//				+2.0*CHNOSZ_logK("H2O", "liq", T, P, "SUPCRT92");
+	// Use CHNOSZ to get log fO2 for fayalite-magnetite-quartz (FMQ) buffer at given T and P
+	logfO2 = -3.0*CHNOSZ_logK("quartz", "cr", T, P, "SUPCRT92")
+		     -2.0*CHNOSZ_logK("magnetite", "cr", T, P, "SUPCRT92")
+	         +3.0*CHNOSZ_logK("fayalite", "cr", T, P, "SUPCRT92")
+		     +1.0*CHNOSZ_logK("O2", "g", T, P, "SUPCRT92");
+	logKO2H2O = -4.0*CHNOSZ_logK("H+", "aq", T, P, "SUPCRT92")
+				-4.0*CHNOSZ_logK("e-", "aq", T, P, "SUPCRT92")
+				-1.0*CHNOSZ_logK("O2", "g", T, P, "SUPCRT92")
+				+2.0*CHNOSZ_logK("H2O", "liq", T, P, "SUPCRT92");
 
 	pe = -(*pH) + 0.25*(logfO2+logKO2H2O);
 
