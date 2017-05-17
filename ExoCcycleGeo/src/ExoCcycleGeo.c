@@ -97,8 +97,8 @@ int main(int argc, char *argv[]) {
 	// Inputs
 	//-------------------------------------------------------------------
 
-	double m_p = 2.0*mEarth;    // Planet mass (kg)
-	double L = 0.0;             // Fraction of planet surface covered by land
+	double m_p = 1.0*mEarth;    // Planet mass (kg)
+	double L = 0.15;             // Fraction of planet surface covered by land
 
 	// Atmospheric inputs
 	double Tsurf = 288.0;       // Surface temperature (K)
@@ -187,6 +187,8 @@ int main(int argc, char *argv[]) {
 	 *
 	 * See Stein et al. (2011), Deschamps & Sotin (2000), Stamenkovic et al. (2012), Wong & Solomatov (2016), Burgisser & Scaillet
 	 * (2007), and Dasgupta & Hirschmann (2010).
+	 *
+	 * The mantle reservoir of carbon is large enough that CO2 outgassing does not depend on the amount of carbon subducted into the mantle (Abbot et al. 2012).
 	 */
 
 	// Model of Kite et al. (2009)
@@ -234,7 +236,8 @@ int main(int argc, char *argv[]) {
 	printf("C -IV \t %g\n", xaq[1]);
 	printf("O2 \t %g\n", xaq[2]);
 	printf("N2 \t %g\n", xaq[3]);
-	deltaCocean = (deltaCocean + xgas[0]) / (4.0*PI_greek*r_p*r_p);
+//	deltaCocean = (deltaCocean + xgas[0]) / (4.0*PI_greek*r_p*r_p);
+	deltaCocean = (1.0-L) * (deltaCocean + xgas[0]) / (4.0*PI_greek*r_p*r_p); // TODO Incorporate L into PHREEQC input
 
 	//-------------------------------------------------------------------
 	// Calculate surface C flux from seafloor weathering TODO include kinetics, manage reservoir size
@@ -243,6 +246,12 @@ int main(int argc, char *argv[]) {
 	deltaCreac = 0.0; // TODO call PHREEQC to get deltaCreac, net mol C leached/precipitated per kg of rock
 	tcirc = 1.0;      // TODO compute tcirc based on Nu(Ra(basal heat flux))
 	deltaCseafw = -(1.0-L) * 4.0/3.0*PI_greek*(pow(r_p,3)-pow(r_p-zCrack,3))/tcirc*deltaCreac*rhoCrust / (4.0*PI_greek*r_p*r_p);
+
+	//-------------------------------------------------------------------
+	// Calculate surface C flux from plate tectonics
+	//-------------------------------------------------------------------
+
+	// Function of mantle convective vigor (planet size and age) as for volcanism
 
 	//-------------------------------------------------------------------
 	// Compute net geo C flux
@@ -257,6 +266,7 @@ int main(int argc, char *argv[]) {
 	printf("continental weathering \t \t %g\n", deltaCcontw/m2cm/m2cm);
 	printf("ocean dissolution \t \t %g\n", deltaCocean/m2cm/m2cm);
 	printf("seafloor weathering \t \t %g\n", deltaCseafw/m2cm/m2cm);
+	printf("plate tectonics \t \t \n");
 	printf("-------------------------------------------\n");
 	printf("all geo processes \t \t %g\n", deltaC/m2cm/m2cm);
 
@@ -269,6 +279,14 @@ int main(int argc, char *argv[]) {
 
 	return EXIT_SUCCESS;
 }
+
+/*--------------------------------------------------------------------
+ *
+ * Subroutine OceanDiss
+ *
+ * Calculates C flux from ocean dissolution in top m.
+ *
+ *--------------------------------------------------------------------*/
 
 int OceanDiss (char path[1024], double T, double P, double *pH, double **xgas, double **xaq) {
 
@@ -301,7 +319,7 @@ int OceanDiss (char path[1024], double T, double P, double *pH, double **xgas, d
 
 //	LoadMolMass (path, &molmass);
 
-	// Use CHNOSZ to get log fO2 for fayalite-magnetite-quartz (FMQ) buffer at given T and P
+	// Use CHNOSZ to get log fO2 for fayalite-magnetite-quartz (FMQ) buffer at given T and P.
 	logfO2 = -3.0*CHNOSZ_logK("quartz", "cr", T, P, "SUPCRT92")
 		     -2.0*CHNOSZ_logK("magnetite", "cr", T, P, "SUPCRT92")
 	         +3.0*CHNOSZ_logK("fayalite", "cr", T, P, "SUPCRT92")
@@ -474,7 +492,7 @@ int WritePHREEQCInput(const char *TemplateFile, double temp, double pressure, do
 	while (fgets(line, line_length, fin)) {
 		line_no++;
 		if (line_no == 5) {
-			fprintf(fout, "%s\n", ConCat("\tpH \t \t",pH_str));
+			fprintf(fout, "%s charge\n", ConCat("\tpH \t \t",pH_str));
 		}
 		else if (line_no == 6) {
 			fprintf(fout, "%s\n", ConCat("\ttemp \t \t",temp_str));

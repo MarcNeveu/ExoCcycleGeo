@@ -2,16 +2,16 @@ TITLE ExoCcycleGeo generated speciation input using core10.dat
 
 SOLUTION 1 Planetary ocean surface waters (PHREEQC v3 manual p. 282)
 
-	pH 	 	8.22
+	pH 	 	8.22 charge
 	temp 	 	14.85
 	pressure 	1
 	pe 	 	12.3815
-	-water		7.9 #kg
 # Mass of Earth’s atmosphere: 5.1480e18 kg
 # Mean molecular mass of Earth’s atmosphere: 29 g mol -1
 # Moles of air in Earth’s atmosphere: 1.775e20 mol
-# Mass of Earth’s oceans: 1.4e21 kg
+# Mass of Earth’s oceans: 1.4e21 kg (/(1-L): water-world)
 # Mass of ocean per mole of air: 7.9 kg
+	-water		7.9 #kg
 	units		ppm
 	Ca		412.3
 	Mg		1291.8
@@ -32,7 +32,7 @@ EQUILIBRIUM_PHASES 1 Atmosphere, no rock
 	 # - log partial pressure    moles so that total gas = 1 mol
   N2(g)                 -0.108		0.78 
   O2(g)                 -0.700		0.2       
-  CO2(g)                -3.45		400e-6
+  CO2(g)                -3.4		400e-6
   CH4(g)                -5.74		1.8e-6
   C2H4(g)        	0.0		0.0
   C2H6(g)		0.0		0.0
@@ -46,8 +46,34 @@ EQUILIBRIUM_PHASES 1 Atmosphere, no rock
   NO2(g)          	0.0		0.0
   SO2(g) 		0.0		0.0
   #
-  # Minerals in equilibrium with ocean (none), allowed to precipitate
-                             # SI    moles by default
+  # Minerals weathered: average continental crust (granodioritic)
+#
+# Gaillardet et al. (1999): On Myr timescales, C from carbonate weathering is removed from the sea by calcite ppt
+# and soon returned to the atmosphere. Carbonate weathering has thus no effect on atm CO2.
+# The only significant reactions are weathering of Ca and Mg silicates on continents turning CO2 from the atmosphere
+# to HCO3- in rivers and leading to precipitation of carbonate minerals in the ocean.
+# The control of atm CO2 by weathering of Na & K silicates on land is less obvious: alkalis are involved in
+# ‘reverse weathering’ reactions in seawater, forming Na and K silicates and converting HCO3- back to atm CO2.
+#
+# Depth of weathering is 70 m (Stierman & Healy 1984, doi:10.1007/BF00874609), 40 m (Goodfellow et al. 2013, doi:10.1002/esp.3505)
+# So volume of weathered rock is L*(4*pi*6378000^2*50) m^3, made of 40 vol% plag, 25 vol% qtz, 15 vol% biotite-chlorite, 
+# 10 vol% K-feldspar, 5 vol% hornblende, <5 vol% zircon, apatite, titanite, oxides (Nesbitt & Markovicz 1997; Rudnick & Gao 2013).
+#
+# Continental crust            SI    moles by default
+  Anorthite       		0	6.8e-2	# CaAl2(SiO4)2
+  Albite        		0	1.2e-1	# NaAlSi3O8
+  Quartz			0	5.2e-1	# SiO2
+  Annite          		0	1.8e-2	# KFe3AlSi3O10(OH)2
+  Phlogopite			0	9.2e-3	# KAlMg3Si3O10(OH)2
+  Daphnite-14A    		0	8.2e-3	# Fe5AlAlSi3O10(OH)8
+  K-Feldspar      		0	4.1e-2	# KAlSi3O8
+  Anthophyllite   		0	3.4e-3	# Mg7Si8O22(OH)2
+  Tremolite			0	5.1e-3	# Ca2Mg5Si8O22(OH)2
+#
+# TOTAL                                 0.794
+#
+# Other phases not present initially, but allowed to precipitate
+#                              SI    moles by default
 #  [(6)(CB)(CB)S]		0	0	# S
 #  [(aro)-O-(aro)]		0	0	# O
   Afwillite   			0	0	# Ca3Si2O4(OH)6
@@ -55,7 +81,6 @@ EQUILIBRIUM_PHASES 1 Atmosphere, no rock
   Al           			0	0	# Al
   Al2(SO4)3    			0	0	# Al2(SO4)3
   Alabandite   			0	0	# MnS
-  Albite        		0	0	# NaAlSi3O8
   Albite_high  			0	0	# NaAlSi3O8
   Albite_low 			0	0	# NaAlSi3O8
   Alum-K       			0	0	# KAl(SO4)2:12H2O
@@ -65,9 +90,6 @@ EQUILIBRIUM_PHASES 1 Atmosphere, no rock
   Andalusite   			0	0	# Al2SiO5
   Andradite  			0	0	# Ca3Fe2(SiO4)3
   Anhydrite  			0	0	# CaSO4
-  Annite          		0	0	# KFe3AlSi3O10(OH)2
-  Anorthite       		0	0	# CaAl2(SiO4)2
-  Anthophyllite   		0	0	# Mg7Si8O22(OH)2
   Antigorite       		0	0	# Mg48Si34O85(OH)62
   Aragonite       		0	0	# CaCO3
   Arcanite       		0	0	# K2SO4
@@ -149,7 +171,6 @@ EQUILIBRIUM_PHASES 1 Atmosphere, no rock
   CuCl2           		0	0	# CuCl2
   CuCr2O4         		0	0	# CuCr2O4
   Cuprite         		0	0	# Cu2O
-  Daphnite-14A    		0	0	# Fe5AlAlSi3O10(OH)8
   Daphnite-7A      		0	0	# Fe5AlAlSi3O10(OH)8
   Dawsonite       		0	0	# NaAlCO3(OH)2
   Delafossite     		0	0	# CuFeO2
@@ -218,7 +239,6 @@ EQUILIBRIUM_PHASES 1 Atmosphere, no rock
   Jadeite         		0	0	# NaAl(SiO3)2
   Jarosite        		0	0	# KFe3(SO4)2(OH)6
   K              		0	0	# K
-  K-Feldspar      		0	0	# KAlSi3O8
   K2O             		0	0	# K2O
   KAl(SO4)2       		0	0	# KAl(SO4)2
   Kalsilite        		0	0	# KAlSiO4
@@ -311,7 +331,6 @@ EQUILIBRIUM_PHASES 1 Atmosphere, no rock
   Pargasite			0	0	# NaCa2Al3Mg4Si6O22(OH)2
   Periclase			0	0	# MgO
   Petalite			0	0	# LiAlSi4O10
-  Phlogopite			0	0	# KAlMg3Si3O10(OH)2
   Polydymite			0	0	# Ni3S4
   Portlandite			0	0	# Ca(OH)2
   Prehnite			0	0	# Ca2Al2Si3O10(OH)2
@@ -321,7 +340,6 @@ EQUILIBRIUM_PHASES 1 Atmosphere, no rock
   Pyrolusite			0	0	# MnO2
   Pyrophyllite			0	0	# Al2Si4O10(OH)2
   Pyrrhotite			0	0	# FeS
-  Quartz			0	0	# SiO2
   Rankinite			0	0	# Ca3Si2O7
   Rhodochrosite			0	0	# MnCO3
   Rhodonite			0	0	# MnSiO3
@@ -386,7 +404,6 @@ EQUILIBRIUM_PHASES 1 Atmosphere, no rock
   TiN				0	0	# TiN
   Titanite			0	0	# CaTiSiO5
   Tobermorite-11A		0	0	# Ca5Si6H11O22.5
-  Tremolite			0	0	# Ca2Mg5Si8O22(OH)2
   Trevorite			0	0	# NiFe2O4
   Tridymite			0	0	# SiO2
   Troilite			0	0	# FeS
