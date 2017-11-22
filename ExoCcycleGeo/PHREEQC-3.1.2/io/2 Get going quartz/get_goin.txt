@@ -1,10 +1,0 @@
-TITLE Kinetic quartz dissolution
-RATESQuartz-start
-1 REM dQu/dt = -k * (1 - ΩQuartz). k = 10^-13.7 mol/m2/s (25 C)
-2 REM parm(1) = A (m2), parm(2) = V (dm3) recalculate to mol/dm3/s10 moles = parm(1) / parm(2) * (m/m0)^0.67 * 10^-13.7 * (1 - SR("Quartz"))20 SAVE moles * TIME     # integrate. save and time must be in rate definition. moles count positive when added to solution-end
-
-END
-KINETICS                   			# Sediment: 100% qu, grain size 0.1 mm, por 0.3, rho_qu 2.65 kg/dm3Quartz	                   			# rate name	-formula 	SiO2	1
-	-m		102.7	-m0 		102.7			# initial moles of quartz	-parms 		22.7 0.162		# parameters for rate eqn. Here: Quartz surface area (m2/kg sediment), water-filled porosity (dm3/kg sediment)	-step 		1.58e8 in 10 steps	# 1.58e8 seconds = 5 years	-tol 		1e-8			# integration tolerance, default 1e-8 molINCREMENTAL_REACTIONS true # start integration from previous stepSOLUTION 1 Pure water
-	pH	7
-	Si	0.001END

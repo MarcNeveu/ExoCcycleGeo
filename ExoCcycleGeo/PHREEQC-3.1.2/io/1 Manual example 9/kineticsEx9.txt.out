@@ -1,53 +1,0 @@
-   Input file: /Users/marc/Documents/Research/2017-2019_NPMP/Git/ExoCcycleGeo/ExoCcycleGeo/PHREEQC-3.1.2/io/kineticsEx9.txt
-  Output file: /Users/marc/Documents/Research/2017-2019_NPMP/Git/ExoCcycleGeo/ExoCcycleGeo/PHREEQC-3.1.2/io/kineticsEx9.txt.out
-Database file: /Users/marc/Documents/Research/2017-2019_NPMP/Git/ExoCcycleGeo/ExoCcycleGeo/PHREEQC-3.1.2/core10.dat
-
-------------------
-Reading data base.
-------------------
-
-	LLNL_AQUEOUS_MODEL_PARAMETERS
-	SOLUTION_MASTER_SPECIES
-	SOLUTION_SPECIES
-	PHASES
-------------------------------------
-Reading input data for simulation 1.
-------------------------------------
-
-	TITLE Example 9.--Kinetically controlled oxidation of ferrous iron. Decoupled valence states of iron.#---------------------------------------------------------------------------# Begin database changes, not needed if kinetics between solid and solution
-		Fe_di		Fe_di+2    0.0     Fe_di	55.847	Fe_tri		Fe_tri+3   0.0     Fe_tri	55.847SOLUTION_SPECIES
-		Fe_di+2 = Fe_di+2 	       log_k   0.0	Fe_tri+3 = Fe_tri+3  	      log_k   0.0		# Fe+2 species
-	Fe_di+2 + H2O = Fe_diOH+ + H+
-		log_k	-9.5        delta_h 13.20   kcal#... and also other Fe+2 species# Fe+3 species
-	Fe_tri+3 + H2O = Fe_triOH+2 + H+        log_k   -2.19        delta_h 10.4    kcal#... and also other Fe+3 speciesPHASES
-	Goethite        Fe_triOOH + 3 H+ = Fe_tri+3 + 2 H2O        log_k   -1.0END
-		200 SAVE moles	-end
-		-step_divide 1e-4 # causes the reaction increment to be less than 1e-4 mol.
-		-axis_titles "Time, in days" "Micromole per kilogram water" "pH"        -axis_scale secondary_y_axis 4.0 7.0 1.0 0.5	-start	10 GRAPH_X TOTAL_TIME / 3600 / 24	20 GRAPH_Y TOT("Fe_tri")*1e6, TOT("Fe_di")*1e6 30 GRAPH_SY -LA("H+")	-end
------
-TITLE
------
-
- Example 9.--Kinetically controlled oxidation of ferrous iron. Decoupled valence states of iron.
-	Fe_di		Fe_di+2    0.0     Fe_di	55.847	Fe_tri		Fe_tri+3   0.0     Fe_tri	55.847SOLUTION_SPECIES
-	Fe_di+2 = Fe_di+2 	       log_k   0.0	Fe_tri+3 = Fe_tri+3  	      log_k   0.0		
-Fe_di+2 + H2O = Fe_diOH+ + H+
-	log_k	-9.5        delta_h 13.20   kcal
-Fe_tri+3 + H2O = Fe_triOH+2 + H+        log_k   -2.19        delta_h 10.4    kcal
-Goethite        Fe_triOOH + 3 H+ = Fe_tri+3 + 2 H2O        log_k   -1.0END
-	200 SAVE moles	-end
-	-step_divide 1e-4 
-	-axis_titles "Time, in days" "Micromole per kilogram water" "pH"        -axis_scale secondary_y_axis 4.0 7.0 1.0 0.5	-start	10 GRAPH_X TOTAL_TIME / 3600 / 24	20 GRAPH_Y TOT("Fe_tri")*1e6, TOT("Fe_di")*1e6 30 GRAPH_SY -LA("H+")	-end
-
-------------------
-End of simulation.
-------------------
-
-------------------------------------
-Reading input data for simulation 2.
-------------------------------------
-
-----------------------------------
-End of Run after 0.020019 Seconds.
-----------------------------------
-
