@@ -211,10 +211,10 @@ int main(int argc, char *argv[]) {
 	// Calculate surface C flux from continental weathering
 	//-------------------------------------------------------------------
 
-	deltaCcontw = -L * 0.5*deltaCcontwEarth * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7); // Edson et al. (2012) Eq. 1
+	deltaCcontw = -L * 0.5*deltaCcontwEarth * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7); // Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
 
 	//-------------------------------------------------------------------
-	// Calculate surface C flux from surface ocean dissolution in top m  TODO include kinetics, manage reservoir size
+	// Calculate surface C flux from surface ocean dissolution in top m  TODO include kinetics
 	//-------------------------------------------------------------------
 
 	/* Assumes that mixing gas and liquid at the surface is as inefficient as on Earth:
@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
 	 */
 
 	printf("xCO2(g) = %g ppm, xCH4(g) = %g ppm, xO2(g) = %g, xN2(g) = %g\n", xgas[0]/1.0e-6, xgas[1]/1.0e-6, xgas[2], xgas[3]);
-	deltaCocean = xgas[0];
+	deltaCocean = xgas[0]; // right now, mol/mol. Need time dimension.
 	printf("Calculating ocean dissolution...\n");
 	OceanDiss(path, Tsurf, Psurf, &pH, &xgas, &xaq);
 	printf("xCO2(g) = %g ppm, xCH4(g) = %g ppm, xO2(g) = %g, xN2(g) = %g\n", xgas[0]/1.0e-6, xgas[1]/1.0e-6, xgas[2], xgas[3]);
@@ -236,7 +236,7 @@ int main(int argc, char *argv[]) {
 	printf("C -IV \t %g\n", xaq[1]);
 	printf("O2 \t %g\n", xaq[2]);
 	printf("N2 \t %g\n", xaq[3]);
-//	deltaCocean = (deltaCocean + xgas[0]) / (4.0*PI_greek*r_p*r_p);
+//	deltaCocean = (deltaCocean + xgas[0]) / (4.0*PI_greek*r_p*r_p); // TODO mol/mol m-2, not mol C m-2 s-1
 	deltaCocean = (1.0-L) * (deltaCocean + xgas[0]) / (4.0*PI_greek*r_p*r_p); // TODO Incorporate L into PHREEQC input
 
 	//-------------------------------------------------------------------
@@ -315,7 +315,7 @@ int OceanDiss (char path[1024], double T, double P, double *pH, double **xgas, d
 	strcat(dbase,"PHREEQC-3.1.2/core10.dat");
 
 	strncat(infile,dbase,strlen(dbase)-10);
-	strcat(infile,"io/PHREEQCOceanDissInput");
+	strcat(infile,"io/OceanDissInput");
 
 //	LoadMolMass (path, &molmass);
 

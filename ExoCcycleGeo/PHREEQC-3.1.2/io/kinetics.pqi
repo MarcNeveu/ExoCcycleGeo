@@ -1,0 +1,30 @@
+TITLE Kinetics of quartz dissolution
+
+RATES
+
+Quartz
+	-start
+	1   REM dQu/dt = -k * (1 - ΩQuartz). k = 10^-13.7 mol/m2/s (25 C)
+	2   REM parm(1) = A (m2), parm(2) = V (dm3) recalculate to mol/dm3/s
+	10  moles = parm(1) / parm(2) * (m/m0)^0.67 * 10^-13.7 * (1 - SR("Quartz"))
+	20  SAVE moles * TIME     # integrate. save and time must be in rate definition. moles count positive when added to solution
+	-end
+
+END
+
+KINETICS
+
+Quartz
+	-formula	SiO2	1
+	-m		102.7
+	-m0		102.7
+	-parms		22.7 0.162
+	-tol		1e-8
+	-steps		1.58e8 in 10 steps
+
+INCREMENTAL_REACTIONS true
+
+SOLUTION 1 Pure water
+
+	pH		7
+	Si		0.001

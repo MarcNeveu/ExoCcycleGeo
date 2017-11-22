@@ -1,0 +1,89 @@
+RATES
+Calcite1
+  -start
+1   REM   PARM(1) = specific surface area of calcite, cm^2/mol 
+2   REM   PARM(2) = exponent for M/M0
+
+10  si_cc = SI("Calcite")
+20  DOS = 10^(si_cc)
+30  S = (DOS)^0.5
+40  IF (M <= 0  and si_cc < 0) THEN GOTO 200
+50  raq = ACT("Ca+2")/ACT("CO3-2")
+60  IF M0 > 0 THEN area = PARM(1)*M0*(M/M0)^PARM(2)* 10^(-4) ELSE area = PARM(1)*M
+110 rate = (MU^(-0.004)) * ((-la("H+"))^(-10.71)) * (raq^(-0.35)) * ((S-1)^2)     #rate in m/s
+120 rate1 = rate * 2.71 * 10^4 #rate in mol/m2/s
+130 rate2 = rate1 * area
+140 moles = rate2 * time # convert from mmol to mol
+200 SAVE moles
+   -end
+
+END
+
+SOLUTION 1
+Na 100
+Cl 100
+temp 25
+ph 8 
+Ca 0.001
+C 1 CO2(g) -3.48
+
+KINETICS 1
+Calcite1
+formula CaCO3
+    -m        10
+    -m0       10
+    -parms    3700 0.67
+    -tol      1e-008
+-steps        10 s in 10 steps
+-step_divide 1
+-runge_kutta 3
+-bad_step_max 500
+INCREMENTAL_REACTIONS true
+
+USER_GRAPH 1
+    -headings               time CaCO3
+    -axis_titles            "time(s)" "CaCO3(mol/l)" 
+    -chart_title            "Calcite Dissolution_CS"
+    -initial_solutions      true
+    -connect_simulations    true
+    -plot_concentration_vs  x
+  -start
+10 graph_x Total_time
+20 graph_y KIN_DELTA("CaCO3")/KIN_TIME
+  -end
+    -active                 true
+
+USER_GRAPH 2
+    -headings               time Ca
+    -axis_titles            "time(s)" "Ca" "pH"
+    -chart_title            "Calcite Dissolution_CS"
+    -initial_solutions      true
+    -connect_simulations    true
+    -plot_concentration_vs  x
+  -start
+10 graph_x Total_time
+20 graph_y tot("Ca")
+30 graph_sy -la("H+")
+  -end
+END    
+
+SELECTED_OUTPUT 1
+    -file                 selected_output_CDK_1.sel
+    -time                 true
+    -totals               Ca
+    -molalities           CaCO3
+    -activities           Ca+2  CO3-2
+    -kinetic_reactants    Calcite
+    -inverse_modeling     false
+    -active               true
+    -user_punch           true
+
+USER_PUNCH 1
+    -headings Calcite_Dissolution
+    -start
+10 PUNCH KIN_DELTA("CaCO3")/KIN_TIME
+20 PUNCH TOTAL_TIME
+30 PUNCH MU
+40 PUNCH -LA("H+")
+50 PUNCH SI("Calcite")
+    -end
