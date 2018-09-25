@@ -27,7 +27,9 @@
 #define mEarth 6.0e24                   // Earth mass (kg)
 #define km2m 1000.0                     // Convert from km to m
 #define m2cm 100.0                      // Convert m to cm
+#define bar2Pa 101325.0                 // Convert bar to Pa
 #define Kelvin 273.15                   // Convert between Celsius and Kelvin
+#define Myr2sec 1e6*365.25*86400        // Convert 1 million years in s
 
 #define TsurfEarth 288                  // Mean equilibrium surface temperature on Earth (K)
 #define RmeltEarth 3.8e-19              // Rate of melt generation on Earth (s-1) Kite et al. 2009 Fig. 15; http://dx.doi.org/10.1088/0004-637X/700/2/1732
@@ -71,14 +73,27 @@ double **read_input (int H, int L, double **Input, char path[1024], const char f
 int main(int argc, char *argv[]) {
 
 	int i = 0;
+	int itime = 0;                  // Time step counter
+	int ntime = 0;                  // Total number of steps
+
+	double dtime = 1.0*Myr2sec;     // Time step (s)
 
 	double r_p = 0.0;               // Planet radius (m)
 
-	double deltaCvolc = 0.0;        // Surface C flux from volcanic outgassing (subaerial+submarine) (mol C m-2 s-1)
-	double deltaCocean = 0.0;       // Surface C flux from surface ocean dissolution (mol C m-2 s-1)
-	double deltaCcontw = 0.0;       // Surface C flux from continental weathering (mol C m-2 s-1)
-	double deltaCseafw = 0.0;       // Surface C flux from seafloor weathering (mol C m-2 s-1)
-	double deltaC = 0.0;            // Net surface C flux from all geological processes (mol C m-2 s-1)
+	double RCplate = 0.0;           // Plate/crust C reservoir (mol)
+	double RCmantle = 0.0;          // Mantle C reservoir (mol)
+	double RCatm = 0.0;             // Atmospheric C reservoir (mol)
+	double RCocean = 0.0;           // Ocean C reservoir (mol)
+	double RCatmoc = RCatm + RCocean; // Combined atmospheric and ocean C reservoir (mol)
+
+	double FCoutgas = 0.0;          // C flux from outgassing (subaerial+submarine) (mol s-1)
+	double FCcontw = 0.0;           // C flux from continental weathering (mol s-1)
+	double FCseafw = 0.0;           // C flux from seafloor weathering (mol s-1)
+	double FCsubd = 0.0;            // C flux from subduction (mol s-1)
+	double netFC = 0.0;             // Net surface C flux from all geological processes (mol s-1)
+
+	double fatm = 0.0;              // Fraction of C in {atm+ocean} reservoir that is in the atmosphere (as opposed to in the ocean)
+	double farc = 0.0;              // Fraction of subducted C that makes it back out through arc volcanism (as opposed to into the mantle)
 
 	double pH = 8.22;               // pH of the surface ocean (default 8.22)
 
@@ -93,12 +108,18 @@ int main(int argc, char *argv[]) {
 	double tcirc = 0.0;             // Time scale of hydrothermal circulation (s)
 	double deltaCreac = 0.0;        // Net C leached/precipitated per kg of rock (mol kg-1)
 
+	double Asurf = 0.0;             // Planet surface area (m2)
+	double molmass_atm = 0.0;		// Mean molecular mass of the atmosphere (kg mol-1)
+
 	//-------------------------------------------------------------------
 	// Inputs
 	//-------------------------------------------------------------------
 
+	ntime = (int) (5000.0*Myr2sec/dtime); // Run for 5 Gyr
+
 	double m_p = 1.0*mEarth;    // Planet mass (kg)
-	double L = 0.15;             // Fraction of planet surface covered by land
+	double L = 0.15;            // Fraction of planet surface covered by land
+	double Mocean = 1.4e21;     // Mass of ocean (kg, default: Earth=1.4e21)
 
 	// Atmospheric inputs
 	double Tsurf = 288.0;       // Surface temperature (K)
@@ -133,7 +154,7 @@ int main(int argc, char *argv[]) {
 
 	printf("\n");
 	printf("-------------------------------------------------------------------\n");
-	printf("ExoCcycleGeo v17.4\n");
+	printf("ExoCcycleGeo v18.9\n");
 	printf("This code is in development and cannot be used for science yet.\n");
 	if (cmdline == 1) printf("Command line mode\n");
 	printf("-------------------------------------------------------------------\n");
@@ -153,7 +174,7 @@ int main(int argc, char *argv[]) {
 	printf("-------------------------------------------------------------------\n");
 
 	printf("\n");
-	printf("Computing geo C fluxes...\n");
+	printf("Computing geo C fluxes through time...\n");
 
 	// Initialize the R environment. We do it here, in the main loop, because this can be done only once.
 	// Otherwise, the program crashes at the second initialization.
@@ -171,104 +192,127 @@ int main(int argc, char *argv[]) {
 
 	r_p = pow(m_p/mEarth,0.27)*rEarth; // Planet radius, determined from mass scaling (m) // TODO implement IcyDwarf compression model for more accurate mass-radius relationship
 	gsurf = G*m_p/r_p/r_p;
+	Asurf = 4.0*PI_greek*r_p*r_p;
+
+	printf("Reservoirs in mol, fluxes in mol s-1\n");
+	printf("Time (Gyr) \t RCmantle \t RCatm \t RCocean \t FCoutgas \t FCcontw \t FCseafw \t FCsubd \t Net C flux\n");
+	printf("%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime, RCmantle, RCatm, RCocean, FCoutgas, FCcontw, FCseafw, FCsubd, netFC);
 
 	//-------------------------------------------------------------------
-	// Calculate surface C flux from volcanic outgassing
+	// Initialize reservoirs
 	//-------------------------------------------------------------------
 
-	/* TODO compute the following quantities instead of assuming them. See Kite et al. Section 2.2.
-	 * i.e., compute how geodynamic processes vary with planet mass, structure, composition, and age.
-	 * The geophysical scaling laws below for heat flux, outgassing rate, and subduction rate are solely valid for limited and very
-	 * specific cases and are not generalizable.
-	 * Vary tectonic mode with planet mass.
-	 *
-	 * Subduction and volcanism may not be more effective on more massive planets, as they could be stagnant-lid planets or have
-	 * intrusive volcanism.
-	 *
-	 * See Stein et al. (2011), Deschamps & Sotin (2000), Stamenkovic et al. (2012), Wong & Solomatov (2016), Burgisser & Scaillet
-	 * (2007), and Dasgupta & Hirschmann (2010).
-	 *
-	 * The mantle reservoir of carbon is large enough that CO2 outgassing does not depend on the amount of carbon subducted into the mantle (Abbot et al. 2012).
-	 */
+	RCmantle = 0.0;
 
-	// Model of Kite et al. (2009)
-	zCrust = 10.0*km2m;
-	Tmantle = 3000.0;
-	Ra = 3000.0;
-
-	Pf = rhoCrust*gsurf*zCrust;
-	TbaseLid = Tmantle - 2.23*Tmantle*Tmantle/A0;
-	Nu = pow(Ra/Ra_c,0.25);
-
-	// Assumes that all melt generated reaches the surface
-	vConv = 2.0*(Nu-1.0) * (kcrust/(rhoMagma*Cp*(r_p-r_c))) * (Tmantle-Tsurf) / (Tmantle-TbaseLid);
-	Rmelt = vConv*rhoMagma/m_p * (rhoCrust*gsurf*zCrust/(Pf-P0)); // m-2 s-1, Kite et al. (2009) multiplied by planet's surface area
-	deltaCvolc = deltaCvolcEarth * Rmelt/RmeltEarth;              // (mol C s-1) * (m-2 s-1) / (s-1) = mol C m-2 s-1
-
-	// TODO compute volcanic outgassing chemistry as a function of source depth, degassing transport and outgassing pressure (debated process)
+	molmass_atm = (xgas[0]*44.0 + xgas[1]*16.0 + xgas[2]*32.0 + xgas[3]*28.0)/(xgas[0]+xgas[1]+xgas[2]+xgas[3])*0.001; // TODO make a function
+	RCatm = xgas[0]*Psurf*bar2Pa*Asurf/molmass_atm;
+	RCocean = 1.5/44.0*Mocean; // Ballpark from https://www.engineeringtoolbox.com/gases-solubility-water-d_1148.html TODO refine
+	RCatmoc = RCatm + RCocean;
+	RCmantle = 10.0*(RCatmoc);
 
 	//-------------------------------------------------------------------
-	// Calculate surface C flux from continental weathering
+	// Start time loop
 	//-------------------------------------------------------------------
 
-	deltaCcontw = -L * 0.5*deltaCcontwEarth * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7); // Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
+	for (itime = 0;itime<ntime;itime++) {
 
-	//-------------------------------------------------------------------
-	// Calculate surface C flux from surface ocean dissolution in top m  TODO include kinetics
-	//-------------------------------------------------------------------
+		//-------------------------------------------------------------------
+		// Calculate partitioning of C between ocean and atmosphere
+		//-------------------------------------------------------------------
 
-	/* Assumes that mixing gas and liquid at the surface is as inefficient as on Earth:
-	 * - same wind agitating the liquid surface;
-	 * - same mixing of the upper layers of the ocean with the next lower layers (takes many years on Earth, the time scale of
-	 *   energy transfer in the upper layers);
-	 * - as on Earth, movement of surface layers to the deep ocean takes centuries.
-	 */
+		/* Assumes that mixing gas and liquid at the surface is as inefficient as on Earth:
+		 * - same wind agitating the liquid surface;
+		 * - same mixing of the upper layers of the ocean with the next lower layers (takes many years on Earth, the time scale of
+		 *   energy transfer in the upper layers);
+		 * - as on Earth, movement of surface layers to the deep ocean takes centuries.
+		 */
 
-	printf("xCO2(g) = %g ppm, xCH4(g) = %g ppm, xO2(g) = %g, xN2(g) = %g\n", xgas[0]/1.0e-6, xgas[1]/1.0e-6, xgas[2], xgas[3]);
-	deltaCocean = xgas[0]; // right now, mol/mol. Need time dimension.
-	printf("Calculating ocean dissolution...\n");
-	OceanDiss(path, Tsurf, Psurf, &pH, &xgas, &xaq);
-	printf("xCO2(g) = %g ppm, xCH4(g) = %g ppm, xO2(g) = %g, xN2(g) = %g\n", xgas[0]/1.0e-6, xgas[1]/1.0e-6, xgas[2], xgas[3]);
-	printf("pH = %g\n", pH);
-	printf("\nx(aq) \t mol/(kg H2O)\n");
-	printf("----------------------\n");
-	printf("C +IV \t %g\n", xaq[0]);
-	printf("C -IV \t %g\n", xaq[1]);
-	printf("O2 \t %g\n", xaq[2]);
-	printf("N2 \t %g\n", xaq[3]);
-//	deltaCocean = (deltaCocean + xgas[0]) / (4.0*PI_greek*r_p*r_p); // TODO mol/mol m-2, not mol C m-2 s-1
-	deltaCocean = (1.0-L) * (deltaCocean + xgas[0]) / (4.0*PI_greek*r_p*r_p); // TODO Incorporate L into PHREEQC input
+		printf("xCO2(g) = %g ppm, xCH4(g) = %g ppm, xO2(g) = %g, xN2(g) = %g\n", xgas[0]/1.0e-6, xgas[1]/1.0e-6, xgas[2], xgas[3]);
+		printf("Calculating ocean dissolution...\n");
+		OceanDiss(path, Tsurf, Psurf, &pH, &xgas, &xaq);
+		printf("xCO2(g) = %g ppm, xCH4(g) = %g ppm, xO2(g) = %g, xN2(g) = %g\n", xgas[0]/1.0e-6, xgas[1]/1.0e-6, xgas[2], xgas[3]);
+		printf("pH = %g\n", pH);
+		printf("\nx(aq) \t mol/(kg H2O)\n");
+		printf("----------------------\n");
+		printf("C +IV \t %g\n", xaq[0]);
+		printf("C -IV \t %g\n", xaq[1]);
+		printf("O2 \t %g\n", xaq[2]);
+		printf("N2 \t %g\n", xaq[3]);
 
-	//-------------------------------------------------------------------
-	// Calculate surface C flux from seafloor weathering TODO include kinetics, manage reservoir size
-	//-------------------------------------------------------------------
+		//-------------------------------------------------------------------
+		// Calculate surface C flux from outgassing
+		//-------------------------------------------------------------------
 
-	deltaCreac = 0.0; // TODO call PHREEQC to get deltaCreac, net mol C leached/precipitated per kg of rock
-	tcirc = 1.0;      // TODO compute tcirc based on Nu(Ra(basal heat flux))
-	deltaCseafw = -(1.0-L) * 4.0/3.0*PI_greek*(pow(r_p,3)-pow(r_p-zCrack,3))/tcirc*deltaCreac*rhoCrust / (4.0*PI_greek*r_p*r_p);
+		/* TODO compute the following quantities instead of assuming them. See Kite et al. Section 2.2.
+		 * i.e., compute how geodynamic processes vary with planet mass, structure, composition, and age.
+		 * The geophysical scaling laws below for heat flux, outgassing rate, and subduction rate are solely valid for limited and very
+		 * specific cases and are not generalizable.
+		 * Vary tectonic mode with planet mass.
+		 *
+		 * Subduction and volcanism may not be more effective on more massive planets, as they could be stagnant-lid planets or have
+		 * intrusive volcanism.
+		 *
+		 * See Stein et al. (2011), Deschamps & Sotin (2000), Stamenkovic et al. (2012), Wong & Solomatov (2016), Burgisser & Scaillet
+		 * (2007), and Dasgupta & Hirschmann (2010).
+		 *
+		 * The mantle reservoir of carbon is large enough that CO2 outgassing does not depend on the amount of carbon subducted into the mantle (Abbot et al. 2012).
+		 */
 
-	//-------------------------------------------------------------------
-	// Calculate surface C flux from plate tectonics
-	//-------------------------------------------------------------------
+		// Model of Kite et al. (2009)
+		zCrust = 10.0*km2m;
+		Tmantle = 3000.0;
+		Ra = 3000.0;
 
-	// Function of mantle convective vigor (planet size and age) as for volcanism
+		Pf = rhoCrust*gsurf*zCrust;
+		TbaseLid = Tmantle - 2.23*Tmantle*Tmantle/A0;
+		Nu = pow(Ra/Ra_c,0.25);
 
-	//-------------------------------------------------------------------
-	// Compute net geo C flux
-	//-------------------------------------------------------------------
+		// Assumes that all melt generated reaches the surface
+		vConv = 2.0*(Nu-1.0) * (kcrust/(rhoMagma*Cp*(r_p-r_c))) * (Tmantle-Tsurf) / (Tmantle-TbaseLid);
+		Rmelt = vConv*rhoMagma/m_p * (rhoCrust*gsurf*zCrust/(Pf-P0)); // m-2 s-1, Kite et al. (2009) multiplied by planet's surface area
+		FCoutgas = deltaCvolcEarth * Rmelt/RmeltEarth;              // (mol C s-1) * (m-2 s-1) / (s-1) = mol C m-2 s-1
 
-	deltaC = deltaCvolc + deltaCcontw + deltaCseafw;
+		//-------------------------------------------------------------------
+		// Calculate surface C flux from continental weathering
+		//-------------------------------------------------------------------
 
-	printf("\n");
-	printf("Net surface C flux from... \t mol C cm-2 s-1\n");
-	printf("-------------------------------------------\n");
-	printf("volcanic outgassing \t \t %g\n", deltaCvolc/m2cm/m2cm);
-	printf("continental weathering \t \t %g\n", deltaCcontw/m2cm/m2cm);
-	printf("ocean dissolution \t \t %g\n", deltaCocean/m2cm/m2cm);
-	printf("seafloor weathering \t \t %g\n", deltaCseafw/m2cm/m2cm);
-	printf("plate tectonics \t \t \n");
-	printf("-------------------------------------------\n");
-	printf("all geo processes \t \t %g\n", deltaC/m2cm/m2cm);
+		FCcontw = -L * 0.5*deltaCcontwEarth * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7); // Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
+
+		//-------------------------------------------------------------------
+		// Calculate surface C flux from seafloor weathering TODO include kinetics, manage reservoir size
+		//-------------------------------------------------------------------
+
+		deltaCreac = 0.0; // TODO call PHREEQC to get deltaCreac, net mol C leached/precipitated per kg of rock
+		tcirc = 1.0;      // TODO compute tcirc based on Nu(Ra(basal heat flux))
+		FCseafw = -(1.0-L) * 4.0/3.0*PI_greek*(pow(r_p,3)-pow(r_p-zCrack,3))/tcirc*deltaCreac*rhoCrust / (4.0*PI_greek*r_p*r_p);
+
+		//-------------------------------------------------------------------
+		// Calculate surface C flux from subduction
+		//-------------------------------------------------------------------
+
+		// Function of mantle convective vigor (planet size and age) as for volcanism
+		FCsubd = 0.0;
+
+		//-------------------------------------------------------------------
+		// Compute net geo C fluxes
+		//-------------------------------------------------------------------
+
+		// Continental weathering fluxes halved because of re-precipitation of carbonates in the ocean dissolved during continental weathering
+		RCplate = RCplate + dtime*(FCcontw/2.0 + FCseafw - FCsubd);
+		RCmantle = RCmantle + dtime*((1.0-farc)*FCsubd - FCoutgas); // Assuming instantaneous mixing into the mantle once subducted (in practice could take 1 Gyr)
+		RCatmoc = RCatmoc + dtime*(farc*FCsubd + FCoutgas - FCcontw/2.0 - FCseafw); // Sum of atmospheric and ocean reservoirs, still needs partitioning
+
+		molmass_atm = (xgas[0]*44.0 + xgas[1]*16.0 + xgas[2]*32.0 + xgas[3]*28.0)/(xgas[0]+xgas[1]+xgas[2]+xgas[3])*0.001;
+		fatm = (xgas[0]*Psurf*bar2Pa*Asurf/molmass_atm) / (xaq[0]*Mocean); // Ratm / Rocean. P*A=mass of atmosphere
+
+		RCatm = fatm * RCatmoc;
+		RCocean = RCatmoc - RCatm;
+
+		netFC = FCoutgas - FCcontw - FCseafw + farc*FCsubd - (1.0-farc)*FCsubd;
+
+		printf("%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime, RCmantle, RCatm, RCocean, FCoutgas, FCcontw, FCseafw, FCsubd, netFC);
+
+	} // End time loop
 
 	printf("\nExiting ExoCcycleGeo...\n");
 
@@ -284,7 +328,7 @@ int main(int argc, char *argv[]) {
  *
  * Subroutine OceanDiss
  *
- * Calculates C flux from ocean dissolution in top m.
+ * Calculates C flux from ocean dissolution // TODO include ocean mass
  *
  *--------------------------------------------------------------------*/
 
