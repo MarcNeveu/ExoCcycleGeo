@@ -18,6 +18,8 @@
 #include <Rembedded.h>
 #include <IPhreeqc.h>                   // To use the external PHREEQC geochemical code
 #include "CHNOSZcmds.h"
+#include <unistd.h>
+#include <fcntl.h>
 
 #define cmdline 0						// If execution from terminal as "./ExoCcycleGeo"
 
@@ -29,9 +31,9 @@
 #define m2cm 100.0                      // Convert m to cm
 #define bar2Pa 101325.0                 // Convert bar to Pa
 #define Kelvin 273.15                   // Convert between Celsius and Kelvin
-#define Myr2sec 1e6*365.25*86400        // Convert 1 million years in s
+#define Myr2sec 31.5576e13              // Convert 1 million years to s
 
-#define TsurfEarth 288                  // Mean equilibrium surface temperature on Earth (K)
+#define TsurfEarth 288.0                // Mean equilibrium surface temperature on Earth (K)
 #define RmeltEarth 3.8e-19              // Rate of melt generation on Earth (s-1) Kite et al. 2009 Fig. 15; http://dx.doi.org/10.1088/0004-637X/700/2/1732
 #define deltaCvolcEarth 2.2e5           // Surface C flux from subaerial+submarine volcanic outgassing (mol C s-1) Donnadieu et al. 2006; http://dx.doi.org/10.1029/2006GC001278
 #define deltaCcontwEarth 8.4543e-10     // Surface C flux from continental weathering on Earth (mol C m-2 s-1)
@@ -127,11 +129,11 @@ int main(int argc, char *argv[]) {
 	double runoff = 0.7;        // Atmospheric runoff (mm/day)
 
 	double *xgas = (double*) malloc(nAtmSpecies*sizeof(double));
-	if (xgas == NULL) printf("WaterRock: Not enough memory to create xgas[nAtmSpecies]\n"); // Mixing ratios by mole of atmospheric gases
-    xgas[0] = 400.0e-6;  // CO2
-    xgas[1] = 1.8e-6;    // CH4
-    xgas[2] = 0.2;       // O2
-    xgas[3] = 0.78;      // N2
+	if (xgas == NULL) printf("WaterRock: Not enough memory to create xgas[nAtmSpecies]\n"); // Mixing ratios by volume (or by mol since all gases are pretty much ideal and have the same molar volume) of atmospheric gases
+    xgas[0] = 0.22;      // 400.0e-6;  // CO2
+    xgas[1] = 0.0;       // 1.8e-6;    // CH4
+    xgas[2] = 0.0;       // 0.2;       // O2
+    xgas[3] = 0.78;                    // N2
     for (i=4;i<nAtmSpecies;i++) xgas[i] = 0.0;
 
 	double *xaq = (double*) malloc(nAtmSpecies*sizeof(double));
@@ -177,7 +179,6 @@ int main(int argc, char *argv[]) {
 	printf("Computing geo C fluxes through time...\n");
 
 	// Initialize the R environment. We do it here, in the main loop, because this can be done only once.
-	// Otherwise, the program crashes at the second initialization.
 	setenv("R_HOME","/Library/Frameworks/R.framework/Resources",1);     // Specify R home directory
 	Rf_initEmbeddedR(argc, argv);                                       // Launch R
 	CHNOSZ_init(1);                                                     // Launch CHNOSZ
@@ -188,15 +189,11 @@ int main(int argc, char *argv[]) {
 	unsigned int size = sizeof(path);
 	path[0] = '\0';
 	if (_NSGetExecutablePath(path, &size) == 0) printf("\n");
-	else printf("IcyDwarf: Couldn't retrieve executable directory. Buffer too small; need size %u\n", size);
+	else printf("ExoCcycleGeo: Couldn't retrieve executable directory. Buffer too small; need size %u\n", size);
 
 	r_p = pow(m_p/mEarth,0.27)*rEarth; // Planet radius, determined from mass scaling (m) // TODO implement IcyDwarf compression model for more accurate mass-radius relationship
 	gsurf = G*m_p/r_p/r_p;
 	Asurf = 4.0*PI_greek*r_p*r_p;
-
-	printf("Reservoirs in mol, fluxes in mol s-1\n");
-	printf("Time (Gyr) \t RCmantle \t RCatm \t RCocean \t FCoutgas \t FCcontw \t FCseafw \t FCsubd \t Net C flux\n");
-	printf("%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime, RCmantle, RCatm, RCocean, FCoutgas, FCcontw, FCseafw, FCsubd, netFC);
 
 	//-------------------------------------------------------------------
 	// Initialize reservoirs
@@ -205,10 +202,27 @@ int main(int argc, char *argv[]) {
 	RCmantle = 0.0;
 
 	molmass_atm = (xgas[0]*44.0 + xgas[1]*16.0 + xgas[2]*32.0 + xgas[3]*28.0)/(xgas[0]+xgas[1]+xgas[2]+xgas[3])*0.001; // TODO make a function
-	RCatm = xgas[0]*Psurf*bar2Pa*Asurf/molmass_atm;
-	RCocean = 1.5/44.0*Mocean; // Ballpark from https://www.engineeringtoolbox.com/gases-solubility-water-d_1148.html TODO refine
+	RCatm = (xgas[0]+xgas[1])*(Psurf*bar2Pa*Asurf/gsurf/molmass_atm); // Second term in parentheses is #mol in atmosphere
+	RCocean = 27.0e-6*Mocean; // Scaled from alkalinity of about 140*M(C)/M(HCO3) where M is molar mass
 	RCatmoc = RCatm + RCocean;
 	RCmantle = 10.0*(RCatmoc);
+
+	// Print first line of output
+	FILE *fout;
+	char *title = (char*)malloc(1024*sizeof(char)); // Don't forget to free!
+	title[0] = '\0';
+	if (cmdline == 1) strncat(title,path,strlen(path)-20);
+	else strncat(title,path,strlen(path)-18);
+	strcat(title,"Output.txt");
+	fout = fopen(title,"w");
+	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+	else {
+		fprintf(fout, "'Reservoirs in mol, fluxes in mol s-1'\n");
+		fprintf(fout, "'Time (Myr)' \t RCmantle \t RCatm \t RCocean \t FCoutgas \t FCcontw \t FCseafw \t FCsubd \t 'Net C flux'\n");
+		fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime/Myr2sec, RCmantle, RCatm, RCocean, FCoutgas, FCcontw, FCseafw, FCsubd, netFC);
+	}
+	fclose (fout);
+	free (title);
 
 	//-------------------------------------------------------------------
 	// Start time loop
@@ -227,17 +241,17 @@ int main(int argc, char *argv[]) {
 		 * - as on Earth, movement of surface layers to the deep ocean takes centuries.
 		 */
 
-		printf("xCO2(g) = %g ppm, xCH4(g) = %g ppm, xO2(g) = %g, xN2(g) = %g\n", xgas[0]/1.0e-6, xgas[1]/1.0e-6, xgas[2], xgas[3]);
-		printf("Calculating ocean dissolution...\n");
+//		printf("xCO2(g) = %g ppm, xCH4(g) = %g ppm, xO2(g) = %g, xN2(g) = %g\n", xgas[0]/1.0e-6, xgas[1]/1.0e-6, xgas[2], xgas[3]);
+//		printf("Calculating ocean dissolution...\n");
 		OceanDiss(path, Tsurf, Psurf, &pH, &xgas, &xaq);
-		printf("xCO2(g) = %g ppm, xCH4(g) = %g ppm, xO2(g) = %g, xN2(g) = %g\n", xgas[0]/1.0e-6, xgas[1]/1.0e-6, xgas[2], xgas[3]);
-		printf("pH = %g\n", pH);
-		printf("\nx(aq) \t mol/(kg H2O)\n");
-		printf("----------------------\n");
-		printf("C +IV \t %g\n", xaq[0]);
-		printf("C -IV \t %g\n", xaq[1]);
-		printf("O2 \t %g\n", xaq[2]);
-		printf("N2 \t %g\n", xaq[3]);
+//		printf("xCO2(g) = %g ppm, xCH4(g) = %g ppm, xO2(g) = %g, xN2(g) = %g\n", xgas[0]/1.0e-6, xgas[1]/1.0e-6, xgas[2], xgas[3]);
+//		printf("pH = %g\n", pH);
+//		printf("\nx(aq) \t mol/(kg H2O)\n");
+//		printf("----------------------\n");
+//		printf("C +IV \t %g\n", xaq[0]);
+//		printf("C -IV \t %g\n", xaq[1]);
+//		printf("O2 \t %g\n", xaq[2]);
+//		printf("N2 \t %g\n", xaq[3]);
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from outgassing
@@ -303,15 +317,26 @@ int main(int argc, char *argv[]) {
 		RCatmoc = RCatmoc + dtime*(farc*FCsubd + FCoutgas - FCcontw/2.0 - FCseafw); // Sum of atmospheric and ocean reservoirs, still needs partitioning
 
 		molmass_atm = (xgas[0]*44.0 + xgas[1]*16.0 + xgas[2]*32.0 + xgas[3]*28.0)/(xgas[0]+xgas[1]+xgas[2]+xgas[3])*0.001;
-		fatm = (xgas[0]*Psurf*bar2Pa*Asurf/molmass_atm) / (xaq[0]*Mocean); // Ratm / Rocean. P*A=mass of atmosphere
+		fatm = (xgas[0]*Psurf*bar2Pa*Asurf/molmass_atm) / (xaq[0]*Mocean + xgas[0]*Psurf*bar2Pa*Asurf/molmass_atm); // Ratm / Rocean. P*A/g=mass of atmosphere
 
 		RCatm = fatm * RCatmoc;
 		RCocean = RCatmoc - RCatm;
 
 		netFC = FCoutgas - FCcontw - FCseafw + farc*FCsubd - (1.0-farc)*FCsubd;
 
-		printf("%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime, RCmantle, RCatm, RCocean, FCoutgas, FCcontw, FCseafw, FCsubd, netFC);
+		// Write output
+		char *title = (char*)malloc(1024*sizeof(char)); // Don't forget to free!
+		title[0] = '\0';
+		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+		else strncat(title,path,strlen(path)-18);
+		strcat(title,"Output.txt");
+		fout = fopen(title,"a");
+		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime/Myr2sec, RCmantle, RCatm, RCocean, FCoutgas, FCcontw, FCseafw, FCsubd, netFC);
+		fclose (fout);
+		free (title);
 
+		exit(0);
 	} // End time loop
 
 	printf("\nExiting ExoCcycleGeo...\n");
@@ -473,7 +498,6 @@ const char* ConCat(const char *str1, const char *str2) {
  * Subroutine WritePHREEQCInput
  *
  * Generate input file from a template.
- * Modifies P, T, pH, pe, W:R
  *
  *--------------------------------------------------------------------*/
 int WritePHREEQCInput(const char *TemplateFile, double temp, double pressure, double pH, double pe, double *xgas, char **tempinput) {
@@ -502,12 +526,16 @@ int WritePHREEQCInput(const char *TemplateFile, double temp, double pressure, do
 	int line_no = 0;  // Line number
 	int eqphases = 0; // Switch to determine if the EQUILIBRIUM_PHASES block is being read
 
+	// Assemble file title
 	sprintf(temp_str,"%g", temp);
 	sprintf(pressure_str,"%g", pressure);
 	sprintf(pH_str,"%g", pH);
 	sprintf(pe_str,"%g", pe);
 	for (i=0;i<nAtmSpecies;i++) {
-		sprintf(gas_str2[i],"%g", log(xgas[i]*pressure)/log(10.0)); // Convert from mixing ratio to -log partial pressure
+		if (xgas[i] > 0.0)
+			sprintf(gas_str2[i],"%g", log(xgas[i]*pressure)/log(10.0)); // Convert from mixing ratio to -log partial pressure
+		else
+			sprintf(gas_str2[i],"%g", 0.0);
 		strcat(gas_str1[i], gas_str2[i]);
 		sprintf(gas_str2[i],"%g", xgas[i]);
 		strcat(gas_str1[i], "\t");
@@ -526,7 +554,7 @@ int WritePHREEQCInput(const char *TemplateFile, double temp, double pressure, do
 	strcat(*tempinput,"xCO2");
 	strcat(*tempinput,gas_str2[0]);
 	strcat(*tempinput,"xCH4");
-	strcat(*tempinput,gas_str2[1]);
+	strcat(*tempinput,gas_str2[1]); // File title complete
 
 	fin = fopen (TemplateFile,"r");
 	if (fin == NULL) printf("OceanDiss: Missing input file. Path: %s\n", TemplateFile);
