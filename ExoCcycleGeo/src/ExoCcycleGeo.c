@@ -46,7 +46,7 @@
 #define xCO2g0 355.0e-6                 // Reference atmospheric CO2 mixing ratio (ppmv)
 #define runoff_0 0.665                  // Reference runoff (mm/day) Edson et al. 2012, http://dx.doi.org/10.1089/ast.2011.0762
 #define nAtmSpecies 4                   // Number of atmospheric species whose abundances are passed between the physical and chemical models
-#define nAqSpecies 4                    // Number of aqueous species whose concentrations are passed between the physical and chemical models
+#define nAqSpecies 6                    // Number of aqueous species whose concentrations are passed between the physical and chemical models
 
 //-------------------------------------------------------------------
 // WATER-ROCK PARAMETERS
@@ -132,22 +132,23 @@ int main(int argc, char *argv[]) {
 	double Mocean = 1.4e21;     // Mass of ocean (kg, default: Earth=1.4e21)
 
 	// Atmospheric inputs
-	double Tsurf = 288.0;       // Surface temperature (K)
-	double Psurf = 2.0;         // Surface pressure (bar)
+	double Tsurf = 288.15;       // Surface temperature (K)
+	double Psurf = 1.0;         // Surface pressure (bar)
 	double runoff = 0.7;        // Atmospheric runoff (mm/day)
 
 	double *xgas = (double*) malloc(nAtmSpecies*sizeof(double));
-	if (xgas == NULL) printf("WaterRock: Not enough memory to create xgas[nAtmSpecies]\n"); // Mixing ratios by volume (or by mol since all gases are pretty much ideal and have the same molar volume) of atmospheric gases
+	if (xgas == NULL) printf("ExoCcycleGeo: Not enough memory to create xgas[nAtmSpecies]\n"); // Mixing ratios by volume (or by mol since all gases are pretty much ideal and have the same molar volume) of atmospheric gases
     xgas[0] = 0.22;      // 400.0e-6;  // CO2
     xgas[1] = 0.0;       // 1.8e-6;    // CH4
     xgas[2] = 0.0;       // 0.2;       // O2
     xgas[3] = 0.78;                    // N2
     for (i=4;i<nAtmSpecies;i++) xgas[i] = 0.0;
 
-	double *xaq = (double*) malloc(nAtmSpecies*sizeof(double));
-	if (xaq == NULL) printf("WaterRock: Not enough memory to create xaq[nAtmSpecies]\n"); // Molalities of aqueous species (mol (kg H2O)-1)
-    for (i=0;i<nAtmSpecies;i++) xaq[i] = 0.0;
-    xaq[0] = 27.0/12.0/1000.0;  // 27 ppm C in today's oceans (scaled from 141 ppm Alk*M(C)/M(HCO3), M being molecular mass)
+	double *xaq = (double*) malloc(nAqSpecies*sizeof(double));
+	if (xaq == NULL) printf("ExoCcycleGeo: Not enough memory to create xaq[nAqSpecies]\n"); // Molalities of aqueous species (mol (kg H2O)-1)
+    for (i=0;i<nAqSpecies;i++) xaq[i] = 0.0;
+    xaq[0] = 520.0/12.0/1000.0;   // 27 ppm C in today's oceans (scaled from 141 ppm Alk*M(C)/M(HCO3), M being molecular mass)
+    xaq[3] = 530.0/14.0/1000.0;   // ppm N in ocean
 
 	// Interior inputs
 	double r_c = 1220000.0;     // Radius of planet core (m)
@@ -251,10 +252,16 @@ int main(int argc, char *argv[]) {
 	//-------------------------------------------------------------------
 
 	for (itime = 0;itime<ntime;itime++) {
-
+		printf("itime=%d\n", itime);
 		double sumPP = 0.0;
 		for(i=0;i<nAtmSpecies;i++) sumPP = sumPP + xgas[i]*Psurf;
-		Psurf = sumPP;
+//		Psurf = sumPP;
+
+		printf("%g\n", sumPP);
+		if (Psurf < 0.01) {
+			printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
+			exit(0);
+		}
 
 		//-------------------------------------------------------------------
 		// Calculate partitioning of C between ocean and atmosphere
@@ -364,8 +371,6 @@ int main(int argc, char *argv[]) {
 		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime/Myr2sec, RCmantle, RCatm, RCocean, FCoutgas, FCcontw, FCseafw, FCsubd, netFC);
 		fclose (fout);
 		free (title);
-
-		if (itime == 2) exit(0);
 	} // End time loop
 
 	printf("\nExiting ExoCcycleGeo...\n");
@@ -382,7 +387,7 @@ int main(int argc, char *argv[]) {
  *
  * Subroutine OceanDiss
  *
- * Calculates C flux from ocean dissolution // TODO include ocean mass
+ * Calculates C flux from ocean dissolution
  *
  *--------------------------------------------------------------------*/
 
@@ -412,9 +417,9 @@ int OceanDiss (char path[1024], int itime, double T, double P, double *pH, doubl
 
 //	LoadMolMass (path, &molmass);
 
-	printf("xCO2(aq) \t xCH4(aq) \t xgas\n");
-	printf("%g %g\t", (*xaq)[0]*12.0*1000.0, (*xaq)[1]*12.0*1000.0);
-	printf("%g\n", (*xgas)[0]);
+	printf("CO2(aq) \t CH4(aq) \t N2(aq) \t CO2(g) \t CH4(g) \t N2(g)\n");
+	printf("%g \t %g\t %g \t", (*xaq)[0]*12.0*1000.0, (*xaq)[1]*12.0*1000.0, (*xaq)[3]*14.0*1000.0);
+	printf("%g \t %g \t %g\n", (*xgas)[0], (*xgas)[1], (*xgas)[3]);
 
 	WritePHREEQCInput(infile, itime, T-Kelvin, P, *pH, *pe, mass_w, *xgas, *xaq, &tempinput);
 
@@ -432,7 +437,9 @@ int OceanDiss (char path[1024], int itime, double T, double P, double *pH, doubl
 	(*xaq)[0] = simdata[45];             // C(4), i.e. dissolved CO2 and carbonate
 	(*xaq)[1] = simdata[43];             // C(-4), i.e. dissolved methane
 	(*xaq)[2] = simdata[72];             // O(0), i.e. dissolved O2
-	(*xaq)[3] = simdata[69];             // N(0), i.e. dissolved N2
+	(*xaq)[3] = simdata[28];             // Total dissolved N
+	(*xaq)[4] = simdata[69];             // N(0), i.e. dissolved N2
+	(*xaq)[5] = simdata[68];             // N(-3), i.e. dissolved NH3 and NH4+
 
 	(*xgas)[0] = simdata[1016];          // CO2(g)
 	(*xgas)[1] = simdata[1012];          // CH4(g)
@@ -534,7 +541,8 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	char **gas_str2 = (char**)malloc(nAtmSpecies*sizeof(char*));
 	for (i=0;i<nAtmSpecies;i++) gas_str2[i] = (char*)malloc(1024);
 
-	char *aqC_str = (char*) malloc(1024);
+	char **aq_str = (char**) malloc(nAqSpecies*sizeof(char*));
+	for (i=0;i<nAqSpecies;i++) aq_str[i] = (char*)malloc(1024);
 
 	itime_str[0] = '\0';
 	temp_str[0] = '\0';
@@ -542,6 +550,13 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	pH_str[0] = '\0';
 	pe_str[0] = '\0';
 	mass_w_str[0] = '\0';
+
+	for (i=0;i<nAtmSpecies;i++) {
+		gas_str1[i][0] = '\0';
+		gas_str2[i][0] = '\0';
+	}
+	for (i=0;i<nAqSpecies;i++) aq_str[i][0] = '\0';
+
 	int line_length = 300;
 	char line[line_length]; // Individual line
 	int line_no = 0;  // Line number
@@ -554,6 +569,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	sprintf(pH_str, "%g", pH);
 	sprintf(pe_str, "%g", pe);
 	sprintf(mass_w_str, "%g", mass_w);
+
 	for (i=0;i<nAtmSpecies;i++) {
 		if (xgas[i] > 0.0)
 			sprintf(gas_str2[i], "%g", log(xgas[i]*pressure)/log(10.0)); // Convert from mixing ratio to -log partial pressure
@@ -580,7 +596,8 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	strcat(*tempinput,"xCH4");
 	strcat(*tempinput,gas_str2[1]); // File title complete
 
-	sprintf(aqC_str,"%g mol/kgw", xaq[0]+xaq[1]); // mol per kg of oxidized and reduced C
+	sprintf(aq_str[0],"%g mol/kgw", xaq[0]+xaq[1]); // mol per kg of oxidized and reduced C
+	sprintf(aq_str[3],"%g mol/kgw", xaq[3]); // mol per kg of N
 
 	fin = fopen (TemplateFile,"r");
 	if (fin == NULL) printf("OceanDiss: Missing input file. Path: %s\n", TemplateFile);
@@ -623,7 +640,10 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 			fprintf(fout, "%s\n", ConCat("\tN2(g) \t\t",gas_str1[3]));
 		}
 		else if (!eqphases && line[1] == 'C' && line[2] == '\t') {
-			fprintf(fout, "%s\n", ConCat("\tC \t\t",aqC_str));
+			fprintf(fout, "%s\n", ConCat("\tC \t\t",aq_str[0]));
+		}
+		else if (!eqphases && line[1] == 'N' && line[2] == '\t') {
+			fprintf(fout, "%s\n", ConCat("\tN \t\t",aq_str[3]));
 		}
 		else fputs(line,fout);
 		if (line[0] == 'E' && line[1] == 'Q' && line[2] == 'U' && line[3] == 'I') eqphases = 1;
@@ -640,9 +660,10 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 		free(gas_str1[i]);
 		free(gas_str2[i]);
 	}
+	for (i=0;i<nAqSpecies;i++) free(aq_str[i]);
 	free(gas_str1);
 	free(gas_str2);
-	free(aqC_str);
+	free(aq_str);
 
 	return 0;
 }
