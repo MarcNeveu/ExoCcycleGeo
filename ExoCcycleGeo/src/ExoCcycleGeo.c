@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 
 	double r_p = 0.0;               // Planet radius (m)
 
-	double RCplate = 0.0;           // Plate/crust C reservoir (mol)
+//	double RCplate = 0.0;           // Plate/crust C reservoir (mol)
 	double RCmantle = 0.0;          // Mantle C reservoir (mol)
 	double RCatm = 0.0;             // Atmospheric C reservoir (mol)
 	double RCocean = 0.0;           // Ocean C reservoir (mol)
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
 	double fatm = 0.0;              // Fraction of C in {atm+ocean} reservoir that is in the atmosphere (as opposed to in the ocean)
 	double farc = 0.0;              // Fraction of subducted C that makes it back out through arc volcanism (as opposed to into the mantle)
 
-	double pH = 8.22;               // pH of the surface ocean (default 8.22)
+	double pH = 0.0;               // pH of the surface ocean (default 8.22)
 	double pe = 0.0;                // pe corresponding to logfO2
 	double logfO2 = 0.0;            // O2 fugacity
 	double logKO2H2O = 0.0;         // log K for reaction 4 H+ + 4 e- + O2 = 2 H2O, from CHNOSZ: subcrt(c("H+","e-","O2","H2O"),c(-4,-4,-1,2),c("aq","aq","g","liq"),T=25,P=1)
@@ -122,47 +122,57 @@ int main(int argc, char *argv[]) {
 	double nAir = 0.0;              // Number of mol in atmosphere (mol)
 	double sumPP = 0.0;             // Sum of partial pressures xgas*Psurf (ideally, should be equal to Psurf)
 
-	//-------------------------------------------------------------------
-	// Inputs
-	//-------------------------------------------------------------------
-
-	int redox = 1; // 1: current Earth surface, 2: hematite-magnetite, 3: fayalite-magnetite-quartz, code won't run with other values.
-
-	ntime = (int) (5000.0*Myr2sec/dtime); // Run for 5 Gyr
-
-	double m_p = 1.0*mEarth;    // Planet mass (kg)
-	double L = 0.15;            // Fraction of planet surface covered by land
-	double Mocean = 1.4e21;     // Mass of ocean (kg, default: Earth=1.4e21)
-
-	// Atmospheric inputs
-	double Tsurf = 288.15;       // Surface temperature (K)
-	double Psurf = 1.0;         // Surface pressure (bar)
-	double runoff = 0.7;        // Atmospheric runoff (mm/day)
-
-	double *xgas = (double*) malloc(nAtmSpecies*sizeof(double));
-	if (xgas == NULL) printf("ExoCcycleGeo: Not enough memory to create xgas[nAtmSpecies]\n"); // Mixing ratios by volume (or by mol since all gases are pretty much ideal and have the same molar volume) of atmospheric gases
-    xgas[0] = 0.0;      // 400.0e-6;  // CO2
-    xgas[1] = 0.5;       // 1.8e-6;    // CH4
-    xgas[2] = 0.0;       // 0.2;       // O2
-    xgas[3] = 0.5;                    // N2
-    for (i=4;i<nAtmSpecies;i++) xgas[i] = 0.0;
-
-	double *xaq = (double*) malloc(nAqSpecies*sizeof(double));
-	if (xaq == NULL) printf("ExoCcycleGeo: Not enough memory to create xaq[nAqSpecies]\n"); // Molalities of aqueous species (mol (kg H2O)-1)
-    for (i=0;i<nAqSpecies;i++) xaq[i] = 0.0;
-    xaq[0] = 560.0/12.0/1000.0;   // 27 ppm C in today's oceans (scaled from 141 ppm Alk*M(C)/M(HCO3), M being molecular mass)
-    xaq[1] = 10.0/12.0/1000.0;
-    xaq[3] = 230.0/14.0/1000.0;   // ppm N in ocean
-
-	// Interior inputs
-	double r_c = 1220000.0;     // Radius of planet core (m)
-	double rhoMagma = 3500.0;   // Magma density (kg m-3)
-	double rhoCrust = 3500.0;   // Crustal density (kg m-3)
-
 	// Quantities to be computed by thermal/geodynamic model
 	double zCrust = 0.0;        // Crustal thickness (m)
 	double Tmantle = 0.0;       // Mantle temperature (K)
 	double Ra = 0.0;            // Rayleigh number for mantle convection (no dim)
+
+	double *xgas = (double*) malloc(nAtmSpecies*sizeof(double));
+	if (xgas == NULL) printf("ExoCcycleGeo: Not enough memory to create xgas[nAtmSpecies]\n"); // Mixing ratios by volume (or by mol since all gases are pretty much ideal and have the same molar volume) of atmospheric gases
+    for (i=0;i<nAtmSpecies;i++) xgas[i] = 0.0;
+
+	double *xaq = (double*) malloc(nAqSpecies*sizeof(double));
+	if (xaq == NULL) printf("ExoCcycleGeo: Not enough memory to create xaq[nAqSpecies]\n"); // Molalities of aqueous species (mol (kg H2O)-1)
+    for (i=0;i<nAqSpecies;i++) xaq[i] = 0.0;
+
+	double *xgas_old = (double*) malloc(nAtmSpecies*sizeof(double));
+	if (xgas_old == NULL) printf("ExoCcycleGeo: Not enough memory to create xgas_old[nAtmSpecies]\n"); // Old mixing ratios by volume (or by mol since all gases are pretty much ideal and have the same molar volume) of atmospheric gases
+    for (i=0;i<nAtmSpecies;i++) xgas_old[i] = 0.0;
+
+	double *xaq_old = (double*) malloc(nAqSpecies*sizeof(double));
+	if (xaq_old == NULL) printf("ExoCcycleGeo: Not enough memory to create xaq_old[nAqSpecies]\n"); // Old molalities of aqueous species (mol (kg H2O)-1)
+    for (i=0;i<nAqSpecies;i++) xaq_old[i] = 0.0;
+
+	//-------------------------------------------------------------------
+	// Inputs
+	//-------------------------------------------------------------------
+
+	ntime = (int) (5000.0*Myr2sec/dtime); // Run for 5 Gyr
+
+	// Planet parameters
+	double m_p = 0.1*mEarth;    // Planet mass (kg)
+	double L = 0.15;            // Fraction of planet surface covered by land
+	double Mocean = 0.7e18;     // Mass of ocean (kg, default: Earth=1.4e21)
+	double r_c = 1220000.0;     // Radius of planet core (m)
+	double rhoMagma = 3500.0;   // Magma density (kg m-3)
+	double rhoCrust = 3500.0;   // Crustal density (kg m-3)
+
+	// Atmospheric inputs
+	double Tsurf = 274.15;      // Surface temperature (K)
+	double Psurf = 0.01;         // Surface pressure (bar)
+	double runoff = 0.7;        // Atmospheric runoff (mm/day)
+	xgas[0] = 0.95;  // CO2
+    xgas[1] = 0.0;    // CH4
+    xgas[2] = 0.0;       // O2
+    xgas[3] = 0.05;                     // N2
+	double atmCNratio = 1.0*(xgas[0]+xgas[1])/(2.0*xgas[3]); // Molar atmospheric C:N ratio
+
+    // Ocean inputs
+	pH = 8.22;
+    int redox = 2; // 1: current Earth surface, 2: hematite-magnetite, 3: fayalite-magnetite-quartz, code won't run with other values.
+    xaq[0] = 27.0/12.0/1000.0;   // 27 ppm C in today's oceans (scaled from 141 ppm Alk*M(C)/M(HCO3), M being molecular mass)
+    xaq[1] = 0.0/12.0/1000.0;
+    xaq[3] = 0.0/14.0/1000.0;   // ppm N in ocean
 
 	//-------------------------------------------------------------------
 	// Startup
@@ -170,7 +180,7 @@ int main(int argc, char *argv[]) {
 
 	printf("\n");
 	printf("-------------------------------------------------------------------\n");
-	printf("ExoCcycleGeo v18.9\n");
+	printf("ExoCcycleGeo v18.10\n");
 	printf("This code is in development and cannot be used for science yet.\n");
 	if (cmdline == 1) printf("Command line mode\n");
 	printf("-------------------------------------------------------------------\n");
@@ -291,13 +301,12 @@ int main(int argc, char *argv[]) {
 		fprintf(fout, "Init \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", xgas[0], xgas[1], xgas[3], sumPP, xaq[0], xaq[1], xaq[3], pH);
 	}
 	fclose (fout);
-	free (title);
 
 	//-------------------------------------------------------------------
 	// Start time loop
 	//-------------------------------------------------------------------
 
-	for (itime = 0;itime<ntime;itime++) {
+//	for (itime = 0;itime<ntime;itime++) {
 //		printf("itime=%d\n", itime);
 		sumPP = 0.0;
 		for(i=0;i<nAtmSpecies;i++) sumPP = sumPP + xgas[i]*Psurf;
@@ -316,7 +325,67 @@ int main(int argc, char *argv[]) {
 		// Calculate partitioning of C between ocean and atmosphere
 		//-------------------------------------------------------------------
 
-		OceanDiss(path, itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq);
+		int iter = 0;
+		int subiter = 0;
+		int niter = 20;
+		int nsubiter = 100;
+		int moveon = 0;
+		double threshold = 0.1;
+
+		printf("Equilibrating ocean and atmosphere at input pressure and atmospheric C/N ratio...\n");
+		printf("--------------------\n");
+		for (iter = 0;iter < niter;iter++) {
+			printf("|");
+			moveon = 1;
+
+			double atmCNratiotemp = 1.0*(xgas[0]+xgas[1])/(2.0*xgas[3]);
+
+			xgas[3] = xgas[3] * Psurf/sumPP * (1.0 + atmCNratiotemp - atmCNratio);
+			xgas[0] = xgas[0] * Psurf/sumPP * (1.0 - atmCNratiotemp + atmCNratio);
+			xgas[1] = xgas[1] * Psurf/sumPP * (1.0 - atmCNratiotemp + atmCNratio);
+
+			xaq[3] = xaq[3] * Psurf/sumPP * (1.0 + atmCNratiotemp - atmCNratio);
+			xaq[0] = xaq[0] * Psurf/sumPP * (1.0 - atmCNratiotemp + atmCNratio);
+			xaq[1] = xaq[1] * Psurf/sumPP * (1.0 - atmCNratiotemp + atmCNratio);
+
+//			for(i=0;i<nAtmSpecies;i++) xgas[i] = xgas[i]*Psurf/sumPP;
+//			for(i=0;i<nAqSpecies;i++) xaq[i] = xaq[i]*Psurf/sumPP;
+
+			for (i=0;i<nAtmSpecies;i++) xgas_old[i] = xgas[i];
+			for (i=0;i<nAqSpecies;i++) xaq_old[i] = xaq[i];
+
+			for (subiter=0;subiter<nsubiter;subiter++) OceanDiss(path, itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq);
+//			if (subiter == nsubiter) printf("ExoCcycleGeo: Ocean-atmosphere could not be equilibrated after %d iterations.\n", subiter);
+
+			for(i=0;i<nAtmSpecies;i++) {
+				if (i!=2 && xgas[i] > 1.0e-10) { // Bottom threshold on abundance to avoid spending too much time converging on negligible species
+					if (fabs(xgas[i]/xgas_old[i]-1.0) > threshold) moveon = 0;
+				}
+			}
+			for(i=0;i<nAqSpecies;i++) {
+				if (i!=2 && xaq[i] > 1.0e-10) { // Bottom threshold on abundance to avoid spending too much time converging on negligible species
+					if (fabs(xaq[i]/xaq_old[i]-1.0) > threshold) moveon = 0;
+				}
+			}
+
+			sumPP = 0.0;
+			for(i=0;i<nAtmSpecies;i++) sumPP = sumPP + xgas[i]*Psurf;
+
+			title[0] = '\0';
+			if (cmdline == 1) strncat(title,path,strlen(path)-20);
+			else strncat(title,path,strlen(path)-18);
+			strcat(title,"CompoOceanAtm.txt");
+			fout = fopen(title,"a");
+			if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+			else fprintf(fout, "%d \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", iter, xgas[0], xgas[1], xgas[3], sumPP, xaq[0], xaq[1], xaq[3], pH);
+			fclose (fout);
+
+			if (moveon) break;
+		} printf("Done \n");
+		if (iter == niter) {
+			printf("ExoCcycleGeo: Ocean-atmosphere could not be equilibrated after %d iterations. Exiting.\n", iter);
+			exit(0);
+		}
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from outgassing
@@ -393,7 +462,6 @@ int main(int argc, char *argv[]) {
 		netFC = FCoutgas - FCcontw - FCseafw + farc*FCsubd - (1.0-farc)*FCsubd;
 
 		// Write outputs
-		char *title = (char*)malloc(1024*sizeof(char)); // Don't forget to free!
 		title[0] = '\0';
 		if (cmdline == 1) strncat(title,path,strlen(path)-20);
 		else strncat(title,path,strlen(path)-18);
@@ -403,19 +471,19 @@ int main(int argc, char *argv[]) {
 		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime/Myr2sec, RCmantle, RCatm, RCocean, FCoutgas, FCcontw, FCseafw, FCsubd, netFC);
 		fclose (fout);
 
-		title[0] = '\0';
-		if (cmdline == 1) strncat(title,path,strlen(path)-20);
-		else strncat(title,path,strlen(path)-18);
-		strcat(title,"CompoOceanAtm.txt");
-		fout = fopen(title,"a");
-		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime/Myr2sec, xgas[0], xgas[1], xgas[3], sumPP, xaq[0], xaq[1], xaq[3], pH);
-		fclose (fout);
-		free (title);
-	} // End time loop
+//		title[0] = '\0';
+//		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+//		else strncat(title,path,strlen(path)-18);
+//		strcat(title,"CompoOceanAtm.txt");
+//		fout = fopen(title,"a");
+//		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+//		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime/Myr2sec, xgas[0], xgas[1], xgas[3], sumPP, xaq[0], xaq[1], xaq[3], pH);
+//		fclose (fout);
+//	} // End time loop
 
 	printf("\nExiting ExoCcycleGeo...\n");
 
+	free (title);
 	free (xgas);
 	free (xaq);
 
@@ -435,7 +503,7 @@ int main(int argc, char *argv[]) {
 int OceanDiss (char path[1024], int itime, double T, double P, double *pH, double *pe, double mass_w, double **xgas, double **xaq) {
 
 	int phreeqc = 0;
-	int i = 0;
+//	int i = 0;
 
 	char *dbase = (char*)malloc(1024);                           // Path to thermodynamic database
 	char *infile = (char*)malloc(1024);                          // Path to initial (template) input file
