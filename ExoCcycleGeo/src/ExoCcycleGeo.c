@@ -63,11 +63,9 @@
 
 int OceanDiss (char path[1024], int itime, double T, double P, double *pH, double *pe, double mass_w, double **xO2g, double **aq);
 // int LoadMolMass (char path[1024], double ***molmass);
-int EHandler(int phreeqc);
 int ExtractWrite(int instance, double** data);
 const char* ConCat(const char *str1, const char *str2);
 int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double pH, double pe, double mass_w, double *xgas, double *xaq, char *tempinput[1024]);
-double **read_input (int H, int L, double **Input, char path[1024], const char filename[1024]);
 int cleanup (char path[1024]);
 double molmass_atm (double *xgas);
 
@@ -103,7 +101,6 @@ int main(int argc, char *argv[]) {
 	double FCcontw = 0.0;           // C flux from continental weathering (mol s-1)
 	double FCseafw = 0.0;           // C flux from seafloor weathering (mol s-1)
 	double FCsubd = 0.0;            // C flux from subduction (mol s-1)
-	double FCatmoc = 0.0;           // C flux from ocean-atmosphere equilibrium (mol s-1)
 	double netFC = 0.0;             // Net surface C flux from all geological processes (mol s-1)
 
 	double farc = 0.0;              // Fraction of subducted C that makes it back out through arc volcanism (as opposed to into the mantle)
@@ -129,6 +126,12 @@ int main(int argc, char *argv[]) {
 	double sumPP = 0.0;             // Sum of partial pressures xgas*Psurf (ideally, should be equal to Psurf)
 	double sumMR = 0.0;             // Sum of mixing ratios xgas (ideally, should be equal to 1)
 	double atmCNratiotemp = 0.0;    // C:N ratio of atmosphere, used in initial ocean-atmosphere equilibrium calculation
+
+	double nCatmoc = 0.0;           // Total C in {atmosphere+ocean}
+	double nNatmoc = 0.0;           // Total N in {atmosphere+ocean}
+	double nCatmoc_old = 0.0;
+	double nNatmoc_old = 0.0;
+	double gasdiff = 0.0;           // Difference in total gas mixing ratios before and after atmosphere-ocean equilibration
 
 	// Quantities to be computed by thermal/geodynamic model
 	double zCrust = 0.0;        // Crustal thickness (m)
@@ -384,7 +387,7 @@ int main(int argc, char *argv[]) {
 	printf("Starting time loop...\n");
 	for (itime = 0;itime<ntime;itime++) {
 		printf("Time: %g Myr, iteration %d/%d. Total N = %g mol, Total C = %g mol, Added C = %g mol\n", (double)itime*dtime/Myr2sec, itime, ntime,
-				xaq[3]*Mocean + xgas[3]/2.0*nAir, (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir + netFC*dtime, netFC*dtime*(double)itime);
+				xaq[3]*Mocean + xgas[3]*2.0*nAir, (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir + netFC*dtime, netFC*dtime*(double)itime);
 
 		//-------------------------------------------------------------------
 		// Update atmosphere
@@ -392,7 +395,7 @@ int main(int argc, char *argv[]) {
 //		Psurf_old = Psurf;
 
 		for (i=2;i<nAtmSpecies;i++) {
-			if (nAir > dtime*netFC) xgas[i] = xgas[i]*nAir/(nAir+dtime*netFC); // Dilute other gases accordingly
+			if (nAir > fabs(dtime*netFC)) xgas[i] = xgas[i]*nAir/(nAir+dtime*netFC); // Dilute other gases accordingly
 			else {
 				printf("ExoCcycleGeo: Too much atmospheric change in one timestep. Reduce timestep.\n"); exit(0);
 			}
@@ -408,14 +411,6 @@ int main(int argc, char *argv[]) {
 
 		nAir = nAir + dtime*netFC;
 		Psurf = nAir/(bar2Pa*Asurf/gsurf/molmass_atm(xgas));
-
-		// Sum of mixing ratios should remain 1
-		sumMR = 0.0;
-		for (i=0;i<nAtmSpecies;i++) sumMR = sumMR + xgas[i];
-		if (fabs(sumMR - 1.0) > threshold) {
-			printf("Sum of mixing ratios of atmospheric species = %.2g, should be 1\n", sumMR);
-//			exit(0);
-		}
 
 		if (Psurf < 0.01) {
 			printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
@@ -436,24 +431,43 @@ int main(int argc, char *argv[]) {
 			for (i=0;i<nAtmSpecies;i++) xgas_old[i] = xgas[i];
 			for (i=0;i<nAqSpecies;i++) xaq_old[i] = xaq[i];
 
-			sumMR = 0.0;
-			for (i=0;i<nAtmSpecies;i++) sumMR = sumMR + xgas[i];
-			printf("sumMR=%g\n", sumMR);
+			nCatmoc_old = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
+			nNatmoc_old = xaq[3]*Mocean + xgas[3]*2.0*nAir;
 
+			// Equilibrate ocean and atmosphere
 			for (subiter=0;subiter<niter;subiter++) OceanDiss(path, itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq);
 
-			double gasdiff = 0.0;
+			// Force conservation of Total C (atmosphere+ocean) and Total N (atmosphere+ocean)
+			nCatmoc = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
+			nNatmoc = xaq[3]*Mocean + xgas[3]*2.0*nAir;
+
+			xgas[0] = xgas[0]*nCatmoc_old/nCatmoc;
+			xgas[1] = xgas[1]*nCatmoc_old/nCatmoc;
+			xgas[3] = xgas[3]*nNatmoc_old/nNatmoc;
+
+			xaq[0] = xaq[0]*nCatmoc_old/nCatmoc;
+			xaq[1] = xaq[1]*nCatmoc_old/nCatmoc;
+			xaq[3] = xaq[3]*nNatmoc_old/nNatmoc;
+
+			// Update air quantity and surface pressure
+			gasdiff = 0.0;
 			for (i=0;i<nAtmSpecies;i++) gasdiff = gasdiff + xgas[i] - xgas_old[i];
 			nAir = nAir*(1.0 + gasdiff);
-//			for (i=0;i<nAtmSpecies;i++) xgas[i] = xgas_old[i]/(1.0 + xgas[i] - xgas_old[i]);
 			Psurf = nAir/(bar2Pa*Asurf/gsurf/molmass_atm(xgas));
 
+			if (Psurf < 0.01) {
+				printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
+				exit(0);
+			}
+			if (Mocean/nAir < 0.1) {
+				printf("ExoCcycleGeo: Mass Ocean / moles of air = %g too low to compute ocean-atmosphere equilibrium. Exiting.\n", Mocean/nAir);
+	//			exit(0);
+			}
+
+			// Rescale mixing ratios
 			sumMR = 0.0;
 			for (i=0;i<nAtmSpecies;i++) sumMR = sumMR + xgas[i];
 			for (i=0;i<nAtmSpecies;i++) xgas[i] = xgas[i]/sumMR;
-
-			printf("sumMR=%g\n", sumMR);
-			if (itime > 3) exit(0);
 
 			for(i=0;i<nAtmSpecies;i++) {
 				if (i!=2 && xgas[i] > 1.0e-10) { // Bottom threshold on abundance to avoid spending too much time converging on negligible species
@@ -470,10 +484,6 @@ int main(int argc, char *argv[]) {
 
 			if (moveon) break;
 		}
-
-//		FCatmoc = xgas[0] - xgas_old[0] + xgas[1] - xgas_old[1];
-//
-//		cleanup(path); // Clean up PHREEQC selected output files
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from outgassing
