@@ -81,8 +81,7 @@ int main(int argc, char *argv[]) {
 	int ntime = 0;                  // Total number of steps
 
 	int iter = 0;                   // Iteration counter
-	int subiter = 0;                // Secondary iteration counter
-	int niter = 20;                 // Number of iterations for ocean-atmosphere equilibrium
+	int niter = 5;                  // Number of iterations for ocean-atmosphere equilibrium
 	int moveon = 0;                 // Switch to break for loop
 	double threshold = 0.1;         // Threshold for convergence of ocean composition in equilibrium with prescribed atmosphere
 
@@ -93,9 +92,6 @@ int main(int argc, char *argv[]) {
 	double RCatm = 0.0;             // Atmospheric C reservoir (mol)
 	double RCocean = 0.0;           // Ocean C reservoir (mol)
 	double RCatmoc = RCatm + RCocean; // Combined atmospheric and ocean C reservoir (mol)
-
-//	double nCatm = 0.0;             // Atmospheric C reservoir (mol), = RCatm but for scaling
-//	double nCocean = 0.0;           // Ocean C reservoir (mol), = RCocean but for scaling
 
 	double FCoutgas = 0.0;          // C flux from outgassing (subaerial+submarine) (mol s-1)
 	double FCcontw = 0.0;           // C flux from continental weathering (mol s-1)
@@ -130,6 +126,8 @@ int main(int argc, char *argv[]) {
 	double nNatmoc = 0.0;           // Total N in {atmosphere+ocean}
 	double nCatmoc_old = 0.0;
 	double nNatmoc_old = 0.0;
+//	double pH_old = 0.0;            // Memorized pH to check that input log(fO2) matches input atmospheric composition
+//	double pe_old = 0.0;			// Memorized pe to check that input log(fO2) matches input atmospheric composition
 	double gasdiff = 0.0;           // Difference in total gas mixing ratios before and after atmosphere-ocean equilibration
 
 	// Kinetic parameters
@@ -166,7 +164,7 @@ int main(int argc, char *argv[]) {
 
 	double dtime = 1.0*Myr2sec;     // Time step (s)
 
-	ntime = (int) (50.0*Myr2sec/dtime); // Number of time steps of simulation
+	ntime = (int) (200.0*Myr2sec/dtime); // Number of time steps of simulation
 
 	// Planet parameters
 	double m_p = 1.0*mEarth;    // Planet mass (kg)
@@ -187,8 +185,8 @@ int main(int argc, char *argv[]) {
 
     // Ocean inputs
 	pH = 8.22;
-    int redox = 1; // 1: current Earth surface, 2: hematite-magnetite, 3: fayalite-magnetite-quartz, code won't run with other values.
-    xaq[0] = 27.0/12.0/1000.0;   // 27 ppm C in today's oceans (scaled from 141 ppm Alk*M(C)/M(HCO3), M being molecular mass)
+    int redox = 1; // 1: current Earth surface, 2: hematite-magnetite, 3: fayalite-magnetite-quartz, 4: iron-wustite, code won't run with other values.
+    xaq[0] = 27.0/12.0/1000.0;  // 27 ppm C in today's oceans (scaled from 141 ppm Alk*M(C)/M(HCO3), M being molecular mass)
     xaq[1] = 0.0/12.0/1000.0;
     xaq[3] = 0.0/14.0/1000.0;   // ppm N in ocean
 
@@ -246,18 +244,12 @@ int main(int argc, char *argv[]) {
 	case 1: // Present-day Earth surface
 		printf("Redox set to present-day Earth surface\n");
 		logfO2 = log(0.2)/log(10.0);
-		printf("log f(O2) = %g\n", logfO2);
 		break;
 	case 2: // Use CHNOSZ to get log fO2 for hematite-magnetite (HM) buffer at given T and P.
 		printf("Redox set to HM buffer\n");
 		logfO2 = -6.0*CHNOSZ_logK("hematite", "cr", Tsurf, Psurf, "SUPCRT92")
 			     +4.0*CHNOSZ_logK("magnetite", "cr", Tsurf, Psurf, "SUPCRT92")
 			     +1.0*CHNOSZ_logK("O2", "g", Tsurf, Psurf, "SUPCRT92");
-		logKO2H2O = -4.0*CHNOSZ_logK("H+", "aq", Tsurf, Psurf, "SUPCRT92")
-					-4.0*CHNOSZ_logK("e-", "aq", Tsurf, Psurf, "SUPCRT92")
-					-1.0*CHNOSZ_logK("O2", "g", Tsurf, Psurf, "SUPCRT92")
-					+2.0*CHNOSZ_logK("H2O", "liq", Tsurf, Psurf, "SUPCRT92");
-		printf("log f(O2) = %g\n", logfO2);
 		break;
 	case 3: // Use CHNOSZ to get log fO2 for fayalite-magnetite-quartz (FMQ) buffer at given T and P.
 		printf("Redox set to FMQ buffer\n");
@@ -265,17 +257,24 @@ int main(int argc, char *argv[]) {
 			     -2.0*CHNOSZ_logK("magnetite", "cr", Tsurf, Psurf, "SUPCRT92")
 		         +3.0*CHNOSZ_logK("fayalite", "cr", Tsurf, Psurf, "SUPCRT92")
 			     +1.0*CHNOSZ_logK("O2", "g", Tsurf, Psurf, "SUPCRT92");
-		logKO2H2O = -4.0*CHNOSZ_logK("H+", "aq", Tsurf, Psurf, "SUPCRT92")
-					-4.0*CHNOSZ_logK("e-", "aq", Tsurf, Psurf, "SUPCRT92")
-					-1.0*CHNOSZ_logK("O2", "g", Tsurf, Psurf, "SUPCRT92")
-					+2.0*CHNOSZ_logK("H2O", "liq", Tsurf, Psurf, "SUPCRT92");
-		printf("log f(O2) = %g\n", logfO2);
 		break;
+	case 4: // TODO Use CHNOSZ to get log fO2 for iron-wustite (IW) buffer at given T and P.
+//		printf("Redox set to FMQ buffer\n");
+//		logfO2 = -3.0*CHNOSZ_logK("quartz", "cr", Tsurf, Psurf, "SUPCRT92")
+//			     -2.0*CHNOSZ_logK("magnetite", "cr", Tsurf, Psurf, "SUPCRT92")
+//		         +3.0*CHNOSZ_logK("fayalite", "cr", Tsurf, Psurf, "SUPCRT92")
+//			     +1.0*CHNOSZ_logK("O2", "g", Tsurf, Psurf, "SUPCRT92");
+//		break;
 	default:
 		printf("ExoCcycleGeo: Redox switch incorrectly specified, should be 1 (current Earth surface), 2 (hematite-magnetite), or 3 (fayalite-magnetite-quartz). Exiting.\n");
 		exit(0);
 	}
+	logKO2H2O = -4.0*CHNOSZ_logK("H+", "aq", Tsurf, Psurf, "SUPCRT92")
+				-4.0*CHNOSZ_logK("e-", "aq", Tsurf, Psurf, "SUPCRT92")
+				-1.0*CHNOSZ_logK("O2", "g", Tsurf, Psurf, "SUPCRT92")
+				+2.0*CHNOSZ_logK("H2O", "liq", Tsurf, Psurf, "SUPCRT92");
 
+	printf("log f(O2) = %g\n", logfO2);
 	pe = -pH + 0.25*(logfO2+logKO2H2O);
 
 	//-------------------------------------------------------------------
@@ -299,6 +298,7 @@ int main(int argc, char *argv[]) {
 	for (i=0;i<nAtmSpecies;i++) {
 		if (xgas[i] > 0.0 && xaq[i] == 0.0) xaq[i] = xgas[i]; // xaq must be >0 otherwise PHREEQC ignores, set to xgas (initial guess).
 	}
+
 	AqueousChem(path, "io/OceanStart", itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq, 1, 0.0, 0);
 
 	RCocean = (xaq[0]+xaq[1])*Mocean;
@@ -338,8 +338,8 @@ int main(int argc, char *argv[]) {
 
 	printf("Starting time loop...\n");
 	for (itime = 0;itime<ntime;itime++) {
-		printf("Time: %g Myr, iteration %d/%d. Total N = %g mol, Total C = %g mol, Added C = %g mol\n", (double)itime*dtime/Myr2sec, itime, ntime,
-				xaq[3]*Mocean + xgas[3]*2.0*nAir, (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir + netFC*dtime, netFC*dtime*(double)itime);
+		printf("Time: %g Myr, iteration %d/%d. Total N = %g mol, Total C = %g mol, Added C this timestep = %g mol\n", (double)itime*dtime/Myr2sec, itime, ntime,
+				xaq[3]*Mocean + xgas[3]*2.0*nAir, (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir + netFC*dtime, netFC*dtime);
 
 		//-------------------------------------------------------------------
 		// Update atmosphere
@@ -354,12 +354,8 @@ int main(int argc, char *argv[]) {
 		}
 
 		// Redox of outgassing
-		if      (xgas[0] > 0.0 && xgas[0] > 10.0*xgas[1]) xgas[0] = (xgas[0]*nAir + dtime*netFC)/(nAir + dtime*netFC); // CO2 dominates over CH4, assume all added gas is CO2 and let equilibration with ocean speciate accurately
-		else if (xgas[1] > 0.0 && xgas[1] > 10.0*xgas[0]) xgas[1] = (xgas[1]*nAir + dtime*netFC)/(nAir + dtime*netFC); // CH4 dominates over CO2, assume all added gas is CH4
-		else {
-			xgas[0] = (xgas[0]*nAir + dtime*netFC/2.0)/(nAir + dtime*netFC); // CH4 and CO2 about equal, split added gas equally
-			xgas[1] = (xgas[1]*nAir + dtime*netFC/2.0)/(nAir + dtime*netFC);
-		}
+		if (redox <= 3) xgas[0] = (xgas[0]*nAir + dtime*netFC)/(nAir + dtime*netFC); // CO2 dominates over CH4, assume all added gas is CO2 and let equilibration with ocean speciate accurately
+		else            xgas[1] = (xgas[1]*nAir + dtime*netFC)/(nAir + dtime*netFC); // CH4 dominates over CO2, assume all added gas is CH4
 
 		nAir = nAir + dtime*netFC;
 		Psurf = nAir/(bar2Pa*Asurf/gsurf/molmass_atm(xgas));
@@ -385,9 +381,19 @@ int main(int argc, char *argv[]) {
 
 			nCatmoc_old = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
 			nNatmoc_old = xaq[3]*Mocean + xgas[3]*2.0*nAir;
+//			pH_old = pH;
+//			pe_old = pe;
 
 			// Equilibrate ocean and atmosphere
-			for (subiter=0;subiter<niter;subiter++) AqueousChem(path, "io/OceanDissInput", itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq, 0, 0.0, 0);
+			AqueousChem(path, "io/OceanDissInput", itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq, 0, 0.0, 0);
+
+			// At the first time step, the composition shouldn't be different from that of the initialization
+//			if (itime == 0 && (pe_old/pe - 1.0) > 0.1) {
+//				printf("ExoCcycleGeo: Adjust starting redox conditions to match input atmospheric composition\n"
+//					   "logfO2 initially estimated at %g, should be closer to %g. Exiting.\n",
+//					   4.0*(pe_old+pH_old) - logKO2H2O, 4.0*(pe+pH) - logKO2H2O);
+//				exit(0);
+//			}
 
 			// Force conservation of Total C (atmosphere+ocean) and Total N (atmosphere+ocean)
 			nCatmoc = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
@@ -401,10 +407,11 @@ int main(int argc, char *argv[]) {
 			xaq[1] = xaq[1]*nCatmoc_old/nCatmoc;
 			xaq[3] = xaq[3]*nNatmoc_old/nNatmoc;
 
-			// Update air quantity and surface pressure
+			// Update moles of air and surface pressure
 			gasdiff = 0.0;
 			for (i=0;i<nAtmSpecies;i++) gasdiff = gasdiff + xgas[i] - xgas_old[i];
 			nAir = nAir*(1.0 + gasdiff);
+
 			Psurf = nAir/(bar2Pa*Asurf/gsurf/molmass_atm(xgas));
 
 			if (Psurf < 0.01) {
@@ -477,7 +484,7 @@ int main(int argc, char *argv[]) {
 		kintime = 1.0*365.25*86400.0;
 		kinsteps = 20;
 		FCcontw = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7); // Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
-		AqueousChem(path, "io/ContWeather", itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq, 1, kintime, kinsteps);
+//		AqueousChem(path, "io/ContWeather", itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq, 1, kintime, kinsteps);
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from seafloor weathering TODO include kinetics, manage reservoir size
@@ -501,7 +508,7 @@ int main(int argc, char *argv[]) {
 		// Continental weathering fluxes halved because of re-precipitation of carbonates in the ocean dissolved during continental weathering
 //		RCplate = RCplate + dtime*(FCcontw/2.0 + FCseafw - FCsubd);
 //		RCmantle = RCmantle + dtime*((1.0-farc)*FCsubd - FCoutgas); // Assuming instantaneous mixing into the mantle once subducted (in practice could take 1 Gyr)
-		netFC = FCoutgas - FCcontw/2.0 - FCseafw - (1.0-farc)*FCsubd;
+		netFC = FCoutgas + FCcontw/2.0 + FCseafw + (1.0-farc)*FCsubd; // FCcontw < 0, FCseafw < 0, FCsubd < 0
 		RCmantle = RCmantle - dtime*netFC; // Assuming plate = mantle (unlike Foley et al. 2015) and instantaneous mixing into the mantle once subducted (in practice could take 1 Gyr)
 		RCatmoc = RCatmoc + dtime*netFC; // Sum of atmospheric and ocean reservoirs, still needs partitioning
 
@@ -706,12 +713,12 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	// Open input file
 	FILE *fin;
 	FILE *fout;
-	char itime_str[5];
-	char temp_str[10];
-	char pressure_str[10];
-	char pH_str[10];
-	char pe_str[10];
-	char mass_w_str[10];
+	char itime_str[32];
+	char temp_str[32];
+	char pressure_str[32];
+	char pH_str[32];
+	char pe_str[32];
+	char mass_w_str[32];
 	char steps_str1[64]; char steps_str2[64];
 
 	char **gas_str1 = (char**)malloc(nAtmSpecies*sizeof(char*));
@@ -750,21 +757,25 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	sprintf(pe_str, "%g", pe);
 	sprintf(mass_w_str, "%g", mass_w);
 
-//	for (i=0;i<nAtmSpecies;i++) {
-//		if (xgas[i] > 0.0)
-//			sprintf(gas_str2[i], "%g", log(xgas[i]*pressure)/log(10.0)); // Convert from mixing ratio to -log partial pressure
-//		else
-//			sprintf(gas_str2[i], "%g", 0.0);
-//		strcat(gas_str1[i], gas_str2[i]);
-//		sprintf(gas_str2[i], "%g", xgas[i]);
-//		strcat(gas_str1[i], "\t");
-//		strcat(gas_str1[i], gas_str2[i]);
-//	}
-	for (i=0;i<nAtmSpecies;i++) {
-		if (xgas[i] > 0.0)
-			sprintf(gas_str2[i], "%g", log(xgas[i]*pressure)/log(10.0)); // Convert from mixing ratio to -log partial pressure
-		else
-			sprintf(gas_str2[i], "%g", 0.0);
+	if (!forcedPP) {
+		for (i=0;i<nAtmSpecies;i++) {
+			if (xgas[i] > 0.0)
+				sprintf(gas_str2[i], "%g", log(xgas[i]*pressure)/log(10.0)); // Convert from mixing ratio to -log partial pressure
+			else
+				sprintf(gas_str2[i], "%g", 0.0);
+			strcat(gas_str1[i], gas_str2[i]);
+			sprintf(gas_str2[i], "%g", xgas[i]);
+			strcat(gas_str1[i], "\t");
+			strcat(gas_str1[i], gas_str2[i]);
+		}
+	}
+	else {
+		for (i=0;i<nAtmSpecies;i++) {
+			if (xgas[i] > 0.0)
+				sprintf(gas_str2[i], "%g", log(xgas[i]*pressure)/log(10.0)); // Convert from mixing ratio to -log partial pressure
+			else
+				sprintf(gas_str2[i], "%g", 0.0);
+		}
 	}
 
 	strcpy(*tempinput,TemplateFile);
