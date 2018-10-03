@@ -61,11 +61,12 @@
 // SUBROUTINE DECLARATIONS
 //-------------------------------------------------------------------
 
-int OceanDiss (char path[1024], int itime, double T, double P, double *pH, double *pe, double mass_w, double **xO2g, double **aq);
-// int LoadMolMass (char path[1024], double ***molmass);
-int ExtractWrite(int instance, double** data);
-const char* ConCat(const char *str1, const char *str2);
-int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double pH, double pe, double mass_w, double *xgas, double *xaq, char *tempinput[1024]);
+int AqueousChem (char path[1024], char filename[64], int itime, double T, double P, double *pH, double *pe, double mass_w,
+		double **xgas, double **xaq, int forcedPP, double kintime, int kinsteps);
+int ExtractWrite(int instance, double** data, int line);
+const char* ConCat (const char *str1, const char *str2);
+int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double pH, double pe, double mass_w,
+		double *xgas, double *xaq, int forcedPP, double kintime, int kinsteps, char **tempinput);
 int cleanup (char path[1024]);
 double molmass_atm (double *xgas);
 
@@ -82,7 +83,6 @@ int main(int argc, char *argv[]) {
 	int iter = 0;                   // Iteration counter
 	int subiter = 0;                // Secondary iteration counter
 	int niter = 20;                 // Number of iterations for ocean-atmosphere equilibrium
-	int nsubiter = 100;				// Number of sub-iterations for ocean-atmosphere equilibrium
 	int moveon = 0;                 // Switch to break for loop
 	double threshold = 0.1;         // Threshold for convergence of ocean composition in equilibrium with prescribed atmosphere
 
@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
 
 	double farc = 0.0;              // Fraction of subducted C that makes it back out through arc volcanism (as opposed to into the mantle)
 
-	double pH = 0.0;               // pH of the surface ocean (default 8.22)
+	double pH = 0.0;                // pH of the surface ocean (default 8.22)
 	double pe = 0.0;                // pe corresponding to logfO2
 	double logfO2 = 0.0;            // O2 fugacity
 	double logKO2H2O = 0.0;         // log K for reaction 4 H+ + 4 e- + O2 = 2 H2O, from CHNOSZ: subcrt(c("H+","e-","O2","H2O"),c(-4,-4,-1,2),c("aq","aq","g","liq"),T=25,P=1)
@@ -125,13 +125,16 @@ int main(int argc, char *argv[]) {
 	double nAir = 0.0;              // Number of mol in atmosphere (mol)
 	double sumPP = 0.0;             // Sum of partial pressures xgas*Psurf (ideally, should be equal to Psurf)
 	double sumMR = 0.0;             // Sum of mixing ratios xgas (ideally, should be equal to 1)
-	double atmCNratiotemp = 0.0;    // C:N ratio of atmosphere, used in initial ocean-atmosphere equilibrium calculation
 
 	double nCatmoc = 0.0;           // Total C in {atmosphere+ocean}
 	double nNatmoc = 0.0;           // Total N in {atmosphere+ocean}
 	double nCatmoc_old = 0.0;
 	double nNatmoc_old = 0.0;
 	double gasdiff = 0.0;           // Difference in total gas mixing ratios before and after atmosphere-ocean equilibration
+
+	// Kinetic parameters
+	int kinsteps = 0;               // Number of time steps of PHREEQC kinetic simulation
+	double kintime = 0.0;           // Total time of PHREEQC kinetic simulation
 
 	// Quantities to be computed by thermal/geodynamic model
 	double zCrust = 0.0;        // Crustal thickness (m)
@@ -177,11 +180,10 @@ int main(int argc, char *argv[]) {
 	double Tsurf = 288.15;      // Surface temperature (K)
 	double Psurf = 1.0;         // Surface pressure (bar)
 	double runoff = 0.7;        // Atmospheric runoff (mm/day)
-	xgas[0] = 1.0e-6;  // CO2
-    xgas[1] = 0.0;    // CH4
+	xgas[0] = 1.0e-6;    // CO2
+    xgas[1] = 0.0;       // CH4
     xgas[2] = 0.0;       // O2
-    xgas[3] = 1.0;                     // N2
-	double atmCNratio = 1.0*(xgas[0]+xgas[1])/(2.0*xgas[3]); // Molar atmospheric C:N ratio
+    xgas[3] = 1.0;       // N2
 
     // Ocean inputs
 	pH = 8.22;
@@ -294,62 +296,12 @@ int main(int argc, char *argv[]) {
 	}
 
 	printf("Equilibrating ocean and atmosphere at input pressure and atmospheric C/N ratio...\n");
-	printf("--------------------\n");
-	for (iter = 0;iter < niter;iter++) {
-		printf("|");
-		moveon = 1;
-
-		atmCNratiotemp = 1.0*(xgas[0]+xgas[1])/(2.0*xgas[3]);
-
-		xgas[3] = xgas[3] * Psurf/sumPP * (1.0 + atmCNratiotemp - atmCNratio);
-		xgas[0] = xgas[0] * Psurf/sumPP * (1.0 - atmCNratiotemp + atmCNratio);
-		xgas[1] = xgas[1] * Psurf/sumPP * (1.0 - atmCNratiotemp + atmCNratio);
-
-		xaq[3] = xaq[3] * Psurf/sumPP * (1.0 + atmCNratiotemp - atmCNratio);
-		xaq[0] = xaq[0] * Psurf/sumPP * (1.0 - atmCNratiotemp + atmCNratio);
-		xaq[1] = xaq[1] * Psurf/sumPP * (1.0 - atmCNratiotemp + atmCNratio);
-
-		for (i=0;i<nAtmSpecies;i++) xgas_old[i] = xgas[i];
-		for (i=0;i<nAqSpecies;i++) xaq_old[i] = xaq[i];
-
-		for (subiter=0;subiter<nsubiter;subiter++) OceanDiss(path, itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq);
-
-		for(i=0;i<nAtmSpecies;i++) {
-			if (i!=2 && xgas[i] > 1.0e-10) { // Bottom threshold on abundance to avoid spending too much time converging on negligible species
-				if (fabs(xgas[i]/xgas_old[i]-1.0) > threshold) moveon = 0;
-			}
-		}
-		for(i=0;i<nAqSpecies;i++) {
-			if (i!=2 && xaq[i] > 1.0e-10) { // Bottom threshold on abundance to avoid spending too much time converging on negligible species
-				if (fabs(xaq[i]/xaq_old[i]-1.0) > threshold) moveon = 0;
-			}
-		}
-
-		sumPP = 0.0;
-		for(i=0;i<nAtmSpecies;i++) sumPP = sumPP + xgas[i]*Psurf;
-
-//		title[0] = '\0';
-//		if (cmdline == 1) strncat(title,path,strlen(path)-20);
-//		else strncat(title,path,strlen(path)-18);
-//		strcat(title,"CompoOceanAtm.txt");
-//		fout = fopen(title,"a");
-//		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-//		else fprintf(fout, "%d \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", iter, xgas[0], xgas[1], xgas[3], sumPP, xaq[0], xaq[1], xaq[3], pH);
-//		fclose (fout);
-
-		cleanup(path); // Remove PHREEQC selected output files
-
-		if (moveon) break;
-
-	} printf("Done \n");
-
-	if (iter == niter) {
-		printf("ExoCcycleGeo: Ocean-atmosphere could not be equilibrated after %d iterations. Exiting.\n", iter);
-		exit(0);
+	for (i=0;i<nAtmSpecies;i++) {
+		if (xgas[i] > 0.0 && xaq[i] == 0.0) xaq[i] = xgas[i]; // xaq must be >0 otherwise PHREEQC ignores, set to xgas (initial guess).
 	}
+	AqueousChem(path, "io/OceanStart", itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq, 1, 0.0, 0);
 
-	Psurf = sumPP;
-
+	RCocean = (xaq[0]+xaq[1])*Mocean;
 	RCatmoc = RCatm + RCocean;
 	RCmantle = 10.0*(RCatmoc);
 
@@ -435,7 +387,7 @@ int main(int argc, char *argv[]) {
 			nNatmoc_old = xaq[3]*Mocean + xgas[3]*2.0*nAir;
 
 			// Equilibrate ocean and atmosphere
-			for (subiter=0;subiter<niter;subiter++) OceanDiss(path, itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq);
+			for (subiter=0;subiter<niter;subiter++) AqueousChem(path, "io/OceanDissInput", itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq, 0, 0.0, 0);
 
 			// Force conservation of Total C (atmosphere+ocean) and Total N (atmosphere+ocean)
 			nCatmoc = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
@@ -522,7 +474,10 @@ int main(int argc, char *argv[]) {
 		// Calculate surface C flux from continental weathering
 		//-------------------------------------------------------------------
 
+		kintime = 1.0*365.25*86400.0;
+		kinsteps = 20;
 		FCcontw = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7); // Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
+		AqueousChem(path, "io/ContWeather", itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq, 1, kintime, kinsteps);
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from seafloor weathering TODO include kinetics, manage reservoir size
@@ -592,13 +547,19 @@ int main(int argc, char *argv[]) {
 
 /*--------------------------------------------------------------------
  *
- * Subroutine OceanDiss
+ * Subroutine AqueousChem
  *
- * Calculates C flux from ocean dissolution
+ * Calculates aqueous chemistry, including:
+ * - ocean-atmospheric equilibrium
+ * - continental weathering
+ *
+ * forced PP forces the aqueous phase to be in equilibrium with gas
+ * partial pressures
  *
  *--------------------------------------------------------------------*/
 
-int OceanDiss (char path[1024], int itime, double T, double P, double *pH, double *pe, double mass_w, double **xgas, double **xaq) {
+int AqueousChem (char path[1024], char filename[64], int itime, double T, double P, double *pH, double *pe, double mass_w,
+		double **xgas, double **xaq, int forcedPP, double kintime, int kinsteps) {
 
 	int phreeqc = 0;
 //	int i = 0;
@@ -608,7 +569,7 @@ int OceanDiss (char path[1024], int itime, double T, double P, double *pH, doubl
 	char *tempinput = (char*)malloc(1024);                       // Temporary PHREEQC input file, modified from template
 
 	double *simdata = (double*) malloc(nvar*sizeof(double));
-	if (simdata == NULL) printf("WaterRock: Not enough memory to create simdata[nvar]\n");
+	if (simdata == NULL) printf("AqueousChem: Not enough memory to create simdata[nvar]\n");
 
 	// Initializations
 	dbase[0] = '\0';
@@ -620,42 +581,61 @@ int OceanDiss (char path[1024], int itime, double T, double P, double *pH, doubl
 	strcat(dbase,"PHREEQC-3.1.2/core10.dat");
 
 	strncat(infile,dbase,strlen(dbase)-10);
-	strcat(infile,"io/OceanDissInput");
+	strcat(infile, filename);
 
-//	LoadMolMass (path, &molmass);
-
-//	printf("CO2(aq) \t CH4(aq) \t N2(aq) \t CO2(g) \t CH4(g) \t N2(g)\n");
-//	printf("%g \t %g\t %g \t", (*xaq)[0]*12.0*1000.0, (*xaq)[1]*12.0*1000.0, (*xaq)[3]*14.0*1000.0);
-//	printf("%g \t %g \t %g\n", (*xgas)[0], (*xgas)[1], (*xgas)[3]);
-
-	WritePHREEQCInput(infile, itime, T-Kelvin, P, *pH, *pe, mass_w, *xgas, *xaq, &tempinput);
+	WritePHREEQCInput(infile, itime, T-Kelvin, P, *pH, *pe, mass_w, *xgas, *xaq, forcedPP, kintime, kinsteps, &tempinput);
 
 	phreeqc = CreateIPhreeqc(); // Run PHREEQC
 	if (LoadDatabase(phreeqc,dbase) != 0) OutputErrorString(phreeqc);
 	SetSelectedOutputFileOn(phreeqc,1);
 	if (RunFile(phreeqc,tempinput) != 0) OutputErrorString(phreeqc);
 
-	ExtractWrite(phreeqc, &simdata);
+	if (strcmp(filename, "io/OceanStart") == 0) ExtractWrite(phreeqc, &simdata, 1); // 1st line of selected output has initial solution composition = equilibrium when there are no equilibrium phases
+	else ExtractWrite(phreeqc, &simdata, 2);                                        // 2nd line of PHREEQC selected output solution and mineral+gas composition at equilibrium
 
 	if (DestroyIPhreeqc(phreeqc) != IPQ_OK) OutputErrorString(phreeqc);
 
 //	for (i=0;i<nvar;i++) printf("%d %g\n", i, simdata[i]);
 
-	(*xaq)[0] = simdata[45];             // C(4), i.e. dissolved CO2 and carbonate
-	(*xaq)[1] = simdata[43];             // C(-4), i.e. dissolved methane
-	(*xaq)[2] = simdata[72];             // O(0), i.e. dissolved O2
-	(*xaq)[3] = simdata[28];             // Total dissolved N
-	(*xaq)[4] = simdata[69];             // N(0), i.e. dissolved N2
-	(*xaq)[5] = simdata[68];             // N(-3), i.e. dissolved NH3 and NH4+
+	// Setting initial ocean chemistry
+	if (strcmp(filename, "io/OceanStart") == 0) {
+		(*pH) = simdata[7];
+		(*pe) = simdata[8];
 
-	(*xgas)[0] = simdata[1016];          // CO2(g)
-	(*xgas)[1] = simdata[1012];          // CH4(g)
-	(*xgas)[2] = simdata[1032];          // O2(g)
-	(*xgas)[3] = simdata[1024];          // N2(g)
+		(*xaq)[0] = simdata[45];             // C(4), i.e. dissolved CO2 and carbonate
+		(*xaq)[1] = simdata[43];             // C(-4), i.e. dissolved methane
+		(*xaq)[2] = simdata[72];             // O(0), i.e. dissolved O2
+		(*xaq)[3] = simdata[28];             // Total dissolved N
+		(*xaq)[4] = simdata[69];             // N(0), i.e. dissolved N2
+		(*xaq)[5] = simdata[68];             // N(-3), i.e. dissolved NH3 and NH4+
+	}
 
-	(*pH) = simdata[7];
-	(*pe) = simdata[8];
+	// Ocean dissolution
+	if (strcmp(filename, "io/OceanDissInput") == 0) {
+		(*pH) = simdata[7];
+		(*pe) = simdata[8];
 
+		(*xaq)[0] = simdata[45];             // C(4), i.e. dissolved CO2 and carbonate
+		(*xaq)[1] = simdata[43];             // C(-4), i.e. dissolved methane
+		(*xaq)[2] = simdata[72];             // O(0), i.e. dissolved O2
+		(*xaq)[3] = simdata[28];             // Total dissolved N
+		(*xaq)[4] = simdata[69];             // N(0), i.e. dissolved N2
+		(*xaq)[5] = simdata[68];             // N(-3), i.e. dissolved NH3 and NH4+
+
+		(*xgas)[0] = simdata[1016];          // CO2(g)
+		(*xgas)[1] = simdata[1012];          // CH4(g)
+		(*xgas)[2] = simdata[1032];          // O2(g)
+		(*xgas)[3] = simdata[1024];          // N2(g)
+	}
+
+	// Continental weathering
+	if (strcmp(filename, "io/ContWeather") == 0) {
+
+	}
+
+	free (dbase);
+	free (infile);
+	free (tempinput);
 	free (simdata);
 
 	return 0;
@@ -669,7 +649,7 @@ int OceanDiss (char path[1024], int itime, double T, double P, double *pH, doubl
  *
  *--------------------------------------------------------------------*/
 
-int ExtractWrite(int instance, double** data) {
+int ExtractWrite(int instance, double** data, int line) {
 	VAR v;
 	int i = 0;
 	VarInit(&v);
@@ -687,7 +667,7 @@ int ExtractWrite(int instance, double** data) {
 	(*data)[6] = v.dVal;
 
 	for (i=1;i<nvar-6;i++) {                           // Rest of parameters
-		GetSelectedOutputValue(instance,2,i,&v);
+		GetSelectedOutputValue(instance,line,i,&v);
 		if (fabs(v.dVal) < 1e-50) (*data)[i+6] = 0.0;
 		else (*data)[i+6] = v.dVal;
 	}
@@ -718,7 +698,8 @@ const char* ConCat(const char *str1, const char *str2) {
  *
  *--------------------------------------------------------------------*/
 
-int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double pH, double pe, double mass_w, double *xgas, double *xaq, char **tempinput) {
+int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double pH, double pe, double mass_w,
+		double *xgas, double *xaq, int forcedPP, double kintime, int kinsteps, char **tempinput) {
 
 	int i = 0;
 
@@ -731,6 +712,8 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	char pH_str[10];
 	char pe_str[10];
 	char mass_w_str[10];
+	char steps_str1[64]; char steps_str2[64];
+
 	char **gas_str1 = (char**)malloc(nAtmSpecies*sizeof(char*));
 	for (i=0;i<nAtmSpecies;i++) gas_str1[i] = (char*)malloc(1024);
 
@@ -746,6 +729,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	pH_str[0] = '\0';
 	pe_str[0] = '\0';
 	mass_w_str[0] = '\0';
+	steps_str1[0] = '\0'; steps_str2[0] = '\0';
 
 	for (i=0;i<nAtmSpecies;i++) {
 		gas_str1[i][0] = '\0';
@@ -755,8 +739,8 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 
 	int line_length = 300;
 	char line[line_length]; // Individual line
-	int line_no = 0;  // Line number
 	int eqphases = 0; // Switch to determine if the EQUILIBRIUM_PHASES block is being read
+	int sel = 0;      // Switch to determine if the SELECTED_OUTPUT block is being read
 
 	// Assemble file title
 	sprintf(itime_str, "%d", itime);
@@ -766,15 +750,21 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	sprintf(pe_str, "%g", pe);
 	sprintf(mass_w_str, "%g", mass_w);
 
+//	for (i=0;i<nAtmSpecies;i++) {
+//		if (xgas[i] > 0.0)
+//			sprintf(gas_str2[i], "%g", log(xgas[i]*pressure)/log(10.0)); // Convert from mixing ratio to -log partial pressure
+//		else
+//			sprintf(gas_str2[i], "%g", 0.0);
+//		strcat(gas_str1[i], gas_str2[i]);
+//		sprintf(gas_str2[i], "%g", xgas[i]);
+//		strcat(gas_str1[i], "\t");
+//		strcat(gas_str1[i], gas_str2[i]);
+//	}
 	for (i=0;i<nAtmSpecies;i++) {
 		if (xgas[i] > 0.0)
 			sprintf(gas_str2[i], "%g", log(xgas[i]*pressure)/log(10.0)); // Convert from mixing ratio to -log partial pressure
 		else
 			sprintf(gas_str2[i], "%g", 0.0);
-		strcat(gas_str1[i], gas_str2[i]);
-		sprintf(gas_str2[i], "%g", xgas[i]);
-		strcat(gas_str1[i], "\t");
-		strcat(gas_str1[i], gas_str2[i]);
 	}
 
 	strcpy(*tempinput,TemplateFile);
@@ -792,60 +782,60 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 //	strcat(*tempinput,"xCH4");
 //	strcat(*tempinput,gas_str2[1]); // File title complete
 
-	sprintf(aq_str[0],"%g mol/kgw", xaq[0]+xaq[1]); // mol per kg of oxidized and reduced C
-	sprintf(aq_str[3],"%g mol/kgw", xaq[3]); // mol per kg of N
+	sprintf(aq_str[0],"%g mol/kgw", xaq[0]);  // mol per kg H2O of oxidized C
+	sprintf(aq_str[1],"%g mol/kgw", xaq[1]);  // mol per kg H2O of reduced C
+	sprintf(aq_str[3],"%g mol/kgw", xaq[3]);  // mol per kg H2O of N
+
+	sprintf(steps_str1,"%g in ", kintime);    // Duration of kinetic simulation
+	sprintf(steps_str2,"%d steps", kinsteps); // Number of time steps of kinetic simulation
+	strcat(steps_str1, steps_str2);           // "kintime in kinsteps steps"
 
 	fin = fopen (TemplateFile,"r");
-	if (fin == NULL) printf("OceanDiss: Missing input file. Path: %s\n", TemplateFile);
+	if (fin == NULL) printf("WritePHREEQCInput: Missing input file. Path: %s\n", TemplateFile);
 	fout = fopen (*tempinput,"w");
-	if (fout == NULL) printf("OceanDiss: Missing output file. Path: %s\n", *tempinput);
+	if (fout == NULL) printf("WritePHREEQCInput: Missing output file. Path: %s\n", *tempinput);
 
 	while (fgets(line, line_length, fin)) {
-		line_no++;
-		if (line_no == 5) {
-			fprintf(fout, "%s charge\n", ConCat("\tpH \t \t",pH_str));
+		if (line[0] == 'E' && line[1] == 'Q' && line[2] == 'U' && line[3] == 'I') eqphases = 1; // EQUILIBRIUM_PHASES block
+		if (line[0] == 'S' && line[1] == 'E' && line[2] == 'L' && line[3] == 'E') sel = 1;      // SELECTED_OUTPUT block
+		if (line[1] == 'p' && line[2] == 'H')                                                  fprintf(fout, "%s charge\n", ConCat("\tpH \t \t",pH_str));
+		else if (line[1] == 't' && line[2] == 'e' && line[3] == 'm' && line[4] == 'p')         fprintf(fout, "%s\n", ConCat("\ttemp \t \t",temp_str));
+		else if (line[1] == 'p' && line[2] == 'r' && line[3] == 'e' && line[4] == 's')         fprintf(fout, "%s\n", ConCat("\tpressure \t",pressure_str));
+		else if (line[1] == 'p' && line[2] == 'e')                                             fprintf(fout, "%s\n", ConCat("\tpe \t \t",pe_str));
+		else if (!sel && line[1] == '-' && line[2] == 'w' && line[3] == 'a' && line[4] == 't') fprintf(fout, "%s\n", ConCat("\t-water \t \t",mass_w_str));
+		else if (!eqphases && line[1] == 'C' && line[2] == '(' && line[3] == '4' && line[4] == ')') {
+			if (forcedPP && xgas[0] > 0.0) {
+				strcat(aq_str[0], "\tCO2(g) \t");
+				strcat(aq_str[0], gas_str2[0]);
+				fprintf(fout, "%s\n", ConCat("\tC(4) \t\t", aq_str[0]));
+			}
+			else          fprintf(fout, "%s\n", ConCat("\tC(4) \t\t",aq_str[0]));
 		}
-		else if (line_no == 6) {
-			fprintf(fout, "%s\n", ConCat("\ttemp \t \t",temp_str));
-		}
-		else if (line_no == 7) {
-			fprintf(fout, "%s\n", ConCat("\tpressure \t",pressure_str));
-		}
-		else if (line_no == 8) {
-			fprintf(fout, "%s\n", ConCat("\tpe \t \t",pe_str));
-		}
-		else if (line[1] == '-' && line[2] == 'w' && line[3] == 'a' && line[4] == 't' && line[5] == 'e') {
-			fprintf(fout, "%s\n", ConCat("\t-water \t \t",mass_w_str));
-		}
-		else if (line[1] == '-' && line[2] == 'p' && line[3] == 'r' && line[4] == 'e' && line[5] == 's') {
-			fprintf(fout, "%s\n", ConCat("\t-pressure \t",pressure_str));
-		}
-		else if (line[1] == '-' && line[2] == 't' && line[3] == 'e' && line[4] == 'm' && line[5] == 'p') {
-			fprintf(fout, "%s\n", ConCat("\t-temperature \t",temp_str));
-		}
-		else if (eqphases == 1 && line[2] == 'C' && line[3] == 'O' && line[4] == '2' && line[5] == '(' && line[6] == 'g') {
-			fprintf(fout, "%s\n", ConCat("\tCO2(g) \t\t",gas_str1[0]));
-		}
-		else if (eqphases == 1 && line[2] == 'C' && line[3] == 'H' && line[4] == '4' && line[5] == '(' && line[6] == 'g') {
-			fprintf(fout, "%s\n", ConCat("\tCH4(g) \t\t",gas_str1[1]));
-		}
-		else if (eqphases == 1 && line[2] == 'O' && line[3] == '2' && line[4] == '(' && line[5] == 'g' && line[6] == ')') {
-			fprintf(fout, "%s\n", ConCat("\tO2(g) \t\t",gas_str1[2]));
-		}
-		else if (eqphases == 1 && line[2] == 'N' && line[3] == '2' && line[4] == '(' && line[5] == 'g' && line[6] == ')') {
-			fprintf(fout, "%s\n", ConCat("\tN2(g) \t\t",gas_str1[3]));
-		}
-		else if (!eqphases && line[1] == 'C' && line[2] == '\t') {
-			fprintf(fout, "%s\n", ConCat("\tC \t\t",aq_str[0]));
+		else if (!eqphases && line[1] == 'C' && line[2] == '(' && line[3] == '-' && line[4] == '4') {
+			if (forcedPP && xgas[1] > 0.0) {
+				strcat(aq_str[1], "\tCH4(g) \t");
+				strcat(aq_str[1], gas_str2[1]);
+				fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t", aq_str[1]));
+			}
+			else          fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t",aq_str[1]));
 		}
 		else if (!eqphases && line[1] == 'N' && line[2] == '\t') {
-			fprintf(fout, "%s\n", ConCat("\tN \t\t",aq_str[3]));
+			if (forcedPP && xgas[3] > 0.0) {
+				strcat(aq_str[3], "\tN2(g) \t");
+				strcat(aq_str[3], gas_str2[3]);
+				fprintf(fout, "%s\n", ConCat("\tN \t\t", aq_str[3]));
+			}
+			else          fprintf(fout, "%s\n", ConCat("\tN \t\t",aq_str[3]));
 		}
+		else if (line[0] == '-' && line[1] == 's' && line[2] == 't' && line[3] == 'e')         fprintf(fout, "%s\n", ConCat("-steps\t",steps_str1));
+		else if (eqphases && line[2] == 'C' && line[3] == 'O' && line[4] == '2' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tCO2(g) \t\t",gas_str1[0]));
+		else if (eqphases && line[2] == 'C' && line[3] == 'H' && line[4] == '4' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tCH4(g) \t\t",gas_str1[1]));
+		else if (eqphases && line[2] == 'O' && line[3] == '2' && line[4] == '(' && line[5] == 'g' && line[6] == ')') fprintf(fout, "%s\n", ConCat("\tO2(g) \t\t",gas_str1[2]));
+		else if (eqphases && line[2] == 'N' && line[3] == '2' && line[4] == '(' && line[5] == 'g' && line[6] == ')') fprintf(fout, "%s\n", ConCat("\tN2(g) \t\t",gas_str1[3]));
 		else fputs(line,fout);
-		if (line[0] == 'E' && line[1] == 'Q' && line[2] == 'U' && line[3] == 'I') eqphases = 1;
 	}
 	if (ferror(fin)) {
-		printf("ParamExploration: Error reading template input file %s\n",TemplateFile);
+		printf("WritePHREEQCInput: Error reading template input file %s\n",TemplateFile);
 		return 1;
 	}
 
