@@ -162,49 +162,49 @@ KINETICS # No precipitation allowed except for the minerals undergoing dissoluti
 
 Quartz
 	-formula	SiO2			1
-	-m		5.2e-1 # moles, assumed =m0 (fresh surface), scaled to 1 mol air
-	-m0		5.2e-1
+	-m		6.59e-1 # moles, assumed =m0 (fresh surface)
+	-m0		6.59e-1
 	-parms		24 87.7e3
 	-tol		1e-8
 Albite
 	-formula	NaAlSi3O8		1
-	-m		1.2e-1
-	-m0		1.2e-1
+	-m		1.5e-1
+	-m0		1.5e-1
 	-tol		1e-8
 Anorthite
 	-formula	CaAl2(SiO4)2		1
-	-m		6.8e-2
-	-m0		6.8e-2
+	-m		8.6e-2
+	-m0		8.6e-2
 	-tol		1e-8
 K-Feldspar
 	-formula	KAlSi3O8		1
-	-m		4.1e-2
-	-m0		4.1e-2
+	-m		5.1e-2
+	-m0		5.1e-2
 	-tol		1e-8
 Phlogopite
 	-formula	KAlMg3Si3O10(OH)2	1
-	-m		9.2e-3
-	-m0		9.2e-3
+	-m		1.2e-2
+	-m0		1.2e-2
 	-tol		1e-8
 Annite # Kinetics are those of phlogopite
 	-formula	KFe3AlSi3O10(OH)2	1
-	-m		1.8e-2
-	-m0		1.8e-2
+	-m		2.2e-2
+	-m0		2.2e-2
 	-tol		1e-8
 Daphnite-14A # (clinochlore-14A instead, listed as solid solution (Mg,Fe)5Al(Si3Al)O10(OH)8) on webmineral.com)
 	-formula	Fe5AlAlSi3O10(OH)8	1
-	-m		8.2e-3
-	-m0		8.2e-3
+	-m		1.0e-2
+	-m0		1.0e-2
 	-tol		1e-8
 Anthophyllite
 	-formula	Mg7Si8O22(OH)2		1
-	-m		3.4e-3
-	-m0		3.4e-3
+	-m		4.3e-3
+	-m0		4.3e-3
 	-tol		1e-8
 Tremolite
 	-formula	Ca2Mg5Si8O22(OH)2	1
-	-m		5.1e-3
-	-m0		5.1e-3
+	-m		6.4e-3
+	-m0		6.4e-3
 	-tol		1e-8
 Calcite
 	-formula	CaCO3			1
@@ -241,20 +241,17 @@ SOLUTION 1 Rainwater (Sanusi et al. 1996, Lara et al. 2001, Das et al. 2005, Bae
 
 	pH		5.5	charge
 	pe		9 # Random choice
-# Runoff is 0.665 mm/day (Edson et al., 2012), i.e. L*(4*pi*6378000^2*0.665e-3) m^3 = L*3.4e11 m^3 = L*3.4e14 kg.
-# Mass of weathereable crust is L*7e22 g = L*7e19 kg. That's a W:R mass ratio of 4.8e-6/day*(50/d m rock weathered).
-# We can get at this more simply: runoff/weathering depth*rho_rain/rho_crust = 0.665e-3/50*1000/2740 = 4.8e-6 (kg day-1)/kg.
-# Alternatively, d=0.09 m of rock weathered results in a W:R mass ratio of 1 in 1 year.
-# Let's set the amount of water to be commensurate with the time over which the reaction proceeds (days of rain).
-# The rock above amounts to 118.3 g. If we put 118.3 g of water, this assumes d=9*runoff/(0.665mm/day) cm (16.2 m in 0.5 yr).
-	-water		0.1183 # kg
+	temp		15
+	pressure	1
+	-water		0.149 # kg, scaled with runoff
 	-units		mol/kgw
 	Cl		10e-6 as Cl-
 	Na		5e-6 as Na+
 	K		3e-6 as K+
 	Ca		5e-6 as Ca+2 	# 1 microeq = 2 microM
 	Mg		4e-6 as Mg+2  	# 1 microeq = 2 microM
-	C		0.0 # 80e-6 as HCO3- 
+	C(4)		0.0 # 80e-6 as HCO3-
+	C(-4)		0.0 
 	N		0.0 # 35e-6 as NO3-   # 20e-6 NH4+ + 15e-6 NO3-
 	S		40e-6 as SO4-2  # 1 microeq = 2 microM
 

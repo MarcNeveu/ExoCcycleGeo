@@ -1,3 +1,59 @@
+KINETIC SIMULATIONS
+
+Column	Quantity
+
+0	simulation (set to 0)
+1	time (s)
+2	time step number
+3	pH that balances charge
+4	pe adjusted to redox equilibrium
+5	temperature (ºC)
+6	mu (ionic strength)
+7	mass of water (kg)
+8	percent error in charge balance
+9	C (aq)
+10	Ca (aq)
+11	Si (aq)
+12	m_HCO3-
+13	m_CO3-2
+14	m_CO2
+15	si_Calcite
+16	si_Dolomite-dis
+17	si_Dolomite-ord
+18	si_Magnesite
+19	k_Quartz (mol in assemblage)
+20	dk_Quartz (net mol produced since last time step)
+21	k_Albite
+22	dk_Albite
+23	k_Anorthite
+24	dk_Anorthite
+25	k_K-Feldspar
+26	dk_K-Feldspar
+27	k_Phlogopite
+28	dk_Phlogopite
+29	k_Annite
+30	dk_Annite
+31	k_Daphnite-14A
+32	dk_Daphnite-14A
+33	k_Anthophyllite
+34	dk_Anthophyllite
+35	k_Tremolite
+36	dk_Tremolite
+37	k_Calcite
+38	dk_Calcite
+39	k_Dolomite-dis
+40	dk_Dolomite-dis
+41	k_Dolomite-ord
+42	dk_Dolomite-ord
+43	k_Magnesite
+44	dk_Magnesite
+45	k_Wollastonite
+46	dk_Wollastonite
+
+=============================
+
+EQUILIBRIUM SIMULATIONS
+
 Column	Quantity
 0	Temperature ©
 1	Undef, should be pressure (bar)
