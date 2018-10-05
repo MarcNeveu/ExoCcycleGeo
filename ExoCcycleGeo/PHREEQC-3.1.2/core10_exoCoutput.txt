@@ -55,6 +55,7 @@ Column	Quantity
 EQUILIBRIUM SIMULATIONS
 
 Column	Quantity
+
 0	Temperature ©
 1	Undef, should be pressure (bar)
 2	pH
@@ -1092,3 +1093,36 @@ Column	Quantity
 1034	
 1035	
 1036	
+
+=============================
+
+GAS PHASE SIMULATIONS
+
+Same outputs as equilibrium_phases,
+except rows 1006 through 1028:
+
+Column	Quantity
+
+1006	pressure (bar)
+1007	total mol gas (mol)
+1008	volume gas (L)
+1009	g_C2H4(g) (mol)
+1010	g_C2H6(g)
+1011	g_C3H8(g)
+1012	g_CH4(g)
+1013	g_CO(g)
+1014	g_CO2(g)
+1015	g_H2(g)
+1016	g_H2O(g)
+1017	g_H2S(g)
+1018	g_N2(g)
+1019	g_NH3(g)
+1020	g_NO(g)
+1021	g_NO2(g)
+1022	g_O2(g)
+1023	g_SO2(g)
+1024
+1025
+1026
+1027
+1028

@@ -25,13 +25,15 @@
 
 #define PI_greek 3.14159265358979323846
 #define G 6.67e-11                      // Gravitational constant (SI)
+#define R_G 8.3145                      // Universal gas constant (J mol-1 K-1)
 #define rEarth 6378000.0                // Earth radius (m)
 #define mEarth 6.0e24                   // Earth mass (kg)
 #define km2m 1000.0                     // Convert from km to m
 #define m2cm 100.0                      // Convert m to cm
 #define bar2Pa 101325.0                 // Convert bar to Pa
 #define Kelvin 273.15                   // Convert between Celsius and Kelvin
-#define Myr2sec 31.5576e13              // Convert 1 million years to s
+#define Myr2sec 3.15576e13              // Convert 1 million years to s
+#define Yr2sec 3.15576e7                // Convert 1 million years to s
 
 #define TsurfEarth 288.0                // Mean equilibrium surface temperature on Earth (K)
 #define RmeltEarth 3.8e-19              // Rate of melt generation on Earth (s-1) Kite et al. 2009 Fig. 15; http://dx.doi.org/10.1088/0004-637X/700/2/1732
@@ -44,8 +46,8 @@
 #define A0 70000.0                      // Activation temperature for thermal model (K)
 
 #define xCO2g0 355.0e-6                 // Reference atmospheric CO2 mixing ratio (ppmv)
-#define runoff_0 0.665e-3               // Reference runoff (m/day) Edson et al. 2012, http://dx.doi.org/10.1089/ast.2011.0762
-#define nAtmSpecies 4                   // Number of atmospheric species whose abundances are passed between the physical and chemical models
+#define runoff_0 7.70e-9                // Reference runoff (m s-1) = 0.665e-3 m day-1 (Edson et al. 2012, http://dx.doi.org/10.1089/ast.2011.0762)
+#define nAtmSpecies 5                   // Number of atmospheric species whose abundances are passed between the physical and chemical models
 #define nAqSpecies 6                    // Number of aqueous species whose concentrations are passed between the physical and chemical models
 
 //-------------------------------------------------------------------
@@ -62,11 +64,11 @@
 // SUBROUTINE DECLARATIONS
 //-------------------------------------------------------------------
 
-int AqueousChem (char path[1024], char filename[64], int itime, double T, double P, double *pH, double *pe, double mass_w,
+int AqueousChem (char path[1024], char filename[64], int itime, double T, double *P, double V, double *pH, double *pe, double mass_w,
 		double **xgas, double **xaq, double ***xrain, int forcedPP, double kintime, int kinsteps, int nvar);
 int ExtractWrite(int instance, double*** data, int line, int nvar);
 const char* ConCat (const char *str1, const char *str2);
-int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double pH, double pe, double mass_w,
+int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
 		double *xgas, double *xaq, int forcedPP, double kintime, int kinsteps, char **tempinput);
 int cleanup (char path[1024]);
 double molmass_atm (double *xgas);
@@ -83,9 +85,7 @@ int main(int argc, char *argv[]) {
 	int ntime = 0;                  // Total number of steps
 
 	int iter = 0;                   // Iteration counter
-	int niter = 5;                  // Number of iterations for ocean-atmosphere equilibrium
-	int moveon = 0;                 // Switch to break for loop
-	double threshold = 0.1;         // Threshold for convergence of ocean composition in equilibrium with prescribed atmosphere
+	int niter = 10;                  // Number of iterations for ocean-atmosphere equilibrium
 
 	double r_p = 0.0;               // Planet radius (m)
 
@@ -96,14 +96,15 @@ int main(int argc, char *argv[]) {
 	double RCatmoc = RCatm + RCocean; // Combined atmospheric and ocean C reservoir (mol)
 
 	double FCoutgas = 0.0;          // C flux from outgassing (subaerial+submarine) (mol s-1)
-	double FCcontw = 0.0;           // C flux from continental weathering (mol s-1)
-	double FCseafw = 0.0;           // C flux from seafloor weathering (mol s-1)
+	double FCcontW = 0.0;           // C flux from continental weathering (mol s-1)
+	double FCseafW = 0.0;           // C flux from seafloor weathering (mol s-1)
 	double FCsubd = 0.0;            // C flux from subduction (mol s-1)
 	double netFC = 0.0;             // Net surface C flux from all geological processes (mol s-1)
 
 	double farc = 0.0;              // Fraction of subducted C that makes it back out through arc volcanism (as opposed to into the mantle)
 
 	double pH = 0.0;                // pH of the surface ocean (default 8.22)
+	double rainpH = 0.0;            // pH of rainwater
 	double pe = 0.0;                // pe (-log activity e-) corresponding to logfO2
 	double logfO2 = 0.0;            // log O2 fugacity
 	double logKO2H2O = 0.0;         // log K for reaction 4 H+ + 4 e- + O2 = 2 H2O, from CHNOSZ: subcrt(c("H+","e-","O2","H2O"),c(-4,-4,-1,2),c("aq","aq","g","liq"),T=25,P=1)
@@ -134,11 +135,11 @@ int main(int argc, char *argv[]) {
 
 	// Kinetic parameters
 	int kinsteps = 0;               // Number of time steps of PHREEQC kinetic simulation
-	double kintime = 0.0;           // Total time of PHREEQC kinetic simulation (s)
-	double WRcontWeather = 0.0;     // Water:rock mass ratio for continental weathering reactions (kg/kg)
-	double zContWeather = 0.0;      // Depth of continental weathering (m)
+	double WRcontW = 0.0;           // Water:rock mass ratio for continental weathering reactions (kg/kg)
+	double zContW = 0.0;            // Depth of continental weathering (m)
 	double rhoContCrust = 0.0;      // Density of continental crust (kg m-3)
 	double molmassContCrust = 0.0;  // Molar mass of continental crust (kg mol-1)
+	double dCdtContW = 0.0;         // Carbon drawdown rate due to continental weathering (mol (kg H2O)-1 s-1)
 
 	// Quantities to be computed by thermal/geodynamic model
 	double zCrust = 0.0;        // Crustal thickness (m)
@@ -174,27 +175,36 @@ int main(int argc, char *argv[]) {
 
 	// Planet parameters
 	double m_p = 1.0*mEarth;    // Planet mass (kg)
-	double L = 0.15;            // Fraction of planet surface covered by land
-	double Mocean = 1.4e21;     // Mass of ocean (kg, default: Earth=1.4e21)
+	double L = 0.29;            // Fraction of planet surface covered by land
+	double Mocean = 1.4e21*(1.0-L)/(1.0-0.29);     // Mass of ocean (kg, default: Earth=1.4e21 for L=0.29)
 	double r_c = 1220000.0;     // Radius of planet core (m)
 	double rhoMagma = 3500.0;   // Magma density (kg m-3)
 	double rhoCrust = 3500.0;   // Crustal density (kg m-3)
+    int redox = 3; // 1: current Earth surface, 2: hematite-magnetite, 3: fayalite-magnetite-quartz, 4: iron-wustite, code won't run with other values.
 
 	// Atmospheric inputs
 	double Tsurf = 288.15;      // Surface temperature (K)
 	double Psurf = 1.0;         // Surface pressure (bar)
-	double runoff = 0.7e-3;     // Atmospheric runoff (m/day)
+	double runoff = 0.7e-3/86400.0; // Atmospheric runoff (m s-1), default runoff_0 = 0.665e-3 m day-1
 	xgas[0] = 1.0e-6;    // CO2
     xgas[1] = 0.0;       // CH4
     xgas[2] = 0.0;       // O2
     xgas[3] = 1.0;       // N2
+    xgas[4] = 0.0;       // H2O
 
     // Ocean inputs
 	pH = 8.22;
-    int redox = 1; // 1: current Earth surface, 2: hematite-magnetite, 3: fayalite-magnetite-quartz, 4: iron-wustite, code won't run with other values.
     xaq[0] = 27.0/12.0/1000.0;  // 27 ppm C in today's oceans (scaled from 141 ppm Alk*M(C)/M(HCO3), M being molecular mass)
     xaq[1] = 0.0/12.0/1000.0;
     xaq[3] = 0.0/14.0/1000.0;   // ppm N in ocean
+
+    // Continental weathering inputs
+	double deplCcrit = 0.18;    // Chemical depletion fraction, i.e. how much carbon has been consumed from rain water by the time fresh rock is emplaced
+	double kintime = 1.0e-6*Yr2sec; // Total time of PHREEQC kinetic simulation (s), default: 1.0e-6 year
+	kinsteps = 100;             // 100 steps by default, could be more
+	zContW = 10.0;
+	rhoContCrust = 2740.0;
+	molmassContCrust = 0.149;
 
 	//-------------------------------------------------------------------
 	// Startup
@@ -264,13 +274,12 @@ int main(int argc, char *argv[]) {
 		         +3.0*CHNOSZ_logK("fayalite", "cr", Tsurf, Psurf, "SUPCRT92")
 			     +1.0*CHNOSZ_logK("O2", "g", Tsurf, Psurf, "SUPCRT92");
 		break;
-	case 4: // TODO Use CHNOSZ to get log fO2 for iron-wustite (IW) buffer at given T and P.
-//		printf("Redox set to FMQ buffer\n");
-//		logfO2 = -3.0*CHNOSZ_logK("quartz", "cr", Tsurf, Psurf, "SUPCRT92")
-//			     -2.0*CHNOSZ_logK("magnetite", "cr", Tsurf, Psurf, "SUPCRT92")
-//		         +3.0*CHNOSZ_logK("fayalite", "cr", Tsurf, Psurf, "SUPCRT92")
-//			     +1.0*CHNOSZ_logK("O2", "g", Tsurf, Psurf, "SUPCRT92");
-//		break;
+	case 4: // Use CHNOSZ to get log fO2 for iron-wustite (IW) buffer at given T and P.
+		printf("Redox set to FMQ buffer\n");
+		logfO2 = +2.0*CHNOSZ_logK("Fe", "cr", Tsurf, Psurf, "SUPCRT92")
+			     -2.0*CHNOSZ_logK("FeO", "cr", Tsurf, Psurf, "SUPCRT92")
+			     +1.0*CHNOSZ_logK("O2", "g", Tsurf, Psurf, "SUPCRT92");
+		break;
 	default:
 		printf("ExoCcycleGeo: Redox switch incorrectly specified, should be 1 (current Earth surface), 2 (hematite-magnetite), or 3 (fayalite-magnetite-quartz). Exiting.\n");
 		exit(0);
@@ -305,7 +314,7 @@ int main(int argc, char *argv[]) {
 		if (xgas[i] > 0.0 && xaq[i] == 0.0) xaq[i] = xgas[i]; // xaq must be >0 otherwise PHREEQC ignores, set to xgas (initial guess).
 	}
 
-	AqueousChem(path, "io/OceanStart", itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq, NULL, 1, 0.0, 1, nvarEq);
+	AqueousChem(path, "io/OceanStart", itime, Tsurf, &Psurf, 0.0, &pH, &pe, Mocean/nAir, &xgas, &xaq, NULL, 1, 0.0, 1, nvarEq);
 
 	RCocean = (xaq[0]+xaq[1])*Mocean;
 	RCatmoc = RCatm + RCocean;
@@ -321,7 +330,7 @@ int main(int argc, char *argv[]) {
 	else {
 		fprintf(fout, "'Reservoirs in mol, fluxes in mol s-1'\n");
 		fprintf(fout, "'Time (Myr)' \t RCmantle \t RCatmoc \t RCocean \t FCoutgas \t FCcontw \t FCseafw \t FCsubd \t 'Net C flux'\n");
-		fprintf(fout, "Init \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", RCmantle, RCatmoc, RCocean, FCoutgas, FCcontw, FCseafw, FCsubd, netFC);
+		fprintf(fout, "Init \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", RCmantle, RCatmoc, RCocean, FCoutgas, FCcontW, FCseafW, FCsubd, netFC);
 	}
 	fclose (fout);
 
@@ -333,8 +342,8 @@ int main(int argc, char *argv[]) {
 	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 	else {
 		fprintf(fout, "'Atmospheric species in mixing ratio (by mol, i.e. by volume for ideal gases), aqueous species in mol/(kg H2O)'\n");
-		fprintf(fout, "'Time (Myr)' \t CO2(g) \t CH4(g) \t N2(g) \t 'P_surface (bar)' \t 'Ox C(aq)' \t 'Red C(aq)' \t 'Total N(aq)' \t pH \n");
-		fprintf(fout, "Init \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", xgas[0], xgas[1], xgas[3], Psurf, xaq[0], xaq[1], xaq[3], pH);
+		fprintf(fout, "'Time (Myr)' \t CO2(g) \t CH4(g) \t O2(g) \t N2(g) \t H2O(g) \t 'P_surface (bar)' \t 'Ox C(aq)' \t 'Red C(aq)' \t 'Total N(aq)' \t 'Ocean pH' \t 'Rain pH'\n");
+		fprintf(fout, "Init \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, xaq[0], xaq[1], xaq[3], pH, rainpH);
 	}
 	fclose (fout);
 
@@ -379,76 +388,57 @@ int main(int argc, char *argv[]) {
 		// Calculate partitioning of C between ocean and atmosphere
 		//-------------------------------------------------------------------
 
-		for (iter = 0;iter < niter;iter++) {
-			moveon = 1;
+		for (i=0;i<nAtmSpecies;i++) xgas_old[i] = xgas[i];
+		for (i=0;i<nAqSpecies;i++) xaq_old[i] = xaq[i];
 
-			for (i=0;i<nAtmSpecies;i++) xgas_old[i] = xgas[i];
-			for (i=0;i<nAqSpecies;i++) xaq_old[i] = xaq[i];
+		nCatmoc_old = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
+		nNatmoc_old = xaq[3]*Mocean + xgas[3]*2.0*nAir;
+//		pH_old = pH;
+//		pe_old = pe;
 
-			nCatmoc_old = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
-			nNatmoc_old = xaq[3]*Mocean + xgas[3]*2.0*nAir;
-//			pH_old = pH;
-//			pe_old = pe;
+		// Equilibrate ocean and atmosphere
+		AqueousChem(path, "io/OceanDiss", itime, Tsurf, &Psurf, R_G*Tsurf/(Psurf*bar2Pa)*1000.0, &pH, &pe, Mocean/nAir, &xgas, &xaq, NULL, 0, 0.0, 1, nvarEq);
 
-			// Equilibrate ocean and atmosphere
-			AqueousChem(path, "io/OceanDiss", itime, Tsurf, Psurf, &pH, &pe, Mocean/nAir, &xgas, &xaq, NULL, 0, 0.0, 1, nvarEq);
+		// At the first time step, the composition shouldn't be different from that of the initialization
+//		if (itime == 0 && (pe_old/pe - 1.0) > 0.0001) {
+//			printf("ExoCcycleGeo: Adjust starting redox conditions to match input atmospheric composition\n"
+//				   "old pe=%g, new pe=%g, old pH=%g, new pH=%g\n"
+//				   "logfO2 initially estimated at %g, should be closer to %g. Exiting.\n", pe_old, pe, pH_old, pH,
+//				   4.0*(pe_old+pH_old) - logKO2H2O, 4.0*(pe+pH) - logKO2H2O);
+//			exit(0);
+//		}
 
-			// At the first time step, the composition shouldn't be different from that of the initialization
-//			if (itime == 0 && (pe_old/pe - 1.0) > 0.1) {
-//				printf("ExoCcycleGeo: Adjust starting redox conditions to match input atmospheric composition\n"
-//					   "logfO2 initially estimated at %g, should be closer to %g. Exiting.\n",
-//					   4.0*(pe_old+pH_old) - logKO2H2O, 4.0*(pe+pH) - logKO2H2O);
-//				exit(0);
-//			}
+		// Force conservation of Total C (atmosphere+ocean) and Total N (atmosphere+ocean)
+		nCatmoc = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
+		nNatmoc = xaq[3]*Mocean + xgas[3]*2.0*nAir;
 
-			// Force conservation of Total C (atmosphere+ocean) and Total N (atmosphere+ocean)
-			nCatmoc = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
-			nNatmoc = xaq[3]*Mocean + xgas[3]*2.0*nAir;
+		xgas[0] = xgas[0]*nCatmoc_old/nCatmoc;
+		xgas[1] = xgas[1]*nCatmoc_old/nCatmoc;
+		xgas[3] = xgas[3]*nNatmoc_old/nNatmoc;
 
-			xgas[0] = xgas[0]*nCatmoc_old/nCatmoc;
-			xgas[1] = xgas[1]*nCatmoc_old/nCatmoc;
-			xgas[3] = xgas[3]*nNatmoc_old/nNatmoc;
+		xaq[0] = xaq[0]*nCatmoc_old/nCatmoc;
+		xaq[1] = xaq[1]*nCatmoc_old/nCatmoc;
+		xaq[3] = xaq[3]*nNatmoc_old/nNatmoc;
 
-			xaq[0] = xaq[0]*nCatmoc_old/nCatmoc;
-			xaq[1] = xaq[1]*nCatmoc_old/nCatmoc;
-			xaq[3] = xaq[3]*nNatmoc_old/nNatmoc;
+		// Update moles of air and surface pressure
+		gasdiff = 0.0;
+		for (i=0;i<nAtmSpecies;i++) gasdiff = gasdiff + xgas[i] - xgas_old[i];
+		nAir = nAir*(1.0 + gasdiff);
 
-			// Update moles of air and surface pressure
-			gasdiff = 0.0;
-			for (i=0;i<nAtmSpecies;i++) gasdiff = gasdiff + xgas[i] - xgas_old[i];
-			nAir = nAir*(1.0 + gasdiff);
+		Psurf = nAir/(bar2Pa*Asurf/gsurf/molmass_atm(xgas));
+		nAir = Psurf*(bar2Pa*Asurf/gsurf/molmass_atm(xgas));
 
-			Psurf = nAir/(bar2Pa*Asurf/gsurf/molmass_atm(xgas));
-
-			if (Psurf < 0.01) {
-				printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
-				exit(0);
-			}
-			if (Mocean/nAir < 0.1) {
-				printf("ExoCcycleGeo: Mass Ocean / moles of air = %g too low to compute ocean-atmosphere equilibrium. Exiting.\n", Mocean/nAir);
-	//			exit(0);
-			}
-
-			// Rescale mixing ratios
-			sumMR = 0.0;
-			for (i=0;i<nAtmSpecies;i++) sumMR = sumMR + xgas[i];
-			for (i=0;i<nAtmSpecies;i++) xgas[i] = xgas[i]/sumMR;
-
-			for(i=0;i<nAtmSpecies;i++) {
-				if (i!=2 && xgas[i] > 1.0e-10) { // Bottom threshold on abundance to avoid spending too much time converging on negligible species
-					if (fabs(xgas[i]/xgas_old[i]-1.0) > threshold) moveon = 0;
-				}
-			}
-			for(i=0;i<nAqSpecies;i++) {
-				if (i!=2 && xaq[i] > 1.0e-10) { // Bottom threshold on abundance to avoid spending too much time converging on negligible species
-					if (fabs(xaq[i]/xaq_old[i]-1.0) > threshold) moveon = 0;
-				}
-			}
-
-			cleanup(path); // Remove PHREEQC selected output files
-
-			if (moveon) break;
+		if (Psurf < 0.01) {
+			printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
+			exit(0);
 		}
+
+		// Rescale mixing ratios
+		sumMR = 0.0;
+		for (i=0;i<nAtmSpecies;i++) sumMR = sumMR + xgas[i];
+		for (i=0;i<nAtmSpecies;i++) xgas[i] = xgas[i]/sumMR;
+
+		cleanup(path); // Remove PHREEQC selected output file
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from outgassing
@@ -487,37 +477,71 @@ int main(int argc, char *argv[]) {
 		// Calculate surface C flux from continental weathering
 		//-------------------------------------------------------------------
 
-		kintime = 10.0*365.25*86400.0;
-		kinsteps = 20;
+		// Analytical calculation from Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
+//		FCcontW = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7);
 
 		double **xrain = (double**) malloc(nAqSpecies*sizeof(double*));
-		if (xrain == NULL) printf("ExoCcycleGeo: Not enough memory to create xrain[nAqSpecies]\n"); // Molalities of aqueous species in rain at different times (mol (kg H2O)-1, rain[][kinstep=0]: time in s)
+		if (xrain == NULL) printf("ExoCcycleGeo: Not enough memory to create xrain[nAqSpecies]\n"); // Molalities of aqueous species in rain at different times (mol (kg H2O)-1, rain[0][kinstep]: time in s)
 	    for (i=0;i<nAqSpecies;i++) {
 	    	xrain[i] = (double*) malloc(kinsteps*sizeof(double));
 	    	if (xrain[i] == NULL) printf("ExoCcycleGeo: Not enough memory to create xrain[nAqSpecies][kinsteps]\n");
 	    }
-	    for (i=0;i<nAqSpecies;i++) {
-	    	for (j=0;j<kinsteps;j++) xrain[i][j] = 0.0;
-	    }
 
-		zContWeather = 0.09;
-		rhoContCrust = 2740.0;
-		molmassContCrust = 0.149;
-		WRcontWeather = runoff*365.25/zContWeather*1000.0/rhoContCrust*molmassContCrust; // Assuming weathering timesale of 1 yr TODO scale with subroutine result?
+	    kintime = 1.0e-6*Yr2sec; // Reset to very small time span
+	    double tol = 1.5; // Tolerance factor for deplCcrit
+		for (iter=0;iter<niter;iter++) {
+		    for (i=0;i<nAqSpecies;i++) {
+		    	for (j=0;j<kinsteps;j++) xrain[i][j] = 0.0;
+		    }
 
-		FCcontw = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7); // Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
-		AqueousChem(path, "io/ContWeather", itime, Tsurf, Psurf, &pH, &pe, WRcontWeather, &xgas, &xaq, &xrain, 1, kintime, kinsteps, nvarKin);
+			WRcontW = runoff*kintime/zContW*1000.0/rhoContCrust*molmassContCrust;
 
-		double deplCcrit = 0.18;
-		for (i=2;i<kinsteps-1;i++) {
-			xrain[2][i] = 1.0-xrain[1][i]/xrain[1][2]; // Chemical depletion fraction
-			xrain[3][i] = (xrain[1][i+1] - xrain[1][i])/kintime*(double)kinsteps; // C drawdown rate (mol kg-1 s-1)
-			printf("%d %g %g %g %g\n", i, xrain[0][i], xrain[1][i], xrain[2][i], xrain[3][i]);
+			AqueousChem(path, "io/ContWeather", itime, Tsurf, &Psurf, 0.0, &pH, &pe, WRcontW, &xgas, &xaq, &xrain, 1, kintime, kinsteps, nvarKin);
+
+			for (i=2;i<kinsteps-1;i++) {
+				if (xrain[2][i] == 0.0) break; // PHREEQC did not return a result (sim interrupted)
+				xrain[3][i] = 1.0-xrain[2][i]/xrain[2][1]; // Chemical depletion fraction
+				printf("%d\t Time: %g yr\t pH: %g\t C(aq): %g\t deplC: %g\n", i, xrain[0][i]/Yr2sec, xrain[1][i], xrain[2][i], xrain[3][i]);
+			}
+
+			if (xrain[3][2] > deplCcrit*tol) {
+				kintime = 0.1*kintime;
+				printf("Continental weathering: Time span too coarse, decreasing kinetic time span 10-fold to %g years...\n", kintime/Yr2sec);
+			}
+			else if (i > 2 && xrain[3][i-1] < deplCcrit/tol) { // Last step for which PHREEQC returned a result (kinsteps-1 unless sim interrupted)
+				// Roughly estimate drawdown rate anyway (scaled down from closest determined value), in case next iteration fails
+				xrain[4][i] = (xrain[2][i+1] - xrain[2][i])/kintime*(double)kinsteps;
+				dCdtContW = sqrt(xrain[4][i+1]*xrain[4][i])*xrain[3][i-1]/deplCcrit;
+				kintime = 10.0*kintime;
+				printf("Continental weathering: Didn't go far enough in time, increasing time span of simulation 10-fold to %g years...\n", kintime/Yr2sec);
+			}
+			else if (i == 2) {
+				kintime = 10.0*kintime; // Increase time step anyway
+				printf("PHREEQC kinetic simulation failed at first step. Increasing time span of simulation 10-fold to %g years...\n", kintime/Yr2sec);
+				kintime++;
+				// break;
+			}
+			else break;
+		}
+
+		if (iter == niter) printf("Could not get timescale of continental weathering after %d iterations. FCcontW=%g not accurately updated at this time step.\n", iter, FCcontW);
+		else {
+			dCdtContW = 0.0;
+			for (j=2;j<i-1;j++) {
+				xrain[4][j] = (xrain[2][j+1] - xrain[2][j])/kintime*(double)kinsteps; // Instantaneous C drawdown rate (mol (kg H2O)-1 s-1)
+				printf("%d \t Time: %g yr\t %g\t %g\t %g\t %g\n", j, xrain[0][j]/Yr2sec, xrain[1][j], xrain[2][j], xrain[3][j], xrain[4][j]);
+				dCdtContW = dCdtContW + xrain[4][j]; // Arithmetically average over time span to get rid of PHREEQC numerical noise
+			}                                        // (geom average would be more accurate but has 50% chance of yielding a NaN = sqrt(<0))
+			dCdtContW = dCdtContW/(double)(i-3);
+
+			printf("dCdtContW=%g mol (kg H2O)-1 s-1\n", dCdtContW);
+			FCcontW = dCdtContW*WRcontW*Asurf*zContW*L*rhoContCrust;
+
+			printf("Weathering time scale: %g years\n", kintime);
 		}
 
 		for (i=0;i<nAqSpecies;i++) free (xrain[i]);
 		free (xrain);
-		exit(0);
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from seafloor weathering TODO include kinetics, manage reservoir size
@@ -525,7 +549,7 @@ int main(int argc, char *argv[]) {
 
 		deltaCreac = 0.0; // TODO call PHREEQC to get deltaCreac, net mol C leached/precipitated per kg of rock
 		tcirc = 1.0;      // TODO compute tcirc based on Nu(Ra(basal heat flux))
-		FCseafw = -(1.0-L) * 4.0/3.0*PI_greek*(pow(r_p,3)-pow(r_p-zCrack,3))/tcirc*deltaCreac*rhoCrust / (4.0*PI_greek*r_p*r_p);
+		FCseafW = -(1.0-L) * 4.0/3.0*PI_greek*(pow(r_p,3)-pow(r_p-zCrack,3))/tcirc*deltaCreac*rhoCrust / (4.0*PI_greek*r_p*r_p);
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from subduction
@@ -538,13 +562,13 @@ int main(int argc, char *argv[]) {
 		// Compute net geo C fluxes
 		//-------------------------------------------------------------------
 
-		// Continental weathering fluxes /2 because 1/2 of weathered crust is carbonate that re-precipitates in the ocean, releasing CO2 (Gaillardet+ 1999; Foley+ 2015).
-		// The only significant reactions are weathering of Ca and Mg *silicates* on continents.
+		// Usually, continental weathering fluxes /2 because 1/2 of weathered crust is carbonate that re-precipitates in the ocean, releasing CO2 (Gaillardet+ 1999; Foley+ 2015).
+		// The only significant reactions are weathering of Ca and Mg *silicates* on continents, as is the case here.
 		// The control of atm CO2 by weathering of Na & K silicates on land is less obvious: alkalis are involved in
 		// ‘reverse weathering’ reactions in seawater, forming Na and K silicates and converting HCO3- back to atm CO2.
 //		RCplate = RCplate + dtime*(FCcontw/2.0 + FCseafw - FCsubd);
 //		RCmantle = RCmantle + dtime*((1.0-farc)*FCsubd - FCoutgas); // Assuming instantaneous mixing into the mantle once subducted (in practice could take 1 Gyr)
-		netFC = FCoutgas + FCcontw/2.0 + FCseafw + (1.0-farc)*FCsubd; // FCcontw < 0, FCseafw < 0, FCsubd < 0
+		netFC = FCoutgas + FCcontW + FCseafW + (1.0-farc)*FCsubd; // FCcontw < 0, FCseafw < 0, FCsubd < 0
 		RCmantle = RCmantle - dtime*netFC; // Assuming plate = mantle (unlike Foley et al. 2015) and instantaneous mixing into the mantle once subducted (in practice could take 1 Gyr)
 		RCatmoc = RCatmoc + dtime*netFC; // Sum of atmospheric and ocean reservoirs, still needs partitioning
 
@@ -558,7 +582,7 @@ int main(int argc, char *argv[]) {
 		strcat(title,"Output.txt");
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime/Myr2sec, RCmantle, RCatmoc, RCocean, FCoutgas, FCcontw, FCseafw, FCsubd, netFC);
+		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime/Myr2sec, RCmantle, RCatmoc, RCocean, FCoutgas, FCcontW, FCseafW, FCsubd, netFC);
 		fclose (fout);
 
 		title[0] = '\0';
@@ -567,7 +591,7 @@ int main(int argc, char *argv[]) {
 		strcat(title,"CompoOceanAtm.txt");
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime/Myr2sec, xgas[0], xgas[1], xgas[3], Psurf, xaq[0], xaq[1], xaq[3], pH);
+		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime/Myr2sec, xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, xaq[0], xaq[1], xaq[3], pH, rainpH);
 		fclose (fout);
 	} // End time loop
 
@@ -597,7 +621,7 @@ int main(int argc, char *argv[]) {
  *
  *--------------------------------------------------------------------*/
 
-int AqueousChem (char path[1024], char filename[64], int itime, double T, double P, double *pH, double *pe, double mass_w,
+int AqueousChem (char path[1024], char filename[64], int itime, double T, double *P, double V, double *pH, double *pe, double mass_w,
 		double **xgas, double **xaq, double ***xrain, int forcedPP, double kintime, int kinsteps, int nvar) {
 
 	int phreeqc = 0;
@@ -630,7 +654,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	strncat(infile,dbase,strlen(dbase)-10);
 	strcat(infile, filename);
 
-	WritePHREEQCInput(infile, itime, T-Kelvin, P, *pH, *pe, mass_w, *xgas, *xaq, forcedPP, kintime, kinsteps, &tempinput);
+	WritePHREEQCInput(infile, itime, T-Kelvin, *P, V, *pH, *pe, mass_w, *xgas, *xaq, forcedPP, kintime, kinsteps, &tempinput);
 
 	phreeqc = CreateIPhreeqc(); // Run PHREEQC
 	if (LoadDatabase(phreeqc,dbase) != 0) OutputErrorString(phreeqc);
@@ -644,10 +668,13 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 	if (DestroyIPhreeqc(phreeqc) != IPQ_OK) OutputErrorString(phreeqc);
 
-//	for (i=0;i<nvar;i++) {
-//		printf("%d\t", i);
-//		for (j=0;j<kinsteps;j++) printf("%g\t", simdata[i][j]);
-//		printf("\n");
+//	if (strcmp(filename, "io/OceanDiss") == 0) {
+//		for (i=0;i<nvar;i++) {
+//			printf("%d\t", i);
+//			for (j=0;j<kinsteps;j++) printf("%g\t", simdata[i][j]);
+//			printf("\n");
+//		}
+//		exit(0); // TODO: Add gas phase in SELECTED_OUTPUT to OceanDiss and check that the result is the same as with EQUILIBRIUM_PHASES.
 //	}
 
 	// Setting initial ocean chemistry
@@ -667,6 +694,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	if (strcmp(filename, "io/OceanDiss") == 0) {
 		(*pH) = simdata[7][0];
 		(*pe) = simdata[8][0];
+		(*P) = simdata[1006][0];
 
 		(*xaq)[0] = simdata[45][0];             // C(4), i.e. dissolved CO2 and carbonate
 		(*xaq)[1] = simdata[43][0];             // C(-4), i.e. dissolved methane
@@ -675,17 +703,22 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 		(*xaq)[4] = simdata[69][0];             // N(0), i.e. dissolved N2
 		(*xaq)[5] = simdata[68][0];             // N(-3), i.e. dissolved NH3 and NH4+
 
-		(*xgas)[0] = simdata[1016][0];          // CO2(g)
+		(*xgas)[0] = simdata[1014][0];          // CO2(g)
 		(*xgas)[1] = simdata[1012][0];          // CH4(g)
-		(*xgas)[2] = simdata[1032][0];          // O2(g)
-		(*xgas)[3] = simdata[1024][0];          // N2(g)
+		(*xgas)[2] = simdata[1022][0];          // O2(g)
+		(*xgas)[3] = simdata[1018][0];          // N2(g)
+		(*xgas)[4] = simdata[1016][0];          // H2O(g)
 	}
 
 	// Continental weathering
 	if (strcmp(filename, "io/ContWeather") == 0) {
+
+		(*xrain)[1][1] = simdata[3][1]; // Rainwater pH
+		(*xrain)[2][1] = simdata[9][1]; // Initial total dissolved C
 		for (i=2;i<kinsteps;i++) {
 			(*xrain)[0][i] = simdata[1][i]; // Time (s)
-			(*xrain)[1][i] = simdata[9][i]; // Total dissolved C
+			(*xrain)[1][i] = simdata[3][i]; // pH
+			(*xrain)[2][i] = simdata[9][i]; // Total dissolved C
 		}
 	}
 
@@ -769,17 +802,20 @@ const char* ConCat(const char *str1, const char *str2) {
  *
  *--------------------------------------------------------------------*/
 
-int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double pH, double pe, double mass_w,
+int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
 		double *xgas, double *xaq, int forcedPP, double kintime, int kinsteps, char **tempinput) {
 
 	int i = 0;
+	int eqphases = 0; // Switch: is the EQUILIBRIUM_PHASES block being read?
+	int gasphase = 0; // Switch: is the GAS_PHASE block being read?
+	int sel = 0;      // Switch: is the SELECTED_OUTPUT block being read?
 
-	// Open input file
 	FILE *fin;
 	FILE *fout;
 	char itime_str[32];
 	char temp_str[32];
 	char pressure_str[32];
+	char vol_str[32];
 	char pH_str[32];
 	char pe_str[32];
 	char mass_w_str[32];
@@ -791,12 +827,16 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	char **gas_str2 = (char**)malloc(nAtmSpecies*sizeof(char*));
 	for (i=0;i<nAtmSpecies;i++) gas_str2[i] = (char*)malloc(1024);
 
+	char **gas_str3 = (char**)malloc(nAtmSpecies*sizeof(char*));
+	for (i=0;i<nAtmSpecies;i++) gas_str3[i] = (char*)malloc(1024);
+
 	char **aq_str = (char**) malloc(nAqSpecies*sizeof(char*));
 	for (i=0;i<nAqSpecies;i++) aq_str[i] = (char*)malloc(1024);
 
 	itime_str[0] = '\0';
 	temp_str[0] = '\0';
 	pressure_str[0] = '\0';
+	vol_str[0] = '\0';
 	pH_str[0] = '\0';
 	pe_str[0] = '\0';
 	mass_w_str[0] = '\0';
@@ -805,18 +845,18 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	for (i=0;i<nAtmSpecies;i++) {
 		gas_str1[i][0] = '\0';
 		gas_str2[i][0] = '\0';
+		gas_str3[i][0] = '\0';
 	}
 	for (i=0;i<nAqSpecies;i++) aq_str[i][0] = '\0';
 
 	int line_length = 300;
 	char line[line_length]; // Individual line
-	int eqphases = 0; // Switch to determine if the EQUILIBRIUM_PHASES block is being read
-	int sel = 0;      // Switch to determine if the SELECTED_OUTPUT block is being read
 
 	// Assemble file title
 	sprintf(itime_str, "%d", itime);
 	sprintf(temp_str, "%g", temp);
 	sprintf(pressure_str, "%g", pressure);
+	sprintf(vol_str, "%g", gasvol);
 	sprintf(pH_str, "%g", pH);
 	sprintf(pe_str, "%g", pe);
 	sprintf(mass_w_str, "%g", mass_w);
@@ -841,6 +881,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 				sprintf(gas_str2[i], "%g", 0.0);
 		}
 	}
+	for (i=0;i<nAtmSpecies;i++) sprintf(gas_str3[i], "%g", xgas[i]);
 
 	strcpy(*tempinput,TemplateFile);
 //	strcat(*tempinput,itime_str);
@@ -865,14 +906,17 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	sprintf(steps_str2,"%d steps", kinsteps); // Number of time steps of kinetic simulation
 	strcat(steps_str1, steps_str2);           // "kintime in kinsteps steps"
 
-	fin = fopen (TemplateFile,"r");
+	fin = fopen (TemplateFile,"r"); 	// Open input file
 	if (fin == NULL) printf("WritePHREEQCInput: Missing input file. Path: %s\n", TemplateFile);
-	fout = fopen (*tempinput,"w");
+	fout = fopen (*tempinput,"w");      // Open output file
 	if (fout == NULL) printf("WritePHREEQCInput: Missing output file. Path: %s\n", *tempinput);
 
 	while (fgets(line, line_length, fin)) {
+		// Block switchers
 		if (line[0] == 'E' && line[1] == 'Q' && line[2] == 'U' && line[3] == 'I') eqphases = 1; // EQUILIBRIUM_PHASES block
+		if (line[0] == 'G' && line[1] == 'A' && line[2] == 'S' && line[3] == '_') gasphase = 1; // EQUILIBRIUM_PHASES block
 		if (line[0] == 'S' && line[1] == 'E' && line[2] == 'L' && line[3] == 'E') sel = 1;      // SELECTED_OUTPUT block
+		// SOLUTION
 		if (line[1] == 'p' && line[2] == 'H')                                                  fprintf(fout, "%s charge\n", ConCat("\tpH \t \t",pH_str));
 		else if (line[1] == 't' && line[2] == 'e' && line[3] == 'm' && line[4] == 'p')         fprintf(fout, "%s\n", ConCat("\ttemp \t \t",temp_str));
 		else if (line[1] == 'p' && line[2] == 'r' && line[3] == 'e' && line[4] == 's')         fprintf(fout, "%s\n", ConCat("\tpressure \t",pressure_str));
@@ -902,11 +946,20 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 			}
 			else          fprintf(fout, "%s\n", ConCat("\tN \t\t",aq_str[3]));
 		}
+		// KINETICS
 		else if (line[0] == '-' && line[1] == 's' && line[2] == 't' && line[3] == 'e')         fprintf(fout, "%s\n", ConCat("-steps\t",steps_str1));
+		// GAS_PHASE
+		else if (gasphase && line[1] == 'v' && line[2] == 'o' && line[3] == 'l') fprintf(fout, "%s\n", ConCat("\tvolume \t\t",vol_str));
+		else if (gasphase && line[1] == 'C' && line[2] == 'O' && line[3] == '2' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tCO2(g) \t\t",gas_str3[0]));
+		else if (gasphase && line[1] == 'C' && line[2] == 'H' && line[3] == '4' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tCH4(g) \t\t",gas_str3[1]));
+		else if (gasphase && line[1] == 'O' && line[2] == '2' && line[3] == '(' && line[4] == 'g') fprintf(fout, "%s\n", ConCat("\tO2(g) \t\t",gas_str3[2]));
+		else if (gasphase && line[1] == 'N' && line[2] == '2' && line[3] == '(' && line[4] == 'g') fprintf(fout, "%s\n", ConCat("\tN2(g) \t\t",gas_str3[3]));
+		// EQUILIBRIUM_PHASES
 		else if (eqphases && line[2] == 'C' && line[3] == 'O' && line[4] == '2' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tCO2(g) \t\t",gas_str1[0]));
 		else if (eqphases && line[2] == 'C' && line[3] == 'H' && line[4] == '4' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tCH4(g) \t\t",gas_str1[1]));
 		else if (eqphases && line[2] == 'O' && line[3] == '2' && line[4] == '(' && line[5] == 'g' && line[6] == ')') fprintf(fout, "%s\n", ConCat("\tO2(g) \t\t",gas_str1[2]));
 		else if (eqphases && line[2] == 'N' && line[3] == '2' && line[4] == '(' && line[5] == 'g' && line[6] == ')') fprintf(fout, "%s\n", ConCat("\tN2(g) \t\t",gas_str1[3]));
+
 		else fputs(line,fout);
 	}
 	if (ferror(fin)) {
@@ -920,10 +973,12 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	for (i=0;i<nAtmSpecies;i++) {
 		free(gas_str1[i]);
 		free(gas_str2[i]);
+		free(gas_str3[i]);
 	}
 	for (i=0;i<nAqSpecies;i++) free(aq_str[i]);
 	free(gas_str1);
 	free(gas_str2);
+	free(gas_str3);
 	free(aq_str);
 
 	return 0;
