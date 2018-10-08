@@ -32,8 +32,9 @@
 #define m2cm 100.0                      // Convert m to cm
 #define bar2Pa 101325.0                 // Convert bar to Pa
 #define Kelvin 273.15                   // Convert between Celsius and Kelvin
+#define Gyr2sec 3.15576e16              // Convert 1 billion years to s
 #define Myr2sec 3.15576e13              // Convert 1 million years to s
-#define Yr2sec 3.15576e7                // Convert 1 million years to s
+#define Yr2sec 3.15576e7                // Convert 1 year to s
 
 #define TsurfEarth 288.0                // Mean equilibrium surface temperature on Earth (K)
 #define RmeltEarth 3.8e-19              // Rate of melt generation on Earth (s-1) Kite et al. 2009 Fig. 15; http://dx.doi.org/10.1088/0004-637X/700/2/1732
@@ -41,8 +42,6 @@
 #define deltaCcontwEarth 8.4543e-10     // Surface C flux from continental weathering on Earth (mol C m-2 s-1)
 
 #define Ra_c 1707.762                   // Critical Rayleigh number for convection, http://home.iitk.ac.in/~sghorai/NOTES/benard/node15.html, see also Koschmieder EL (1993) Benard cells and Taylor vortices, Cambridge U Press, p. 20.
-#define Cp 914.0                        // Specific heat capacity of mantle rock (J kg-1 K-1)
-#define kcrust 4.18                     // Thermal conductivity of crust (W m-1 K-1)
 #define A0 70000.0                      // Activation temperature for thermal model (K)
 
 #define xCO2g0 355.0e-6                 // Reference atmospheric CO2 mixing ratio (ppmv)
@@ -72,6 +71,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 		double *xgas, double *xaq, int forcedPP, double kintime, int kinsteps, char **tempinput);
 int cleanup (char path[1024]);
 double molmass_atm (double *xgas);
+int strain (double Pressure, double Xhydr, double T, double *strain_rate, double *Brittle_strength, double porosity);
 
 //-------------------------------------------------------------------
 // MAIN PROGRAM
@@ -171,16 +171,17 @@ int main(int argc, char *argv[]) {
 
 	double dtime = 1.0*Myr2sec;     // Time step (s)
 
-	ntime = (int) (200.0*Myr2sec/dtime); // Number of time steps of simulation
+	ntime = (int) (5000.0*Myr2sec/dtime); // Number of time steps of simulation
 
 	// Planet parameters
 	double m_p = 1.0*mEarth;    // Planet mass (kg)
 	double L = 0.29;            // Fraction of planet surface covered by land
-	double Mocean = 1.4e21*(1.0-L)/(1.0-0.29);     // Mass of ocean (kg, default: Earth=1.4e21 for L=0.29)
+	double Mocean = 1.4e21;     // Mass of ocean (kg, default: Earth=1.4e21)
 	double r_c = 1220000.0;     // Radius of planet core (m)
 	double rhoMagma = 3500.0;   // Magma density (kg m-3)
 	double rhoCrust = 3500.0;   // Crustal density (kg m-3)
     int redox = 3; // 1: current Earth surface, 2: hematite-magnetite, 3: fayalite-magnetite-quartz, 4: iron-wustite, code won't run with other values.
+    Tmantle = 3000.0;
 
 	// Atmospheric inputs
 	double Tsurf = 288.15;      // Surface temperature (K)
@@ -361,12 +362,12 @@ int main(int argc, char *argv[]) {
 		//-------------------------------------------------------------------
 //		Psurf_old = Psurf;
 
-		for (i=2;i<nAtmSpecies;i++) {
-			if (nAir > fabs(dtime*netFC)) xgas[i] = xgas[i]*nAir/(nAir+dtime*netFC); // Dilute other gases accordingly
-			else {
-				printf("ExoCcycleGeo: Too much atmospheric change in one timestep. Reduce timestep.\n"); exit(0);
-			}
-		}
+//		for (i=2;i<nAtmSpecies;i++) {
+//			if (nAir > fabs(dtime*netFC)) xgas[i] = xgas[i]*nAir/(nAir+dtime*netFC); // Dilute other gases accordingly
+//			else {
+//				printf("ExoCcycleGeo: Too much atmospheric change in one timestep. Reduce timestep.\n"); exit(0);
+//			}
+//		}
 
 		// Redox of outgassing
 		if (redox <= 3) xgas[0] = (xgas[0]*nAir + dtime*netFC)/(nAir + dtime*netFC); // CO2 dominates over CH4, assume all added gas is CO2 and let equilibration with ocean speciate accurately
@@ -379,10 +380,10 @@ int main(int argc, char *argv[]) {
 			printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
 			exit(0);
 		}
-		if (Mocean/nAir < 0.1) {
-			printf("ExoCcycleGeo: Mass Ocean / moles of air = %g too low to compute ocean-atmosphere equilibrium. Exiting.\n", Mocean/nAir);
-//			exit(0);
-		}
+//		if (Mocean/nAir < 0.1) {
+//			printf("ExoCcycleGeo: Mass Ocean / moles of air = %g too low to compute ocean-atmosphere equilibrium. Exiting.\n", Mocean/nAir);
+////			exit(0);
+//		}
 
 		//-------------------------------------------------------------------
 		// Calculate partitioning of C between ocean and atmosphere
@@ -444,32 +445,55 @@ int main(int argc, char *argv[]) {
 		// Calculate surface C flux from outgassing
 		//-------------------------------------------------------------------
 
-		/* TODO compute the following quantities instead of assuming them. See Kite et al. Section 2.2.
-		 * i.e., compute how geodynamic processes vary with planet mass, structure, composition, and age.
-		 * The geophysical scaling laws below for heat flux, outgassing rate, and subduction rate are solely valid for limited and very
+		/* The geophysical scaling laws below for heat flux, outgassing rate, and subduction rate are solely valid for limited and very
 		 * specific cases and are not generalizable.
-		 * Vary tectonic mode with planet mass.
 		 *
-		 * Subduction and volcanism may not be more effective on more massive planets, as they could be stagnant-lid planets or have
-		 * intrusive volcanism.
-		 *
-		 * See Stein et al. (2011), Deschamps & Sotin (2000), Stamenkovic et al. (2012), Wong & Solomatov (2016), Burgisser & Scaillet
-		 * (2007), and Dasgupta & Hirschmann (2010).
-		 *
-		 * The mantle reservoir of carbon is large enough that CO2 outgassing does not depend on the amount of carbon subducted into the mantle (Abbot et al. 2012).
+		 * Vary tectonic mode with planet mass. More massive planets could be less effective at subducting.
 		 */
 
-		// Model of Kite et al. (2009)
-		zCrust = 10.0*km2m;
-		Tmantle = 3000.0;
-		Ra = 3000.0;
+		double beta = 0.3; // Schubert et al. (2001)
 
-		Pf = rhoCrust*gsurf*zCrust;
+		// Mantle parameters TODO make function of composition?
+		double k = 4.18; // Thermal conductivity of the mantle (W m-1 K-1)
+		double alpha = 3.0e-5; // Mantle thermal expansivity (K-1)
+		double Cp = 914.0; // Specific heat capacity (J kg-1 K-1)
+		double rhoMantle = 4000.0; // Density of the mantle TODO get mantle mass through compression() routine of IcyDwarf?
+
+		double H = 0.0; // Specific radiogenic heating rate (J s-1 kg-1)
+		double d = r_p-r_c; // Depth to the core-mantle boundary
+
+		double kappa = k/(rhoMantle*Cp);
+
+		double nu = 1.0e16*exp((2.0e5 + (rhoMantle*gsurf*d/2.0) *1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
+
+		// Compute instantaneous heating rate (Kite et al. 2009 Table 1): H = X_4.5 * W * exp(ln(1/2) / t1/2 * (t-4.5))
+		H =  36.9e-9  * 2.92e-5 * exp(log(0.5)/( 1.26 *Gyr2sec) * ((double)itime*dtime - 4.5*Gyr2sec))  //  40-K
+		  + 124.0e-9  * 2.64e-5 * exp(log(0.5)/(14.0  *Gyr2sec) * ((double)itime*dtime - 4.5*Gyr2sec))  // 232-Th
+		  +   0.22e-9 * 56.9e-5 * exp(log(0.5)/( 0.704*Gyr2sec) * ((double)itime*dtime - 4.5*Gyr2sec))  // 235-U
+		  +  30.8e-9  * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * ((double)itime*dtime - 4.5*Gyr2sec)); // 238-U
+
+		// Compute effective thermal conductivity
+		double Nu = 0.0; // Nusselt number
+		double Tref = 0.0; // Temperature at outer boundary of convective zone (surface or base of stagnant lid)
+		int staglid = 0; // 1 if stagnant-lid, 0 if mobile-lid
+
 		TbaseLid = Tmantle - 2.23*Tmantle*Tmantle/A0;
-		Nu = pow(Ra/Ra_c,0.25);
+
+		if (!staglid) Tref = Tsurf;
+		else          Tref = TbaseLid;
+
+		Ra = alpha*gsurf*(Tmantle-Tref)*pow(d,3)/(kappa*nu);
+		Nu = pow(Ra/Ra_c, beta);
+
+		// Update mantle temperature
+		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/(d*d));
+
+		// Melting model of Kite et al. (2009)
+		zCrust = 10.0*km2m;
+		Pf = rhoCrust*gsurf*zCrust;
 
 		// Assumes that all melt generated reaches the surface
-		vConv = 2.0*(Nu-1.0) * (kcrust/(rhoMagma*Cp*(r_p-r_c))) * (Tmantle-Tsurf) / (Tmantle-TbaseLid);
+		vConv = 2.0*(Nu-1.0) * (k/(rhoMagma*Cp*(r_p-r_c))) * (Tmantle-Tsurf) / (Tmantle-TbaseLid);
 		Rmelt = vConv*rhoMagma/m_p * (rhoCrust*gsurf*zCrust/(Pf-P0)); // m-2 s-1, Kite et al. (2009) multiplied by planet's surface area
 		FCoutgas = deltaCvolcEarth * Rmelt/RmeltEarth * Asurf;              // (mol C s-1) * (m-2 s-1) / (s-1) * m2 = mol C s-1
 
@@ -478,70 +502,72 @@ int main(int argc, char *argv[]) {
 		//-------------------------------------------------------------------
 
 		// Analytical calculation from Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
-//		FCcontW = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7);
+		FCcontW = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7);
 
-		double **xrain = (double**) malloc(nAqSpecies*sizeof(double*));
-		if (xrain == NULL) printf("ExoCcycleGeo: Not enough memory to create xrain[nAqSpecies]\n"); // Molalities of aqueous species in rain at different times (mol (kg H2O)-1, rain[0][kinstep]: time in s)
-	    for (i=0;i<nAqSpecies;i++) {
-	    	xrain[i] = (double*) malloc(kinsteps*sizeof(double));
-	    	if (xrain[i] == NULL) printf("ExoCcycleGeo: Not enough memory to create xrain[nAqSpecies][kinsteps]\n");
-	    }
-
-	    kintime = 1.0e-6*Yr2sec; // Reset to very small time span
-	    double tol = 1.5; // Tolerance factor for deplCcrit
-		for (iter=0;iter<niter;iter++) {
-		    for (i=0;i<nAqSpecies;i++) {
-		    	for (j=0;j<kinsteps;j++) xrain[i][j] = 0.0;
-		    }
-
-			WRcontW = runoff*kintime/zContW*1000.0/rhoContCrust*molmassContCrust;
-
-			AqueousChem(path, "io/ContWeather", itime, Tsurf, &Psurf, 0.0, &pH, &pe, WRcontW, &xgas, &xaq, &xrain, 1, kintime, kinsteps, nvarKin);
-
-			for (i=2;i<kinsteps-1;i++) {
-				if (xrain[2][i] == 0.0) break; // PHREEQC did not return a result (sim interrupted)
-				xrain[3][i] = 1.0-xrain[2][i]/xrain[2][1]; // Chemical depletion fraction
-				printf("%d\t Time: %g yr\t pH: %g\t C(aq): %g\t deplC: %g\n", i, xrain[0][i]/Yr2sec, xrain[1][i], xrain[2][i], xrain[3][i]);
-			}
-
-			if (xrain[3][2] > deplCcrit*tol) {
-				kintime = 0.1*kintime;
-				printf("Continental weathering: Time span too coarse, decreasing kinetic time span 10-fold to %g years...\n", kintime/Yr2sec);
-			}
-			else if (i > 2 && xrain[3][i-1] < deplCcrit/tol) { // Last step for which PHREEQC returned a result (kinsteps-1 unless sim interrupted)
-				// Roughly estimate drawdown rate anyway (scaled down from closest determined value), in case next iteration fails
-				xrain[4][i] = (xrain[2][i+1] - xrain[2][i])/kintime*(double)kinsteps;
-				dCdtContW = sqrt(xrain[4][i+1]*xrain[4][i])*xrain[3][i-1]/deplCcrit;
-				kintime = 10.0*kintime;
-				printf("Continental weathering: Didn't go far enough in time, increasing time span of simulation 10-fold to %g years...\n", kintime/Yr2sec);
-			}
-			else if (i == 2) {
-				kintime = 10.0*kintime; // Increase time step anyway
-				printf("PHREEQC kinetic simulation failed at first step. Increasing time span of simulation 10-fold to %g years...\n", kintime/Yr2sec);
-				kintime++;
-				// break;
-			}
-			else break;
-		}
-
-		if (iter == niter) printf("Could not get timescale of continental weathering after %d iterations. FCcontW=%g not accurately updated at this time step.\n", iter, FCcontW);
-		else {
-			dCdtContW = 0.0;
-			for (j=2;j<i-1;j++) {
-				xrain[4][j] = (xrain[2][j+1] - xrain[2][j])/kintime*(double)kinsteps; // Instantaneous C drawdown rate (mol (kg H2O)-1 s-1)
-				printf("%d \t Time: %g yr\t %g\t %g\t %g\t %g\n", j, xrain[0][j]/Yr2sec, xrain[1][j], xrain[2][j], xrain[3][j], xrain[4][j]);
-				dCdtContW = dCdtContW + xrain[4][j]; // Arithmetically average over time span to get rid of PHREEQC numerical noise
-			}                                        // (geom average would be more accurate but has 50% chance of yielding a NaN = sqrt(<0))
-			dCdtContW = dCdtContW/(double)(i-3);
-
-			printf("dCdtContW=%g mol (kg H2O)-1 s-1\n", dCdtContW);
-			FCcontW = dCdtContW*WRcontW*Asurf*zContW*L*rhoContCrust;
-
-			printf("Weathering time scale: %g years\n", kintime);
-		}
-
-		for (i=0;i<nAqSpecies;i++) free (xrain[i]);
-		free (xrain);
+//		double **xrain = (double**) malloc(nAqSpecies*sizeof(double*));
+//		if (xrain == NULL) printf("ExoCcycleGeo: Not enough memory to create xrain[nAqSpecies]\n"); // Molalities of aqueous species in rain at different times (mol (kg H2O)-1, rain[0][kinstep]: time in s)
+//	    for (i=0;i<nAqSpecies;i++) {
+//	    	xrain[i] = (double*) malloc(kinsteps*sizeof(double));
+//	    	if (xrain[i] == NULL) printf("ExoCcycleGeo: Not enough memory to create xrain[nAqSpecies][kinsteps]\n");
+//	    }
+//
+//	    kintime = 1.0e-6*Yr2sec; // Reset to very small time span
+//	    double tol = 1.5; // Tolerance factor for deplCcrit
+//		for (iter=0;iter<niter;iter++) {
+//		    for (i=0;i<nAqSpecies;i++) {
+//		    	for (j=0;j<kinsteps;j++) xrain[i][j] = 0.0;
+//		    }
+//
+//			WRcontW = runoff*kintime/zContW*1000.0/rhoContCrust*molmassContCrust;
+//
+//			AqueousChem(path, "io/ContWeather", itime, Tsurf, &Psurf, 0.0, &pH, &pe, WRcontW, &xgas, &xaq, &xrain, 1, kintime, kinsteps, nvarKin);
+//
+//			rainpH = xrain[1][1];
+//
+//			for (i=2;i<kinsteps-1;i++) {
+//				if (xrain[2][i] == 0.0) break; // PHREEQC did not return a result (sim interrupted)
+//				xrain[3][i] = 1.0-xrain[2][i]/xrain[2][1]; // Chemical depletion fraction
+//				printf("%d\t Time: %g yr\t pH: %g\t C(aq): %g\t deplC: %g\n", i, xrain[0][i]/Yr2sec, xrain[1][i], xrain[2][i], xrain[3][i]);
+//			}
+//
+//			if (xrain[3][2] > deplCcrit*tol) {
+//				kintime = 0.1*kintime;
+//				printf("Continental weathering: Time span too coarse, decreasing kinetic time span 10-fold to %g years...\n", kintime/Yr2sec);
+//			}
+//			else if (i > 2 && xrain[3][i-1] < deplCcrit/tol) { // Last step for which PHREEQC returned a result (kinsteps-1 unless sim interrupted)
+//				// Roughly estimate drawdown rate anyway (scaled down from closest determined value), in case next iteration fails
+//				xrain[4][i] = (xrain[2][i+1] - xrain[2][i])/kintime*(double)kinsteps;
+//				dCdtContW = sqrt(xrain[4][i+1]*xrain[4][i])*xrain[3][i-1]/deplCcrit;
+//				kintime = 10.0*kintime;
+//				printf("Continental weathering: Didn't go far enough in time, increasing time span of simulation 10-fold to %g years...\n", kintime/Yr2sec);
+//			}
+//			else if (i == 2) {
+//				kintime = 10.0*kintime; // Increase time step anyway
+//				printf("PHREEQC kinetic simulation failed at first step. Increasing time span of simulation 10-fold to %g years...\n", kintime/Yr2sec);
+//				kintime++;
+//				// break;
+//			}
+//			else break;
+//		}
+//
+//		if (iter == niter) printf("Could not get timescale of continental weathering after %d iterations. FCcontW=%g not accurately updated at this time step.\n", iter, FCcontW);
+//		else {
+//			dCdtContW = 0.0;
+//			for (j=2;j<i-1;j++) {
+//				xrain[4][j] = (xrain[2][j+1] - xrain[2][j])/kintime*(double)kinsteps; // Instantaneous C drawdown rate (mol (kg H2O)-1 s-1)
+//				printf("%d \t Time: %g yr\t %g\t %g\t %g\t %g\n", j, xrain[0][j]/Yr2sec, xrain[1][j], xrain[2][j], xrain[3][j], xrain[4][j]);
+//				dCdtContW = dCdtContW + xrain[4][j]; // Arithmetically average over time span to get rid of PHREEQC numerical noise
+//			}                                        // (geom average would be more accurate but has 50% chance of yielding a NaN = sqrt(<0))
+//			dCdtContW = dCdtContW/(double)(i-3);
+//
+//			printf("dCdtContW=%g mol (kg H2O)-1 s-1\n", dCdtContW);
+//			FCcontW = dCdtContW*WRcontW*Asurf*zContW*L*rhoContCrust;
+//
+//			printf("Weathering time scale: %g years\n", kintime);
+//		}
+//
+//		for (i=0;i<nAqSpecies;i++) free (xrain[i]);
+//		free (xrain);
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from seafloor weathering TODO include kinetics, manage reservoir size
@@ -912,7 +938,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	if (fout == NULL) printf("WritePHREEQCInput: Missing output file. Path: %s\n", *tempinput);
 
 	while (fgets(line, line_length, fin)) {
-		// Block switchers
+		// Block switches
 		if (line[0] == 'E' && line[1] == 'Q' && line[2] == 'U' && line[3] == 'I') eqphases = 1; // EQUILIBRIUM_PHASES block
 		if (line[0] == 'G' && line[1] == 'A' && line[2] == 'S' && line[3] == '_') gasphase = 1; // EQUILIBRIUM_PHASES block
 		if (line[0] == 'S' && line[1] == 'E' && line[2] == 'L' && line[3] == 'E') sel = 1;      // SELECTED_OUTPUT block
@@ -1023,4 +1049,40 @@ double molmass_atm (double *xgas) {
 	molmass = (xgas[0]*44.0 + xgas[1]*16.0 + xgas[2]*32.0 + xgas[3]*28.0)/(xgas[0]+xgas[1]+xgas[2]+xgas[3])*0.001;
 
 	return molmass;
+}
+
+/*--------------------------------------------------------------------
+ *
+ * Subroutine strain
+ *
+ * Calculates the brittle strength in Pa and corresponding ductile
+ * strain rate in s-1 of silicate rock.
+ * Brittle-ductile and brittle-plastic transitions are
+ * mixed up, although they shouldn't (Kohlstedt et al. 1995).
+ * The brittle strength is given by a friction/low-P Byerlee type law:
+ * stress = mu*P, assuming negligible water pressure since in practice
+ * the brittle-ductile transition occurs in dehydrated rock (T>700 K)
+ * even over long time scales.
+ * The ductile strength is given by a flow law:
+ * d epsilon/dt = A*sigma^n*d^-p*exp[(-Ea+P*V)/RT].
+ *
+ *--------------------------------------------------------------------*/
+
+int strain (double Pressure, double Xhydr, double T, double *strain_rate, double *Brittle_strength, double porosity) {
+
+	double Hydr_strength = 0.0;
+	double Dry_strength = 0.0;
+
+//	Hydr_strength = mu_f_serp*Pressure;
+//	if (Pressure <= 200.0e6) Dry_strength = mu_f_Byerlee_loP*Pressure;
+//	else Dry_strength = mu_f_Byerlee_hiP*Pressure + C_f_Byerlee_hiP;
+//	(*Brittle_strength) = Xhydr*Hydr_strength + (1.0-Xhydr)*Dry_strength;
+//	(*Brittle_strength) = (*Brittle_strength)/(1.0-porosity);
+//
+//	if (T > 140.0)
+//		(*strain_rate) = pow(10.0,5.62)*pow((*Brittle_strength)/MPa,1.0)*pow(d_flow_law,-3.0)*exp((-240.0e3 + Pressure*0.0)/(1.0*R_G*T));
+//	else // Set T at 140 K to calculate ductile strength so that it doesn't yield numbers too high to handle
+//		(*strain_rate) = pow(10.0,5.62)*pow((*Brittle_strength)/MPa,1.0)*pow(d_flow_law,-3.0)*exp((-240.0e3 + Pressure*0.0)/(1.0*R_G*140.0));
+
+	return 0;
 }
