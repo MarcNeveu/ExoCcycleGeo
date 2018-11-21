@@ -119,20 +119,11 @@ int main(int argc, char *argv[]) {
 	double pH = 0.0;                // pH of the surface ocean (default 8.22)
 	double rainpH = 0.0;            // pH of rainwater
 	double pe = 0.0;                // pe (-log activity e-) corresponding to logfO2
-//	double pH_old = 0.0;            // Memorized pH to check that input log(fO2) matches input atmospheric composition
-//	double pe_old = 0.0;			// Memorized pe to check that input log(fO2) matches input atmospheric composition
 	double logfO2 = 0.0;            // log O2 fugacity
 	double logKO2H2O = 0.0;         // log K for reaction 4 H+ + 4 e- + O2 = 2 H2O, from CHNOSZ: subcrt(c("H+","e-","O2","H2O"),c(-4,-4,-1,2),c("aq","aq","g","liq"),T=25,P=1)
 
 	// Atmosphere parameters
 	double nAir = 0.0;              // Number of mol in atmosphere (mol)
-	double sumPP = 0.0;             // Sum of partial pressures xgas*Psurf (ideally, should be equal to Psurf) (bar)
-	double sumMR = 0.0;             // Sum of mixing ratios xgas (ideally, should be equal to 1)
-	double nCatmoc = 0.0;           // Total C in {atmosphere+ocean} (mol)
-	double nNatmoc = 0.0;           // Total N in {atmosphere+ocean} (mol)
-	double nCatmoc_old = 0.0;
-	double nNatmoc_old = 0.0;
-	double gasdiff = 0.0;           // Difference in total gas mixing ratios before and after atmosphere-ocean equilibration
 
 	// Kinetic parameters
 	int kinsteps = 0;               // Number of time steps of PHREEQC kinetic simulation
@@ -272,7 +263,6 @@ int main(int argc, char *argv[]) {
 	d = r_p-r_c;
 	gsurf = G*m_p/r_p/r_p;
 	Asurf = 4.0*PI_greek*r_p*r_p;
-	for(i=0;i<nAtmSpecies;i++) sumPP = sumPP + xgas[i]*Psurf;
 
 	//-------------------------------------------------------------------
 	// Choose redox state (from most oxidized to most reduced)
@@ -376,13 +366,12 @@ int main(int argc, char *argv[]) {
 
 	printf("Starting time loop...\n");
 	for (itime = 0;itime<ntime;itime++) {
-		printf("Time: %g Myr, iteration %d/%d. Total N = %g mol, Total C = %g mol, Added C this timestep = %g mol\n",
-				(double)itime*dtime/Myr2sec, itime, ntime, xaq[3]*Mocean + xgas[3]*2.0*nAir, (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir + netFC*dtime, netFC*dtime);
+		printf("Time: %g Myr, iteration %d/%d. Psurf = %g bar, Total N = %g mol, Total C = %g mol, Added C this timestep = %g mol\n",
+				(double)itime*dtime/Myr2sec, itime, ntime, Psurf, xaq[3]*Mocean + xgas[3]*2.0*nAir, (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir + netFC*dtime, netFC*dtime);
 
 		//-------------------------------------------------------------------
 		// Update atmosphere
 		//-------------------------------------------------------------------
-//		Psurf_old = Psurf;
 
 //		for (i=2;i<nAtmSpecies;i++) {
 //			if (nAir > fabs(dtime*netFC)) xgas[i] = xgas[i]*nAir/(nAir+dtime*netFC); // Dilute other gases accordingly
@@ -416,11 +405,6 @@ int main(int argc, char *argv[]) {
 		for (i=0;i<nAtmSpecies;i++) xgas_old[i] = xgas[i];
 		for (i=0;i<nAqSpecies;i++) xaq_old[i] = xaq[i];
 
-//		nCatmoc_old = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
-//		nNatmoc_old = xaq[3]*Mocean + xgas[3]*2.0*nAir;
-//		pH_old = pH;
-//		pe_old = pe;
-
 		// Equilibrate ocean and atmosphere
 		AqueousChem(path, "io/OceanDiss", itime, Tsurf, &Psurf, R_G*Tsurf/(Psurf*bar2Pa)*1000.0, &pH, &pe, Mocean/nAir, &xgas, &xaq, NULL, 0, 0.0, 1, nvarEq);
 
@@ -433,30 +417,12 @@ int main(int argc, char *argv[]) {
 //			exit(0);
 //		}
 
-		// Force conservation of Total C (atmosphere+ocean) and Total N (atmosphere+ocean)
-//		nCatmoc = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
-//		nNatmoc = xaq[3]*Mocean + xgas[3]*2.0*nAir;
-//
-//		xgas[0] = xgas[0]*nCatmoc_old/nCatmoc;
-//		xgas[1] = xgas[1]*nCatmoc_old/nCatmoc;
-//		xgas[3] = xgas[3]*nNatmoc_old/nNatmoc;
-//
-//		xaq[0] = xaq[0]*nCatmoc_old/nCatmoc;
-//		xaq[1] = xaq[1]*nCatmoc_old/nCatmoc;
-//		xaq[3] = xaq[3]*nNatmoc_old/nNatmoc;
-
-		// Update moles of air and surface pressure
-//		gasdiff = 0.0;
-//		for (i=0;i<nAtmSpecies;i++) gasdiff = gasdiff + xgas[i] - xgas_old[i];
-//		nAir = nAir*(1.0 + gasdiff);
-//		Psurf = nAir/(bar2Pa*Asurf/gsurf/molmass_atm(xgas));
-		// Alternatively, since Psurf is already updated by AqueousChem subroutine:
-		nAir = Psurf*(bar2Pa*Asurf/gsurf/molmass_atm(xgas));
-
 		if (Psurf < 0.01) {
 			printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
 			exit(0);
 		}
+
+		nAir = Psurf*(bar2Pa*Asurf/gsurf/molmass_atm(xgas));
 
 		cleanup(path); // Remove PHREEQC selected output file
 
