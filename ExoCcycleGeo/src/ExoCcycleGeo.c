@@ -23,6 +23,7 @@
 
 #define cmdline 0						// If execution from terminal as "./ExoCcycleGeo"
 
+// Constants and conversion factors
 #define PI_greek 3.14159265358979323846
 #define G 6.67e-11                      // Gravitational constant (SI)
 #define R_G 8.3145                      // Universal gas constant (J mol-1 K-1)
@@ -36,23 +37,30 @@
 #define Myr2sec 3.15576e13              // Convert 1 million years to s
 #define Yr2sec 3.15576e7                // Convert 1 year to s
 
+// Earth scalings
 #define TsurfEarth 288.0                // Mean equilibrium surface temperature on Earth (K)
 #define RmeltEarth 3.8e-19              // Rate of melt generation on Earth (s-1) Kite et al. 2009 Fig. 15; http://dx.doi.org/10.1088/0004-637X/700/2/1732
 #define deltaCvolcEarth 2.2e5           // Surface C flux from subaerial+submarine volcanic outgassing (mol C s-1) Donnadieu et al. 2006; http://dx.doi.org/10.1029/2006GC001278
 #define deltaCcontwEarth 8.4543e-10     // Surface C flux from continental weathering on Earth (mol C m-2 s-1)
 
+// Mantle parameters TODO make function of composition?
+#define k 4.18                          // Mantle thermal conductivity (W m-1 K-1)
+#define alpha 3.0e-5                    // Mantle thermal expansivity (K-1)
+#define Cp 914.0                        // Mantle heat capacity (J kg-1 K-1)
+#define rhoMantle 4000.0                // Mantle density of the mantle TODO get through compression() routine of IcyDwarf?
+
+// Thermal model parameters
+#define beta 0.3                        // Exponent for scaling Nusselt number to Rayleigh number, 1/4 to 1/3 (Schubert et al. 2001)
 #define Ra_c 1707.762                   // Critical Rayleigh number for convection, http://home.iitk.ac.in/~sghorai/NOTES/benard/node15.html, see also Koschmieder EL (1993) Benard cells and Taylor vortices, Cambridge U Press, p. 20.
 #define A0 70000.0                      // Activation temperature for thermal model (K)
 
+// Atmosphere parameters
 #define xCO2g0 355.0e-6                 // Reference atmospheric CO2 mixing ratio (ppmv)
 #define runoff_0 7.70e-9                // Reference runoff (m s-1) = 0.665e-3 m day-1 (Edson et al. 2012, http://dx.doi.org/10.1089/ast.2011.0762)
+
+// Geochem parameters
 #define nAtmSpecies 5                   // Number of atmospheric species whose abundances are passed between the physical and chemical models
 #define nAqSpecies 6                    // Number of aqueous species whose concentrations are passed between the physical and chemical models
-
-//-------------------------------------------------------------------
-// WATER-ROCK PARAMETERS
-//-------------------------------------------------------------------
-
 #define nvarEq 1036                     // Number of geochemical variables stored in each PHREEQC equilibrium simulation
 #define nvarKin 60                      // Number of geochemical variables stored in each PHREEQC kinetic simulation
 #define naq 258                         // Number of aqueous species (+ physical parameters)
@@ -87,50 +95,43 @@ int main(int argc, char *argv[]) {
 	int iter = 0;                   // Iteration counter
 	int niter = 10;                  // Number of iterations for ocean-atmosphere equilibrium
 
+	// Planet parameters
 	double r_p = 0.0;               // Planet radius (m)
+	double gsurf = 0.0;             // Surface gravity (m s-2)
+	double Asurf = 0.0;             // Planet surface area (m2)
 
+	// Reservoirs
 //	double RCplate = 0.0;           // Plate/crust C reservoir (mol)
 	double RCmantle = 0.0;          // Mantle C reservoir (mol)
 	double RCatm = 0.0;             // Atmospheric C reservoir (mol)
 	double RCocean = 0.0;           // Ocean C reservoir (mol)
 	double RCatmoc = RCatm + RCocean; // Combined atmospheric and ocean C reservoir (mol)
 
+	// Fluxes
 	double FCoutgas = 0.0;          // C flux from outgassing (subaerial+submarine) (mol s-1)
 	double FCcontW = 0.0;           // C flux from continental weathering (mol s-1)
 	double FCseafW = 0.0;           // C flux from seafloor weathering (mol s-1)
 	double FCsubd = 0.0;            // C flux from subduction (mol s-1)
 	double netFC = 0.0;             // Net surface C flux from all geological processes (mol s-1)
-
 	double farc = 0.0;              // Fraction of subducted C that makes it back out through arc volcanism (as opposed to into the mantle)
 
+	// Geochem parameters
 	double pH = 0.0;                // pH of the surface ocean (default 8.22)
 	double rainpH = 0.0;            // pH of rainwater
 	double pe = 0.0;                // pe (-log activity e-) corresponding to logfO2
+//	double pH_old = 0.0;            // Memorized pH to check that input log(fO2) matches input atmospheric composition
+//	double pe_old = 0.0;			// Memorized pe to check that input log(fO2) matches input atmospheric composition
 	double logfO2 = 0.0;            // log O2 fugacity
 	double logKO2H2O = 0.0;         // log K for reaction 4 H+ + 4 e- + O2 = 2 H2O, from CHNOSZ: subcrt(c("H+","e-","O2","H2O"),c(-4,-4,-1,2),c("aq","aq","g","liq"),T=25,P=1)
 
-	double Rmelt = 0.0;             // Rate of melt generation (m-2 s-1)
-	double vConv = 0.0;             // Convective velocity (m s-1)
-	double gsurf = 0.0;             // Surface gravity (m s-2)
-	double P0 = 0.0;                // Surface pressure (Pa)
-	double Pf = 0.0;                // Pressure at base of crust (Pa)
-	double TbaseLid = 0.0;          // Temperature at base of stagnant lid (K)
-	double Nu = 0.0;                // Nusselt number (no dim)
-	double zCrack = 0.0;            // Depth of fracturing below seafloor (m)
-	double tcirc = 0.0;             // Time scale of hydrothermal circulation (s)
-	double deltaCreac = 0.0;        // Net C leached/precipitated per kg of rock (mol kg-1)
-
-	double Asurf = 0.0;             // Planet surface area (m2)
+	// Atmosphere parameters
 	double nAir = 0.0;              // Number of mol in atmosphere (mol)
 	double sumPP = 0.0;             // Sum of partial pressures xgas*Psurf (ideally, should be equal to Psurf) (bar)
 	double sumMR = 0.0;             // Sum of mixing ratios xgas (ideally, should be equal to 1)
-
 	double nCatmoc = 0.0;           // Total C in {atmosphere+ocean} (mol)
 	double nNatmoc = 0.0;           // Total N in {atmosphere+ocean} (mol)
 	double nCatmoc_old = 0.0;
 	double nNatmoc_old = 0.0;
-//	double pH_old = 0.0;            // Memorized pH to check that input log(fO2) matches input atmospheric composition
-//	double pe_old = 0.0;			// Memorized pe to check that input log(fO2) matches input atmospheric composition
 	double gasdiff = 0.0;           // Difference in total gas mixing ratios before and after atmosphere-ocean equilibration
 
 	// Kinetic parameters
@@ -142,9 +143,28 @@ int main(int argc, char *argv[]) {
 	double dCdtContW = 0.0;         // Carbon drawdown rate due to continental weathering (mol (kg H2O)-1 s-1)
 
 	// Quantities to be computed by thermal/geodynamic model
-	double zCrust = 0.0;        // Crustal thickness (m)
-	double Tmantle = 0.0;       // Mantle temperature (K)
-	double Ra = 0.0;            // Rayleigh number for mantle convection (no dim)
+	int staglid = 0;                // 1 if stagnant-lid, 0 if mobile-lid
+	double d = 0.0;                 // Depth to core-mantle boundary (m)
+	double Tmantle = 0.0;           // Mantle temperature (K)
+	double H = 0.0;                 // Specific radiogenic heating rate (J s-1 kg-1)
+	double kappa = k/(rhoMantle*Cp); // Mantle thermal diffusivity (m2 s-1)
+	double nu = 0.0;                // Mantle kinematic viscosity (m2 s-1)
+	double zCrust = 0.0;            // Crustal thickness (m)
+	double Ra = 0.0;                // Rayleigh number for mantle convection (no dim)
+	double Nu = 0.0;                // Nusselt number (no dim)
+	double Tref = 0.0;              // Temperature at outer boundary of convective zone (surface or base of stagnant lid)
+	double TbaseLid = 0.0;          // Temperature at base of stagnant lid (K)
+
+	// Quantities to be computed by melting model
+	double Rmelt = 0.0;             // Rate of melt generation (m-2 s-1)
+	double vConv = 0.0;             // Convective velocity (m s-1)
+	double P0 = 0.0;                // Surface pressure (Pa)
+	double Pf = 0.0;                // Pressure at base of crust (Pa)
+
+	// Quantities to be computed by seafloor weathering model
+	double zCrack = 0.0;            // Depth of fracturing below seafloor (m)
+	double tcirc = 0.0;             // Time scale of hydrothermal circulation (s)
+	double deltaCreac = 0.0;        // Net C leached/precipitated per kg of rock (mol kg-1)
 
 	double *xgas = (double*) malloc(nAtmSpecies*sizeof(double));
 	if (xgas == NULL) printf("ExoCcycleGeo: Not enough memory to create xgas[nAtmSpecies]\n"); // Mixing ratios by volume (or by mol since all gases are pretty much ideal and have the same molar volume) of atmospheric gases
@@ -249,6 +269,7 @@ int main(int argc, char *argv[]) {
 	else printf("ExoCcycleGeo: Couldn't retrieve executable directory. Buffer too small; need size %u\n", size);
 
 	r_p = pow(m_p/mEarth,0.27)*rEarth; // Planet radius, determined from mass scaling (m) // TODO implement IcyDwarf compression model or ExoPLEX for more accurate mass-radius relationship
+	d = r_p-r_c;
 	gsurf = G*m_p/r_p/r_p;
 	Asurf = 4.0*PI_greek*r_p*r_p;
 	for(i=0;i<nAtmSpecies;i++) sumPP = sumPP + xgas[i]*Psurf;
@@ -343,8 +364,9 @@ int main(int argc, char *argv[]) {
 	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 	else {
 		fprintf(fout, "'Atmospheric species in mixing ratio (by mol, i.e. by volume for ideal gases), aqueous species in mol/(kg H2O)'\n");
-		fprintf(fout, "'Time (Myr)' \t CO2(g) \t CH4(g) \t O2(g) \t N2(g) \t H2O(g) \t 'P_surface (bar)' \t 'Ox C(aq)' \t 'Red C(aq)' \t 'Total N(aq)' \t 'Ocean pH' \t 'Rain pH'\n");
-		fprintf(fout, "Init \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, xaq[0], xaq[1], xaq[3], pH, rainpH);
+		fprintf(fout, "'Time (Myr)' \t CO2(g) \t CH4(g) \t O2(g) \t N2(g) \t H2O(g) \t 'P_surface (bar)' \t 'Ox C(aq)' \t 'Red C(aq)' \t 'Total N(aq)' \t 'Ocean pH' \t 'Ocean log f(O2)' \t 'Rain pH'\n");
+		fprintf(fout, "Init \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+				xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, xaq[0], xaq[1], xaq[3], pH, 4.0*(pe+pH)-logKO2H2O, rainpH);
 	}
 	fclose (fout);
 
@@ -354,8 +376,8 @@ int main(int argc, char *argv[]) {
 
 	printf("Starting time loop...\n");
 	for (itime = 0;itime<ntime;itime++) {
-		printf("Time: %g Myr, iteration %d/%d. Total N = %g mol, Total C = %g mol, Added C this timestep = %g mol\n", (double)itime*dtime/Myr2sec, itime, ntime,
-				xaq[3]*Mocean + xgas[3]*2.0*nAir, (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir + netFC*dtime, netFC*dtime);
+		printf("Time: %g Myr, iteration %d/%d. Total N = %g mol, Total C = %g mol, Added C this timestep = %g mol\n",
+				(double)itime*dtime/Myr2sec, itime, ntime, xaq[3]*Mocean + xgas[3]*2.0*nAir, (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir + netFC*dtime, netFC*dtime);
 
 		//-------------------------------------------------------------------
 		// Update atmosphere
@@ -372,6 +394,8 @@ int main(int argc, char *argv[]) {
 		// Redox of outgassing
 		if (redox <= 3) xgas[0] = (xgas[0]*nAir + dtime*netFC)/(nAir + dtime*netFC); // CO2 dominates over CH4, assume all added gas is CO2 and let equilibration with ocean speciate accurately
 		else            xgas[1] = (xgas[1]*nAir + dtime*netFC)/(nAir + dtime*netFC); // CH4 dominates over CO2, assume all added gas is CH4
+
+		for (i=2;i<nAtmSpecies;i++) xgas[i] = xgas[i]*nAir/(nAir + dtime*netFC);
 
 		nAir = nAir + dtime*netFC;
 		Psurf = nAir/(bar2Pa*Asurf/gsurf/molmass_atm(xgas));
@@ -392,8 +416,8 @@ int main(int argc, char *argv[]) {
 		for (i=0;i<nAtmSpecies;i++) xgas_old[i] = xgas[i];
 		for (i=0;i<nAqSpecies;i++) xaq_old[i] = xaq[i];
 
-		nCatmoc_old = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
-		nNatmoc_old = xaq[3]*Mocean + xgas[3]*2.0*nAir;
+//		nCatmoc_old = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
+//		nNatmoc_old = xaq[3]*Mocean + xgas[3]*2.0*nAir;
 //		pH_old = pH;
 //		pe_old = pe;
 
@@ -410,34 +434,29 @@ int main(int argc, char *argv[]) {
 //		}
 
 		// Force conservation of Total C (atmosphere+ocean) and Total N (atmosphere+ocean)
-		nCatmoc = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
-		nNatmoc = xaq[3]*Mocean + xgas[3]*2.0*nAir;
-
-		xgas[0] = xgas[0]*nCatmoc_old/nCatmoc;
-		xgas[1] = xgas[1]*nCatmoc_old/nCatmoc;
-		xgas[3] = xgas[3]*nNatmoc_old/nNatmoc;
-
-		xaq[0] = xaq[0]*nCatmoc_old/nCatmoc;
-		xaq[1] = xaq[1]*nCatmoc_old/nCatmoc;
-		xaq[3] = xaq[3]*nNatmoc_old/nNatmoc;
+//		nCatmoc = (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir;
+//		nNatmoc = xaq[3]*Mocean + xgas[3]*2.0*nAir;
+//
+//		xgas[0] = xgas[0]*nCatmoc_old/nCatmoc;
+//		xgas[1] = xgas[1]*nCatmoc_old/nCatmoc;
+//		xgas[3] = xgas[3]*nNatmoc_old/nNatmoc;
+//
+//		xaq[0] = xaq[0]*nCatmoc_old/nCatmoc;
+//		xaq[1] = xaq[1]*nCatmoc_old/nCatmoc;
+//		xaq[3] = xaq[3]*nNatmoc_old/nNatmoc;
 
 		// Update moles of air and surface pressure
-		gasdiff = 0.0;
-		for (i=0;i<nAtmSpecies;i++) gasdiff = gasdiff + xgas[i] - xgas_old[i];
-		nAir = nAir*(1.0 + gasdiff);
-
-		Psurf = nAir/(bar2Pa*Asurf/gsurf/molmass_atm(xgas));
+//		gasdiff = 0.0;
+//		for (i=0;i<nAtmSpecies;i++) gasdiff = gasdiff + xgas[i] - xgas_old[i];
+//		nAir = nAir*(1.0 + gasdiff);
+//		Psurf = nAir/(bar2Pa*Asurf/gsurf/molmass_atm(xgas));
+		// Alternatively, since Psurf is already updated by AqueousChem subroutine:
 		nAir = Psurf*(bar2Pa*Asurf/gsurf/molmass_atm(xgas));
 
 		if (Psurf < 0.01) {
 			printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
 			exit(0);
 		}
-
-		// Rescale mixing ratios
-		sumMR = 0.0;
-		for (i=0;i<nAtmSpecies;i++) sumMR = sumMR + xgas[i];
-		for (i=0;i<nAtmSpecies;i++) xgas[i] = xgas[i]/sumMR;
 
 		cleanup(path); // Remove PHREEQC selected output file
 
@@ -451,20 +470,8 @@ int main(int argc, char *argv[]) {
 		 * Vary tectonic mode with planet mass. More massive planets could be less effective at subducting.
 		 */
 
-		double beta = 0.3; // Schubert et al. (2001)
-
-		// Mantle parameters TODO make function of composition?
-		double k = 4.18; // Thermal conductivity of the mantle (W m-1 K-1)
-		double alpha = 3.0e-5; // Mantle thermal expansivity (K-1)
-		double Cp = 914.0; // Specific heat capacity (J kg-1 K-1)
-		double rhoMantle = 4000.0; // Density of the mantle TODO get mantle mass through compression() routine of IcyDwarf?
-
-		double H = 0.0; // Specific radiogenic heating rate (J s-1 kg-1)
-		double d = r_p-r_c; // Depth to the core-mantle boundary
-
-		double kappa = k/(rhoMantle*Cp);
-
-		double nu = 1.0e16*exp((2.0e5 + (rhoMantle*gsurf*d/2.0) *1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
+		// Kinematic viscosity
+		nu = 1.0e16*exp((2.0e5 + (rhoMantle*gsurf*d/2.0) *1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
 
 		// Compute instantaneous heating rate (Kite et al. 2009 Table 1): H = X_4.5 * W * exp(ln(1/2) / t1/2 * (t-4.5))
 		H =  36.9e-9  * 2.92e-5 * exp(log(0.5)/( 1.26 *Gyr2sec) * ((double)itime*dtime - 4.5*Gyr2sec))  //  40-K
@@ -473,10 +480,6 @@ int main(int argc, char *argv[]) {
 		  +  30.8e-9  * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * ((double)itime*dtime - 4.5*Gyr2sec)); // 238-U
 
 		// Compute effective thermal conductivity
-		double Nu = 0.0; // Nusselt number
-		double Tref = 0.0; // Temperature at outer boundary of convective zone (surface or base of stagnant lid)
-		int staglid = 0; // 1 if stagnant-lid, 0 if mobile-lid
-
 		TbaseLid = Tmantle - 2.23*Tmantle*Tmantle/A0;
 
 		if (!staglid) Tref = Tsurf;
@@ -608,7 +611,8 @@ int main(int argc, char *argv[]) {
 		strcat(title,"Output.txt");
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime/Myr2sec, RCmantle, RCatmoc, RCocean, FCoutgas, FCcontW, FCseafW, FCsubd, netFC);
+		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+				(double)itime*dtime/Myr2sec, RCmantle, RCatmoc, RCocean, FCoutgas, FCcontW, FCseafW, FCsubd, netFC);
 		fclose (fout);
 
 		title[0] = '\0';
@@ -617,7 +621,8 @@ int main(int argc, char *argv[]) {
 		strcat(title,"CompoOceanAtm.txt");
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", (double)itime*dtime/Myr2sec, xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, xaq[0], xaq[1], xaq[3], pH, rainpH);
+		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+				(double)itime*dtime/Myr2sec, xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, xaq[0], xaq[1], xaq[3], pH, 4.0*(pe+pH)-logKO2H2O, rainpH);
 		fclose (fout);
 	} // End time loop
 
@@ -675,9 +680,9 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 	if (cmdline == 1) strncat(dbase,path,strlen(path)-20);
 	else strncat(dbase,path,strlen(path)-18);
-	strcat(dbase,"PHREEQC-3.1.2/core10.dat");
+	strcat(dbase,"PHREEQC-3.1.2/core10_idealgas.dat");
 
-	strncat(infile,dbase,strlen(dbase)-10);
+	strncat(infile,dbase,strlen(dbase)-19);
 	strcat(infile, filename);
 
 	WritePHREEQCInput(infile, itime, T-Kelvin, *P, V, *pH, *pe, mass_w, *xgas, *xaq, forcedPP, kintime, kinsteps, &tempinput);
@@ -734,6 +739,8 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 		(*xgas)[2] = simdata[1022][0];          // O2(g)
 		(*xgas)[3] = simdata[1018][0];          // N2(g)
 		(*xgas)[4] = simdata[1016][0];          // H2O(g)
+
+		for (i=0;i<nAtmSpecies;i++) (*xgas)[i] = (*xgas)[i]/simdata[1007][0]; // Divide by total mol gas to return mixing ratio
 	}
 
 	// Continental weathering
@@ -907,7 +914,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 				sprintf(gas_str2[i], "%g", 0.0);
 		}
 	}
-	for (i=0;i<nAtmSpecies;i++) sprintf(gas_str3[i], "%g", xgas[i]);
+	for (i=0;i<nAtmSpecies;i++) sprintf(gas_str3[i], "%g", xgas[i]*pressure); // Partial pressure
 
 	strcpy(*tempinput,TemplateFile);
 //	strcat(*tempinput,itime_str);
