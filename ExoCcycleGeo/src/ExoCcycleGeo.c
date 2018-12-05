@@ -26,14 +26,15 @@
 // Constants and conversion factors
 #define PI_greek 3.14159265358979323846
 #define G 6.67e-11                      // Gravitational constant (SI)
-#define R_G 8.3145                      // Universal gas constant (J mol-1 K-1)
+#define R_G 8.314                       // Universal gas constant, same number of decimal places as in PHREEQC (J mol-1 K-1)
 #define sigStefBoltz 5.6704e-8          // Stefan-Boltzmann constant (W m-2 K-4)
 #define rEarth 6378000.0                // Earth radius (m)
 #define mEarth 6.0e24                   // Earth mass (kg)
 #define km2m 1000.0                     // Convert from km to m
 #define m2cm 100.0                      // Convert m to cm
 #define bar2Pa 1.0e5                    // Convert bar to Pa
-#define Kelvin 273.15                   // Convert between Celsius and Kelvin
+#define atm2bar 1.01325                 // Convert atm to bar, same conversion factor as for PHREEQC
+#define Kelvin 273.15                   // Convert between Celsius and Kelvin, same conversion factor as for PHREEQC
 #define Gyr2sec 3.15576e16              // Convert 1 billion years to s
 #define Myr2sec 3.15576e13              // Convert 1 million years to s
 #define Yr2sec 3.15576e7                // Convert 1 year to s
@@ -72,8 +73,8 @@
 // SUBROUTINE DECLARATIONS
 //-------------------------------------------------------------------
 
-int AqueousChem (char path[1024], char filename[64], int itime, double T, double P, double V, double *pH, double *pe, double mass_w,
-		double **xgas, double **xaq, double ***xrain, int forcedPP, double kintime, int kinsteps, int nvar);
+int AqueousChem (char path[1024], char filename[64], int itime, double T, double *P, double *V, double *nAir, double *pH, double *pe,
+		double *mass_w, double **xgas, double **xaq, double ***xrain, int forcedPP, double kintime, int kinsteps, int nvar);
 int ExtractWrite(int instance, double*** data, int line, int nvar);
 const char* ConCat (const char *str1, const char *str2);
 int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
@@ -192,7 +193,7 @@ int main(int argc, char *argv[]) {
 	// Inputs
 	//-------------------------------------------------------------------
 
-	double dtime = 1e-4*Myr2sec;     // Time step (s)
+	double dtime = 1e-2*Myr2sec;     // Time step (s)
 
 	ntime = (int) (5000.0*Myr2sec/dtime); // Number of time steps of simulation
 
@@ -341,7 +342,7 @@ int main(int argc, char *argv[]) {
 		if (xgas[i] > 0.0 && xaq[i] == 0.0) xaq[i] = xgas[i]; // xaq must be >0 otherwise PHREEQC ignores, set to xgas (initial guess).
 	}
 
-	AqueousChem(path, "io/OceanStart", itime, Tsurf, Psurf, 0.0, &pH, &pe, Mocean/nAir, &xgas, &xaq, NULL, 1, 0.0, 1, nvarEq);
+	AqueousChem(path, "io/OceanStart", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, NULL, 1, 0.0, 1, nvarEq);
 
 	RCocean = (xaq[0]+xaq[1])*Mocean;
 	RCatmoc = RCatm + RCocean;
@@ -414,15 +415,21 @@ int main(int argc, char *argv[]) {
 		// Update atmosphere
 		//-------------------------------------------------------------------
 
-		if (itime < 2) {
+		if (itime < 2) { // First 2 time steps: re-compute Vatm to avoid it being too influence by ballpark initial conditions
 			Vatm1 = nAir*R_G*Tsurf/(Psurf*bar2Pa);
 			Tsurf1 = Tsurf;
 		}
-		Vatm = Vatm1*Tsurf/Tsurf1;
+		Vatm = Vatm1*Tsurf/Tsurf1; // After 2nd time step, keep Vatm constant
 
 		// Redox of outgassing
-		if (redox <= 3) xgas[0] = (xgas[0]*nAir + 1.0*dtime*netFC)/(nAir + dtime*netFC); // CO2 dominates over CH4, assume 100% added gas is CO2 and let equilibration with ocean speciate accurately
-		else            xgas[1] = (xgas[1]*nAir + 1.0*dtime*netFC)/(nAir + dtime*netFC); // CH4 dominates over CO2, assume 100% added gas is CH4
+		if (redox <= 3) {
+			xgas[0] = (xgas[0]*nAir + 1.0*dtime*netFC)/(nAir + dtime*netFC); // CO2 dominates over CH4, assume 100% added gas is CO2 and let equilibration with ocean speciate accurately
+			xgas[1] = xgas[1]*nAir/(nAir + dtime*netFC);
+		}
+		else {
+			xgas[1] = (xgas[1]*nAir + 1.0*dtime*netFC)/(nAir + dtime*netFC); // CH4 dominates over CO2, assume 100% added gas is CH4
+			xgas[0] = xgas[0]*nAir/(nAir + dtime*netFC);
+		}
 
 		for (i=2;i<nAtmSpecies;i++) xgas[i] = xgas[i]*nAir/(nAir + dtime*netFC); // Dilute other gases accordingly
 
@@ -441,19 +448,17 @@ int main(int argc, char *argv[]) {
 		if (Tsurf > Tfreeze) {
 			for (i=0;i<nAtmSpecies;i++) xgas_old[i] = xgas[i];
 			for (i=0;i<nAqSpecies;i++) xaq_old[i] = xaq[i];
-printf("2 %.10g\n", xgas[3]*nAir*2.0+xaq[3]*Mocean);
 
 			// Equilibrate ocean and atmosphere
 //			AqueousChem(path, "io/OceanDiss", itime, Tsurf, &Psurf, R_G*Tsurf/(Psurf*bar2Pa)*1000.0, &pH, &pe, Mocean/nAir, &xgas, &xaq, NULL, 0, 0.0, 1, nvarEq);
-			AqueousChem(path, "io/OceanDiss", itime, Tsurf, Psurf, Vatm*1000.0/nAir, &pH, &pe, Mocean/nAir, &xgas, &xaq, NULL, 0, 0.0, 1, nvarEq); // Scale Vatm (converted from m3 to L) and Mocean (kg) by nAir (mol) so the code doesn't have to handle large numbers
-printf("3 %.10g\n", xgas[3]*nAir*2.0+xaq[3]*Mocean);
+			AqueousChem(path, "io/OceanDiss", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, NULL, 0, 0.0, 1, nvarEq);
 
-			if (Psurf < 0.01) {
-				printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
-				exit(0);
-			}
+//			if (Psurf < 0.01) {
+//				printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
+//				exit(0);
+//			}
 
-			nAir = Psurf*bar2Pa*Vatm/(R_G*Tsurf);
+//			nAir = Psurf*bar2Pa*Vatm/(R_G*Tsurf);
 
 			cleanup(path); // Remove PHREEQC selected output file
 		}
@@ -653,8 +658,8 @@ printf("3 %.10g\n", xgas[3]*nAir*2.0+xaq[3]*Mocean);
  *
  *--------------------------------------------------------------------*/
 
-int AqueousChem (char path[1024], char filename[64], int itime, double T, double P, double V, double *pH, double *pe, double mass_w,
-		double **xgas, double **xaq, double ***xrain, int forcedPP, double kintime, int kinsteps, int nvar) {
+int AqueousChem (char path[1024], char filename[64], int itime, double T, double *P, double *V, double *nAir, double *pH, double *pe,
+		double *mass_w, double **xgas, double **xaq, double ***xrain, int forcedPP, double kintime, int kinsteps, int nvar) {
 
 	int phreeqc = 0;
 	int i = 0;
@@ -663,6 +668,8 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	char *dbase = (char*)malloc(1024);                           // Path to thermodynamic database
 	char *infile = (char*)malloc(1024);                          // Path to initial (template) input file
 	char *tempinput = (char*)malloc(1024);                       // Temporary PHREEQC input file, modified from template
+
+	double nAir0 = *nAir; // Scaling factor for gas volume and water mass, so PHREEQC doesn't have to handle large numbers
 
 	double **simdata = (double**) malloc(nvar*sizeof(double*));
 	if (simdata == NULL) printf("AqueousChem: Not enough memory to create simdata[nvar][kinsteps]\n");
@@ -686,7 +693,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	strncat(infile,dbase,strlen(dbase)-19);
 	strcat(infile, filename);
 
-	WritePHREEQCInput(infile, itime, T-Kelvin, P, V, *pH, *pe, mass_w, *xgas, *xaq, forcedPP, kintime, kinsteps, &tempinput);
+	WritePHREEQCInput(infile, itime, T-Kelvin, *P, *V/nAir0, *pH, *pe, *mass_w/nAir0, *xgas, *xaq, forcedPP, kintime, kinsteps, &tempinput);
 
 	phreeqc = CreateIPhreeqc(); // Run PHREEQC
 	if (LoadDatabase(phreeqc,dbase) != 0) OutputErrorString(phreeqc);
@@ -726,7 +733,10 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	if (strcmp(filename, "io/OceanDiss") == 0) {
 		(*pH) = simdata[7][0];
 		(*pe) = simdata[8][0];
-//		(*P) = simdata[1006][0];
+		(*nAir) = simdata[1007][0]*nAir0;
+		(*P) = simdata[1006][0]*atm2bar;
+		(*V) = simdata[1008][0]/1000.0*nAir0;
+		(*mass_w) = simdata[11][0]*nAir0;
 
 		(*xaq)[0] = simdata[45][0];             // C(4), i.e. dissolved CO2 and carbonate
 		(*xaq)[1] = simdata[43][0];             // C(-4), i.e. dissolved methane
@@ -885,6 +895,10 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 
 	int line_length = 300;
 	char line[line_length]; // Individual line
+
+	// Convert to PHREEQC input units
+	pressure = pressure/atm2bar; // Convert from bar to atm
+	gasvol = gasvol*1000.0;      // Convert from m3 to L
 
 	// Assemble file title
 	sprintf(itime_str, "%d", itime);
