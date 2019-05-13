@@ -5,6 +5,19 @@
 
  Computes net C fluxes (in mol C m-2 s-1) at the surface-atmosphere interface
  of a terrestrial planet due to geophysical and geochemical processes.
+
+ TODO:
+ 1- Lookup table based on PHREEQC calculations of kinetics of weathering for
+ felsic and mafic rock, as a function of temperature and atmospheric carbon
+ abundance
+ 2- Refine convection model with comparison of yield and driving stress to
+ enable plate tectonics mode, enables subduction sink - then scale
+ melting from Sasaki & Tajika 1995.
+ 3- Seafloor weathering on the timescale of emplacement of new crust. km3
+ created per year * fraction getting within diffusional reach of seawater, if
+ slow enough, let that determine the rate of consumption by assuming reaction
+ has time to go to equilibrium. Confirm with PHREEQC simulations of rates.
+ 4- Redox of outgassing. MELTS?
  ============================================================================
  */
 
@@ -158,7 +171,6 @@ int main(int argc, char *argv[]) {
 	double Ra = 0.0;                // Rayleigh number for mantle convection (no dim)
 	double Nu = 0.0;                // Nusselt number (no dim)
 	double Tref = 0.0;              // Temperature at outer boundary of convective zone (surface or base of stagnant lid)
-	double TbaseLid = 0.0;          // Temperature at base of stagnant lid (K)
 
 	// Quantities to be computed by melting model
 	double Rmelt = 0.0;             // Rate of melt generation (m-2 s-1)
@@ -481,28 +493,39 @@ int main(int argc, char *argv[]) {
 		  +   0.22e-9 * 56.9e-5 * exp(log(0.5)/( 0.704*Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 235-U
 		  +  30.8e-9  * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * (realtime - 4.5*Gyr2sec)); // 238-U
 
-		// Compute effective thermal conductivity
-		TbaseLid = Tmantle - 2.23*Tmantle*Tmantle/A0;
-
-		if (!staglid) Tref = Tsurf;
-		else          Tref = TbaseLid;
+		if (!staglid) Tref = Tsurf; // TODO circular logic to then have value of !staglid depend on Tref below.
+		else          Tref = Tmantle - 2.23*Tmantle*Tmantle/A0; // Tmantle - Tc in K09
 
 		Ra = alpha*gsurf*(Tmantle-Tref)*pow(d,3)/(kappa*nu);
 		Nu = pow(Ra/Ra_c, beta);
 
-		// Update mantle temperature
-		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/(d*d));
+		// Convective velocity (K09 equation 24), replaced Tc (temp at base of stagnant lid) with Tref for compatibility with !staglid regime
+		vConv = 2.0*(Nu-1.0) * (k/(rhoMagma*Cp*(r_p-r_c))) * (Tmantle-Tsurf) / (Tmantle-Tref); // Check against eq. (6.379) of Turcotte & Schubert (2002), p. 514
+
+		// Determine if convective driving stress exceeds lithosphere yield stress, in which case switch to mobile-lid (plate tectonics) regime
+		// Convective drive stress:
+		// Viscosity = stress / strain rate (assumed Newtonian - see Deschamps & Sotin 2000), i.e. stress = viscosity * vConv/δ, w/ δ: boundary layer thickness
+		// δ = thickness of thermal gradient = 2.32*(kappa*δ/vConv)^0.5 (Turcotte & Schubert 2002, eq. 6.327 with δ/vConv = conduction timescale)
+		// So δ^0.5 = 2.32*(kappa/vConv)^0.5 and δ ≈ 5.38*kappa/vConv
+		double driveStress = nu*rhoMantle*vConv*vConv/(5.38*kappa);
+
+		// Lithospheric yield stress = strength at brittle-ductile transition TODO
 
 		// Melting model of Kite et al. (2009)
 		zCrust = 10.0*km2m;
 		if (!staglid) Pf = 0.0; // K09 equations (10-12)
 		else Pf = rhoCrust*gsurf*zCrust;
-		P0 = rhoCrust*gsurf*(10.0*zCrust); // Should be higher than Pf. Arbitrary for now, 2.0*zCrust results in 50% melting rate
+		P0 = rhoCrust*gsurf*(10.0*zCrust); // Should be higher than Pf. Arbitrary for now TODO calculate based on brittle-ductile transition?, 2.0*zCrust results in 50% melting rate
 
-		// Assumes that all melt generated reaches the surface
-		vConv = 2.0*(Nu-1.0) * (k/(rhoMagma*Cp*(r_p-r_c))) * (Tmantle-Tsurf) / (Tmantle-TbaseLid);
-		Rmelt = Asurf*vConv*rhoMagma * (rhoCrust*gsurf*zCrust/(P0-Pf)); // kg s-1, Kite et al. (2009) eq. 25 normalized by planet mass. Note typo: P0>Pf
-		FCoutgas = deltaCvolcEarth * Rmelt/(RmeltEarth*mEarth);         // mol C s-1
+		double MORlength = 60000*km2m; // Unconstrained parameter, default 60000 km (Earth today), likely did not vary monotonically in the past
+
+		if (!staglid) Rmelt = vConv*MORlength*zCrust*rhoCrust; // Enhancement of rate of melting due to plate tectonics. Also a function of age. See Sasaki & Tajika 1995.
+		else Rmelt = Asurf*vConv*rhoMagma * (rhoCrust*gsurf*zCrust/(P0-Pf)); // kg s-1, Kite et al. (2009) eq. 25 not normalized by planet mass. Note typo: P0>Pf
+
+		FCoutgas = deltaCvolcEarth * Rmelt/(RmeltEarth*mEarth);         // mol C s-1. Accurate for Earth magma C concentrations, but for other mantle concentrations, should be calculated explicitly (MELTS?)
+
+		// Update mantle temperature using effective thermal conductivity scaled with Nu
+		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/(d*d));
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from continental weathering
@@ -544,8 +567,8 @@ int main(int argc, char *argv[]) {
 //				}
 //				else if (i > 2 && xrain[3][i-1] < deplCcrit/tol) { // Last step for which PHREEQC returned a result (kinsteps-1 unless sim interrupted)
 //					// Roughly estimate drawdown rate anyway (scaled down from closest determined value), in case next iteration fails
-//					xrain[4][i] = (xrain[2][i+1] - xrain[2][i])/kintime*(double)kinsteps;
-//					dCdtContW = sqrt(xrain[4][i+1]*xrain[4][i])*xrain[3][i-1]/deplCcrit;
+//					xrain[4][i] = (xrain[2][i-1] - xrain[2][i-2])/kintime*(double)kinsteps;
+//					dCdtContW = xrain[4][i]*xrain[3][i-1]/deplCcrit;
 //					kintime = 10.0*kintime;
 //					printf("Continental weathering: Didn't go far enough in time, increasing time span of simulation 10-fold to %g years...\n", kintime/Yr2sec);
 //				}
@@ -562,7 +585,7 @@ int main(int argc, char *argv[]) {
 //			else {
 //				dCdtContW = 0.0;
 //				for (j=2;j<i-1;j++) {
-//					xrain[4][j] = (xrain[2][j+1] - xrain[2][j])/kintime*(double)kinsteps; // Instantaneous C drawdown rate (mol (kg H2O)-1 s-1)
+//					xrain[4][j] = (xrain[2][j-1] - xrain[2][j-2])/kintime*(double)kinsteps; // Instantaneous C drawdown rate (mol (kg H2O)-1 s-1)
 //					printf("%d \t Time: %g yr\t %g\t %g\t %g\t %g\n", j, xrain[0][j]/Yr2sec, xrain[1][j], xrain[2][j], xrain[3][j], xrain[4][j]);
 //					dCdtContW = dCdtContW + xrain[4][j]; // Arithmetically average over time span to get rid of PHREEQC numerical noise
 //				}                                        // (geom average would be more accurate but has 50% chance of yielding a NaN = sqrt(<0))
