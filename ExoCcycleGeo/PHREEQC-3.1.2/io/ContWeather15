@@ -231,7 +231,7 @@ Wollastonite
 	-m		0
 	-m0		0
 	-tol		1e-8
--steps	3.16e7 in 20 steps # 3.16e9 in 2000 steps # 100 years
+-steps	3.15677e+10 in 100 steps
 -cvode	true
 -bad_step_max 1000           # default 500
 
@@ -239,20 +239,20 @@ INCREMENTAL_REACTIONS true
 
 SOLUTION 1 Rainwater (Sanusi et al. 1996, Lara et al. 2001, Das et al. 2005, Baez et al. 2007)
 
-	pH		5.5	charge
-	pe		9 # Random choice
-	temp		15
-	pressure	1
-	-water		0.149 # kg, scaled with runoff
+	pH 	 	11.0599 charge
+	pe 	 	-7.83796
+	temp 	 	15
+	pressure 	1.01512
+	-water 	 	1.39079
 	-units		mol/kgw
 	Cl		10e-6 as Cl-
 	Na		5e-6 as Na+
 	K		3e-6 as K+
 	Ca		5e-6 as Ca+2 	# 1 microeq = 2 microM
 	Mg		4e-6 as Mg+2  	# 1 microeq = 2 microM
-	C(4)		0.0 # 80e-6 as HCO3-
-	C(-4)		0.0 
-	N		0.0 # 35e-6 as NO3-   # 20e-6 NH4+ + 15e-6 NO3-
+	C(4) 		0.00114103 mol/kgw	CO2(g) 	-8.16997
+	C(-4) 		6.5157e-14 mol/kgw	CH4(g) 	-10.4274
+	N 		0.00156853 mol/kgw	N2(g) 	0.000566183
 	S		40e-6 as SO4-2  # 1 microeq = 2 microM
 
 SELECTED_OUTPUT

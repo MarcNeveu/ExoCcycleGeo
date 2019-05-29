@@ -2,16 +2,16 @@ TITLE ExoCcycleGeo generated speciation input using core10.dat
 
 SOLUTION 1 Planetary ocean surface waters (PHREEQC v3 manual p. 282)
 
-	pH		8.22 charge
-	temp 	 	14.85
-	pressure 	1
-	pe 	 	12.3815
+	pH 	 	8.22 charge
+	temp 	 	26.85
+	pressure 	0.986923
+	pe 	 	-5.21199
 # Mass of Earth’s atmosphere: 5.1480e18 kg
 # Mean molecular mass of Earth’s atmosphere: 29 g mol -1
 # Moles of air in Earth’s atmosphere: 1.775e20 mol
 # Mass of Earth’s oceans: 1.4e21 kg (/(1-L): water-world)
 # Mass of ocean per mole of air: 7.9 kg
-	-water		7.9 #kg
+	-water 	 	10.2546
 	units		mol/kgw
 	Ca		0.010287     # 412.3 ppm -> 412.3e-6 kg / 40.078 g/mol * 1000
 	Mg		0.05315      # 1291.8e-6/(24.305/1000)
@@ -21,10 +21,10 @@ SOLUTION 1 Planetary ocean surface waters (PHREEQC v3 manual p. 282)
 	Si		0.000071246  # 4.28e-6/((28.0855+2*15.994)/1000), SiO2 is master species
 	Cl		0.5459       # 19353.0e-6/(35.4527/1000)
 # C expressed in mol/kgw rather than ppm. For some reason (likely gfw set as HCO3 in master species), PHREEQC otherwise interprets C as HCO3 (mass 61) so the conversion from ppm to mol/kgw is messed up.
-	C(4)		0.0022479               # 27 ppm C, = 141/M(HCO3)*M(C), default: Alkalinity 141.682 as HCO3
-	C(-4)		0.0
+	C(4) 		0.00225 mol/kgw	CO2(g) 	-0.306747
+	C(-4) 		0 mol/kgw
 	S(6)		0.02824      # 2712.0e-6/((32.066+4*15.994)/1000), SO4 is master species
-	N		0.0                     # Absent on abiotic Earth?
+	N 		0.5 mol/kgw	N2(g) 	-0.306747
 #	N(5)		0.29/62.0               # Likely mostly biological
 #	N(-3)		0.03/(14.0067+4*1.0079) # Likely mostly biological
 

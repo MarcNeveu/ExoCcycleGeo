@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
 	double dCdtContW = 0.0;         // Carbon drawdown rate due to continental weathering (mol (kg H2O)-1 s-1)
 
 	// Quantities to be computed by thermal/geodynamic model
-	int staglid = 0;                // 1 if stagnant-lid, 0 if mobile-lid
+	int staglid = 1;                // 1 if stagnant-lid, 0 if mobile-lid
 	double d = 0.0;                 // Depth to core-mantle boundary (m)
 	double Tmantle = 0.0;           // Mantle temperature (K)
 	double H = 0.0;                 // Specific radiogenic heating rate (J s-1 kg-1)
@@ -298,32 +298,32 @@ int main(int argc, char *argv[]) {
 		break;
 	case 2: // Use CHNOSZ to get log fO2 for hematite-magnetite (HM) buffer at given T and P.
 		printf("Redox set to HM buffer\n");
-		logfO2 = -6.0*CHNOSZ_logK("hematite", "cr", Tsurf, Psurf, "SUPCRT92")
-			     +4.0*CHNOSZ_logK("magnetite", "cr", Tsurf, Psurf, "SUPCRT92")
-			     +1.0*CHNOSZ_logK("O2", "g", Tsurf, Psurf, "SUPCRT92");
+		logfO2 = -6.0*CHNOSZ_logK("hematite", "cr", Tsurf - Kelvin, Psurf, "SUPCRT92")
+			     +4.0*CHNOSZ_logK("magnetite", "cr", Tsurf - Kelvin, Psurf, "SUPCRT92")
+			     +1.0*CHNOSZ_logK("O2", "g", Tsurf - Kelvin, Psurf, "SUPCRT92");
 		break;
 	case 3: // Use CHNOSZ to get log fO2 for fayalite-magnetite-quartz (FMQ) buffer at given T and P.
 		printf("Redox set to FMQ buffer\n");
-		logfO2 = -3.0*CHNOSZ_logK("quartz", "cr", Tsurf, Psurf, "SUPCRT92")
-			     -2.0*CHNOSZ_logK("magnetite", "cr", Tsurf, Psurf, "SUPCRT92")
-		         +3.0*CHNOSZ_logK("fayalite", "cr", Tsurf, Psurf, "SUPCRT92")
-			     +1.0*CHNOSZ_logK("O2", "g", Tsurf, Psurf, "SUPCRT92");
+		logfO2 = -3.0*CHNOSZ_logK("quartz", "cr", Tsurf - Kelvin, Psurf, "SUPCRT92")
+			     -2.0*CHNOSZ_logK("magnetite", "cr", Tsurf - Kelvin, Psurf, "SUPCRT92")
+		         +3.0*CHNOSZ_logK("fayalite", "cr", Tsurf - Kelvin, Psurf, "SUPCRT92")
+			     +1.0*CHNOSZ_logK("O2", "g", Tsurf - Kelvin, Psurf, "SUPCRT92");
 		break;
 	case 4: // Use CHNOSZ to get log fO2 for iron-wustite (IW) buffer at given T and P.
 		printf("Redox set to IW buffer\n");
-		logfO2 = +2.0*CHNOSZ_logK("Fe", "cr", Tsurf, Psurf, "SUPCRT92")
-			     -2.0*CHNOSZ_logK("FeO", "cr", Tsurf, Psurf, "SUPCRT92")
-			     +1.0*CHNOSZ_logK("O2", "g", Tsurf, Psurf, "SUPCRT92");
+		logfO2 = +2.0*CHNOSZ_logK("Fe", "cr", Tsurf - Kelvin, Psurf, "SUPCRT92")
+			     -2.0*CHNOSZ_logK("FeO", "cr", Tsurf - Kelvin, Psurf, "SUPCRT92")
+			     +1.0*CHNOSZ_logK("O2", "g", Tsurf - Kelvin, Psurf, "SUPCRT92");
 		break;
 	default:
 		printf("ExoCcycleGeo: Redox switch incorrectly specified, should be 1 (current Earth surface), 2 (hematite-magnetite), "
 				"3 (fayalite-magnetite-quartz), or 4 (iron-wustite). Exiting.\n");
 		exit(0);
 	}
-	logKO2H2O = -4.0*CHNOSZ_logK("H+", "aq", Tsurf, Psurf, "SUPCRT92")
-				-4.0*CHNOSZ_logK("e-", "aq", Tsurf, Psurf, "SUPCRT92")
-				-1.0*CHNOSZ_logK("O2", "g", Tsurf, Psurf, "SUPCRT92")
-				+2.0*CHNOSZ_logK("H2O", "liq", Tsurf, Psurf, "SUPCRT92");
+	logKO2H2O = -4.0*CHNOSZ_logK("H+", "aq", Tsurf - Kelvin, Psurf, "SUPCRT92")
+				-4.0*CHNOSZ_logK("e-", "aq", Tsurf - Kelvin, Psurf, "SUPCRT92")
+				-1.0*CHNOSZ_logK("O2", "g", Tsurf - Kelvin, Psurf, "SUPCRT92")
+				+2.0*CHNOSZ_logK("H2O", "liq", Tsurf - Kelvin, Psurf, "SUPCRT92");
 
 	printf("log f(O2) = %g\n", logfO2);
 	pe = -pH + 0.25*(logfO2+logKO2H2O);
@@ -493,6 +493,7 @@ int main(int argc, char *argv[]) {
 		  +   0.22e-9 * 56.9e-5 * exp(log(0.5)/( 0.704*Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 235-U
 		  +  30.8e-9  * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * (realtime - 4.5*Gyr2sec)); // 238-U
 
+		// Compute effective thermal conductivity
 		if (!staglid) Tref = Tsurf; // TODO circular logic to then have value of !staglid depend on Tref below.
 		else          Tref = Tmantle - 2.23*Tmantle*Tmantle/A0; // Tmantle - Tc in K09
 
@@ -515,7 +516,7 @@ int main(int argc, char *argv[]) {
 		zCrust = 10.0*km2m;
 		if (!staglid) Pf = 0.0; // K09 equations (10-12)
 		else Pf = rhoCrust*gsurf*zCrust;
-		P0 = rhoCrust*gsurf*(10.0*zCrust); // Should be higher than Pf. Arbitrary for now TODO calculate based on brittle-ductile transition?, 2.0*zCrust results in 50% melting rate
+		P0 = rhoCrust*gsurf*(10.0*zCrust); // Should be higher than Pf. Arbitrary for now,  TODO calculate based on brittle-ductile transition?, 2.0*zCrust results in 50% melting rate
 
 		double MORlength = 60000*km2m; // Unconstrained parameter, default 60000 km (Earth today), likely did not vary monotonically in the past
 
@@ -568,7 +569,7 @@ int main(int argc, char *argv[]) {
 //				else if (i > 2 && xrain[3][i-1] < deplCcrit/tol) { // Last step for which PHREEQC returned a result (kinsteps-1 unless sim interrupted)
 //					// Roughly estimate drawdown rate anyway (scaled down from closest determined value), in case next iteration fails
 //					xrain[4][i] = (xrain[2][i-1] - xrain[2][i-2])/kintime*(double)kinsteps;
-//					dCdtContW = xrain[4][i]*xrain[3][i-1]/deplCcrit;
+//					dCdtContW = sqrt(xrain[4][i-1]*xrain[4][i-2])*xrain[3][i-1]/deplCcrit;
 //					kintime = 10.0*kintime;
 //					printf("Continental weathering: Didn't go far enough in time, increasing time span of simulation 10-fold to %g years...\n", kintime/Yr2sec);
 //				}
