@@ -171,6 +171,7 @@ int main(int argc, char *argv[]) {
 	double Ra = 0.0;                // Rayleigh number for mantle convection (no dim)
 	double Nu = 0.0;                // Nusselt number (no dim)
 	double Tref = 0.0;              // Temperature at outer boundary of convective zone (surface or base of stagnant lid)
+	double driveStress = 0.0;       // Driving stress at the base of lithosphere, used to switch between stagnant and mobile-lid modes
 
 	// Quantities to be computed by melting model
 	double Rmelt = 0.0;             // Rate of melt generation (m-2 s-1)
@@ -198,7 +199,7 @@ int main(int argc, char *argv[]) {
 	// Inputs
 	//-------------------------------------------------------------------
 
-	double dtime = 1.0e-3*Myr2sec;     // Time step (s)
+	double dtime = 1.0e8; // 1.0e-3*Myr2sec;     // Time step (s)
 
 	ntime = (int) (5000.0*Myr2sec/dtime); // Number of time steps of simulation
 
@@ -485,7 +486,7 @@ int main(int argc, char *argv[]) {
 		 */
 
 		// Kinematic viscosity
-		nu = 1.0e16*exp((2.0e5 + (rhoMantle*gsurf*d/2.0) *1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
+		nu = 1.0e-16*exp((2.0e5 + (rhoMantle*gsurf*d/2.0) *1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
 
 		// Compute instantaneous heating rate (Kite et al. 2009 Table 1): H = X_4.5 * W * exp(ln(1/2) / t1/2 * (t-4.5))
 		H =  36.9e-9  * 2.92e-5 * exp(log(0.5)/( 1.26 *Gyr2sec) * (realtime - 4.5*Gyr2sec))  //  40-K
@@ -508,9 +509,31 @@ int main(int argc, char *argv[]) {
 		// Viscosity = stress / strain rate (assumed Newtonian - see Deschamps & Sotin 2000), i.e. stress = viscosity * vConv/δ, w/ δ: boundary layer thickness
 		// δ = thickness of thermal gradient = 2.32*(kappa*δ/vConv)^0.5 (Turcotte & Schubert 2002, eq. 6.327 with δ/vConv = conduction timescale)
 		// So δ^0.5 = 2.32*(kappa/vConv)^0.5 and δ ≈ 5.38*kappa/vConv
-		double driveStress = nu*rhoMantle*vConv*vConv/(5.38*kappa);
+		driveStress = nu*rhoMantle*vConv*vConv/(5.38*kappa);
 
-		// Lithospheric yield stress = strength at brittle-ductile transition TODO
+		// Lithospheric yield stress = strength at brittle-ductile transition (BDT). Solve for pressure of BDT. Could solve for brittleStrength-ductileStrength = f(P) = 0.
+		// But common zero-finding algorithms (Newton-Raphson, binary search) are tricky here because we are choosing to approximate a uniform mantle temperature and therefore there is no geotherm.
+		// With a fixed pressure, both brittle and ductile strengths increase with depth.
+		// Instead, we know ductile > brittle down to some depth. Let's just increase P until brittle > ductile.
+		// TODO that won't work, need to compute a thermal profile.
+		double P = 0.0;
+//		for
+		double brittleStrength = 0.0;
+		if (P < 200.0e6) brittleStrength = 0.85*P;
+		else brittleStrength = 0.6*P + 50.0e6;
+
+		// Ductile strength requires choosing timescale for mantle convection = time step (3e-11 s-1 for dtime = 1e3 years,
+		// relatively insensitive to that time step because viscosity varies by orders of mag with temperature).
+		// Assume grain size 1.0e-3 m = 1 mm
+		double ductileStrength = 0.0;
+		double ductileStrengthDiff = 0.0; // Dry diffusion
+		double ductileStrengthDisl = 0.0; // Dry dislocation
+		ductileStrengthDiff =     1.0/dtime * pow(10.0,-5.25)*pow(1.0e-3,2.98)*exp((261.0e3 + P* 6.0e-6)/(R_G*Tmantle))            ; // Korenaga & Karato (2008), dry diffusion
+		ductileStrengthDisl = pow(1.0/dtime * pow(10.0,-6.09)                 *exp((610.0e3 + P*13.0e-6)/(R_G*Tmantle)) , 1.0/4.94); // Korenaga & Karato (2008), dry dislocation
+		ductileStrength = ductileStrengthDiff + ductileStrengthDisl; // TODO Better treated in parallel than in series
+
+		// Crustal thickness is the depth of the brittle-ductile transition
+
 
 		// Melting model of Kite et al. (2009)
 		zCrust = 10.0*km2m;
