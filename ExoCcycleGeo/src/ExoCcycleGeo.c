@@ -2,10 +2,8 @@
  ============================================================================
  Name        : ExoCcycleGeo.c
  Author      : Marc Neveu
-
  Computes net C fluxes (in mol C m-2 s-1) at the surface-atmosphere interface
  of a terrestrial planet due to geophysical and geochemical processes.
-
  TODO:
  1- Lookup table based on PHREEQC calculations of kinetics of weathering for
  felsic and mafic rock, as a function of temperature and atmospheric carbon
@@ -94,7 +92,8 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 		double *xgas, double *xaq, int forcedPP, double kintime, int kinsteps, char **tempinput);
 int cleanup (char path[1024]);
 double molmass_atm (double *xgas);
-int strain (double Pressure, double Xhydr, double T, double *strain_rate, double *Brittle_strength, double porosity);
+double brittleDuctile (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double dtime);
+double brittleDuctile_prime (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double dtime);
 
 //-------------------------------------------------------------------
 // MAIN PROGRAM
@@ -162,16 +161,25 @@ int main(int argc, char *argv[]) {
 
 	// Quantities to be computed by thermal/geodynamic model
 	int staglid = 1;                // 1 if stagnant-lid, 0 if mobile-lid
+	int n_iter = 0, n_iter_max = 100; // Iteration counter and max for the Bisection/Newton-Raphson loop to determine T_BDT
 	double d = 0.0;                 // Depth to core-mantle boundary (m)
 	double Tmantle = 0.0;           // Mantle temperature (K)
 	double H = 0.0;                 // Specific radiogenic heating rate (J s-1 kg-1)
 	double kappa = k/(rhoMantle*Cp); // Mantle thermal diffusivity (m2 s-1)
 	double nu = 0.0;                // Mantle kinematic viscosity (m2 s-1)
-	double zCrust = 0.0;            // Crustal thickness (m)
+	double zCrust = 10.0*km2m;      // Crustal thickness (m)
 	double Ra = 0.0;                // Rayleigh number for mantle convection (no dim)
 	double Nu = 0.0;                // Nusselt number (no dim)
 	double Tref = 0.0;              // Temperature at outer boundary of convective zone (surface or base of stagnant lid)
 	double driveStress = 0.0;       // Driving stress at the base of lithosphere, used to switch between stagnant and mobile-lid modes
+	double yieldStress = 0.0;       // Lithospheric yield stress, taken to be the strength at the brittle-ductile transition (brittle strength = ductile strength)
+	double T_BDT = 0.0;             // Temperature at brittle-ductile transition (K)
+	double T_INF = 0.0, T_SUP = 0.0, T_TEMP = 0.0; // Intermediate temperatures used in determination of T_BDT by Bisection/Newton-Raphson loop
+	double dT = 0.0, dTold = 0.0;   // Intermediate temperature changes used in determination of T_BDT by Bisection/Newton-Raphson loop
+	double f_inf = 0.0, f_sup = 0.0; // Differences between brittle and ductile strengths, used in determination of T_BDT by Bisection/Newton-Raphson loop (P)
+	double f_x = 0.0, f_prime_x = 0.0; // Derivatives of the above (Pa K-1)
+	double NewtRaphThresh = 1.0e5;  // Threshold for the Bisection/Newton-Raphson loop, here in Pa
+	double P_BDT = 0.0;             // Pressure at brittle-ductile transition (Pa)
 
 	// Quantities to be computed by melting model
 	double Rmelt = 0.0;             // Rate of melt generation (m-2 s-1)
@@ -479,13 +487,7 @@ int main(int argc, char *argv[]) {
 		// Calculate surface C flux from outgassing
 		//-------------------------------------------------------------------
 
-		/* The geophysical scaling laws below for heat flux, outgassing rate, and subduction rate are solely valid for limited and very
-		 * specific cases and are not generalizable.
-		 *
-		 * Vary tectonic mode with planet mass. More massive planets could be less effective at subducting.
-		 */
-
-		// Kinematic viscosity
+		// Kinematic viscosity TODO make consistent with laws used to calculate ductile strength?
 		nu = 1.0e-16*exp((2.0e5 + (rhoMantle*gsurf*d/2.0) *1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
 
 		// Compute instantaneous heating rate (Kite et al. 2009 Table 1): H = X_4.5 * W * exp(ln(1/2) / t1/2 * (t-4.5))
@@ -505,41 +507,104 @@ int main(int argc, char *argv[]) {
 		vConv = 2.0*(Nu-1.0) * (k/(rhoMagma*Cp*(r_p-r_c))) * (Tmantle-Tsurf) / (Tmantle-Tref); // Check against eq. (6.379) of Turcotte & Schubert (2002), p. 514
 
 		// Determine if convective driving stress exceeds lithosphere yield stress, in which case switch to mobile-lid (plate tectonics) regime
-		// Convective drive stress:
-		// Viscosity = stress / strain rate (assumed Newtonian - see Deschamps & Sotin 2000), i.e. stress = viscosity * vConv/δ, w/ δ: boundary layer thickness
-		// δ = thickness of thermal gradient = 2.32*(kappa*δ/vConv)^0.5 (Turcotte & Schubert 2002, eq. 6.327 with δ/vConv = conduction timescale)
-		// So δ^0.5 = 2.32*(kappa/vConv)^0.5 and δ ≈ 5.38*kappa/vConv
+		/* Convective drive stress:
+		 * Viscosity = stress / strain rate (assumed Newtonian - see Deschamps & Sotin 2000), i.e. stress = viscosity * vConv/δ, w/ δ: boundary layer thickness
+		 * δ = thickness of thermal gradient = 2.32*(kappa*δ/vConv)^0.5 (Turcotte & Schubert 2002, eq. 6.327 with δ/vConv = conduction timescale)
+		 * So δ^0.5 = 2.32*(kappa/vConv)^0.5 and δ ≈ 5.38*kappa/vConv */
 		driveStress = nu*rhoMantle*vConv*vConv/(5.38*kappa);
 
-		// Lithospheric yield stress = strength at brittle-ductile transition (BDT). Solve for pressure of BDT. Could solve for brittleStrength-ductileStrength = f(P) = 0.
-		// But common zero-finding algorithms (Newton-Raphson, binary search) are tricky here because we are choosing to approximate a uniform mantle temperature and therefore there is no geotherm.
-		// With a fixed pressure, both brittle and ductile strengths increase with depth.
-		// Instead, we know ductile > brittle down to some depth. Let's just increase P until brittle > ductile.
-		// TODO that won't work, need to compute a thermal profile.
-		double P = 0.0;
-//		for
-		double brittleStrength = 0.0;
-		if (P < 200.0e6) brittleStrength = 0.85*P;
-		else brittleStrength = 0.6*P + 50.0e6;
+		/* Lithospheric yield stress = strength at brittle-ductile transition (BDT).
+		 * Geotherm near surface is T prop to depth, with T=Tsurf at depth = 0 and T=Tmantle at depth = zCrust = P(BDT)/(rhoCrust*gsurf). [1]
+		 * So T = (Tmantle-Tsurf)*depth/zCrust + Tsurf. [2]
+		 * P ≈ rhoCrust*gsurf*depth = rhoCrust*gsurf*zCrust*(T-Tsurf)/(Tmantle-Tsurf) [3]
+		 * Initiate zCrust. Solve for temperature of BDT: brittleStrength-ductileStrength = f(P,T) = f(T) = 0. Get updated zCrust from [2] (= depth). */
 
-		// Ductile strength requires choosing timescale for mantle convection = time step (3e-11 s-1 for dtime = 1e3 years,
-		// relatively insensitive to that time step because viscosity varies by orders of mag with temperature).
-		// Assume grain size 1.0e-3 m = 1 mm
-		double ductileStrength = 0.0;
-		double ductileStrengthDiff = 0.0; // Dry diffusion
-		double ductileStrengthDisl = 0.0; // Dry dislocation
-		ductileStrengthDiff =     1.0/dtime * pow(10.0,-5.25)*pow(1.0e-3,2.98)*exp((261.0e3 + P* 6.0e-6)/(R_G*Tmantle))            ; // Korenaga & Karato (2008), dry diffusion
-		ductileStrengthDisl = pow(1.0/dtime * pow(10.0,-6.09)                 *exp((610.0e3 + P*13.0e-6)/(R_G*Tmantle)) , 1.0/4.94); // Korenaga & Karato (2008), dry dislocation
-		ductileStrength = ductileStrengthDiff + ductileStrengthDisl; // TODO Better treated in parallel than in series
+		// Initialize bounds for T_BDT
+		T_INF = Tsurf;                     // Extreme lower bound: T physically needs to be > 0 K
+		T_SUP = Tmantle;                   // Assumes f(T_SUP) = brittle-ductile (T_sup) will always be positive (mantle hot enough)
 
-		// Crustal thickness is the depth of the brittle-ductile transition
+		// Ensure that f(T_INF)<0 and f(T_SUP)>0
 
+		f_inf = brittleDuctile(T_INF, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, dtime);
+		f_sup = brittleDuctile(T_SUP, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, dtime);
+
+		if (f_inf*f_sup > 0.0) {
+			if (f_sup < 0.0) printf("ExoCcycleGeo: Brittle strength < ductile strength, i.e. brittle regime even at Tmantle=%g K.\n"
+					                 "Brittle-ductile transition could not be determined.\n", Tmantle); // Brittle regime in mantle
+			else zCrust = 0.0; // Ductile regime at surface
+		}
+		else {
+			if (f_inf > 0.0) { // Swap INF and SUP if f_inf > 0 and f_sup < 0
+				T_TEMP = T_INF;
+				T_INF = T_SUP;
+				T_SUP = T_TEMP;
+			}
+			T_BDT = 0.5*(T_INF+T_SUP); // Initialize the guess for the root T_BDT,
+			dTold = fabs(T_INF-T_SUP); // Initialize the "stepsize before last"
+			dT = dTold;                // Initialize the last stepsize
+
+			f_x = brittleDuctile(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, dtime);
+			f_prime_x = brittleDuctile_prime(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, dtime);
+
+			// Loop over allowed iterations to find T_BDT that is a root of f
+			n_iter = 0;
+			while (fabs(f_x) > NewtRaphThresh) {
+
+				// Bisect if Newton is out of range, or if not decreasing fast enough
+				if ((((T_BDT-T_SUP)*f_prime_x-f_x)*((T_BDT-T_INF)*f_prime_x-f_x) > 0.0) || (fabs(2.0*f_x) > fabs(dTold*f_prime_x))) {
+					dTold = dT;
+					dT = 0.5*(T_SUP-T_INF);
+					T_BDT = T_INF + dT;
+				}
+				else { // Do Newton-Raphson
+					dTold = dT;
+					dT = f_x/f_prime_x;
+					T_BDT = T_BDT - dT;
+				}
+
+				// Calculate updated f and f'
+				f_x = brittleDuctile(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, dtime);
+				f_prime_x = brittleDuctile_prime(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, dtime);
+
+				if (f_x < 0.0) T_INF = T_BDT; // Maintain the bracket on the root
+				else T_SUP = T_BDT;
+
+				n_iter++;
+				if (n_iter>=n_iter_max) {
+					printf("ExoCcycleGeo: could not find the brittle-ductile transition after %d iterations\n",n_iter_max);
+					break;
+				}
+			}
+
+			zCrust = (T_BDT-Tsurf)/(Tmantle-Tsurf)*zCrust; // Crustal thickness is the depth of the brittle-ductile transition
+		}
+
+		P_BDT = rhoCrust*gsurf*zCrust; // Pressure at brittle-ductile transition (Pa)
+
+		// Equate yield stress to brittle strength at brittle-ductie transition (equivalently, ductile strength but that expression is more complicated)
+		if (P_BDT < 200.0e6) yieldStress = 0.85*P_BDT;
+		else yieldStress = 0.6*P_BDT + 50.0e6;
+
+	// Debug -----
+//		printf("T_BDT=%g K, P_BDT=%g MPa, driveStress=%g MPa, yieldStress=%g MPa, zCrust=%g km\n", T_BDT, P_BDT/1.0e6, driveStress/1.0e6, yieldStress/1.0e6, zCrust/km2m);
+//
+//		double ductileDiff = 0.0;                                   // Dry silicate diffusion (Pa)
+//		double ductileDisl = 0.0;                                   // Dry silicate dislocation (Pa)
+//		ductileDiff =     1.0/dtime * pow(10.0,-5.25)*pow(1.0e-3,2.98)*exp((261.0e3 + P_BDT* 6.0e-6)/(R_G*T_BDT))            ; // Korenaga & Karato (2008), dry diffusion
+//		ductileDisl = pow(1.0/dtime * pow(10.0,-6.09)                 *exp((610.0e3 + P_BDT*13.0e-6)/(R_G*T_BDT)) , 1.0/4.94); // Korenaga & Karato (2008), dry dislocation
+//		yieldStress = 1.0/(1.0/ductileDiff + 1.0/ductileDisl); // Parallel combination (Cizkova et al. 2012 eq. 1)
+//
+//		printf("yieldStress=%g MPa\n", yieldStress/1.0e6);
+	// End debug -----
+
+		// Compare driving and yield stresses to assess tectonic regime
+		if (yieldStress < driveStress) staglid = 0; // Mobile-lid regime, i.e. plate tectonics
+		else staglid = 1;                           // Stagnant-lid regime
 
 		// Melting model of Kite et al. (2009)
-		zCrust = 10.0*km2m;
 		if (!staglid) Pf = 0.0; // K09 equations (10-12)
 		else Pf = rhoCrust*gsurf*zCrust;
-		P0 = rhoCrust*gsurf*(10.0*zCrust); // Should be higher than Pf. Arbitrary for now,  TODO calculate based on brittle-ductile transition?, 2.0*zCrust results in 50% melting rate
+		P0 = 2.0*P_BDT; // Should be higher than Pf. Arbitrary for now, rhoCrust*gsurf*2.0*zCrust results in 50% melting rate
 
 		double MORlength = 60000*km2m; // Unconstrained parameter, default 60000 km (Earth today), likely did not vary monotonically in the past
 
@@ -1124,36 +1189,92 @@ double molmass_atm (double *xgas) {
 
 /*--------------------------------------------------------------------
  *
- * Subroutine strain
+ * Subroutine brittleductile
  *
- * Calculates the brittle strength in Pa and corresponding ductile
- * strain rate in s-1 of silicate rock.
+ * Calculates the difference between the brittle strength and ductile
+ * strength of the interior, both in Pa.
  * Brittle-ductile and brittle-plastic transitions are
  * mixed up, although they shouldn't (Kohlstedt et al. 1995).
+ *
  * The brittle strength is given by a friction/low-P Byerlee type law:
- * stress = mu*P, assuming negligible water pressure since in practice
+ * strength = mu*P, assuming negligible water pressure since in practice
  * the brittle-ductile transition occurs in dehydrated rock (T>700 K)
  * even over long time scales.
- * The ductile strength is given by a flow law:
+ *
+ * The ductile strength sigma is given by a flow law:
  * d epsilon/dt = A*sigma^n*d^-p*exp[(-Ea+P*V)/RT].
+ * This law requires choosing timescale for mantle convection =
+ * time step (3e-11 s-1 for dtime = 1e3 years, relatively insensitive
+ * to that time step because viscosity varies by orders of mag with
+ * temperature).
  *
  *--------------------------------------------------------------------*/
 
-int strain (double Pressure, double Xhydr, double T, double *strain_rate, double *Brittle_strength, double porosity) {
+double brittleDuctile (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double dtime) {
 
-	double Hydr_strength = 0.0;
-	double Dry_strength = 0.0;
+	double f = 0.0;
 
-//	Hydr_strength = mu_f_serp*Pressure;
-//	if (Pressure <= 200.0e6) Dry_strength = mu_f_Byerlee_loP*Pressure;
-//	else Dry_strength = mu_f_Byerlee_hiP*Pressure + C_f_Byerlee_hiP;
-//	(*Brittle_strength) = Xhydr*Hydr_strength + (1.0-Xhydr)*Dry_strength;
-//	(*Brittle_strength) = (*Brittle_strength)/(1.0-porosity);
-//
-//	if (T > 140.0)
-//		(*strain_rate) = pow(10.0,5.62)*pow((*Brittle_strength)/MPa,1.0)*pow(d_flow_law,-3.0)*exp((-240.0e3 + Pressure*0.0)/(1.0*R_G*T));
-//	else // Set T at 140 K to calculate ductile strength so that it doesn't yield numbers too high to handle
-//		(*strain_rate) = pow(10.0,5.62)*pow((*Brittle_strength)/MPa,1.0)*pow(d_flow_law,-3.0)*exp((-240.0e3 + Pressure*0.0)/(1.0*R_G*140.0));
+	double P = rhoCrust*gsurf*zCrust*(T-Tsurf)/(Tmantle-Tsurf); // Pressure (Pa)
+	double d = 1.0e-3;                                          // Grain size (m)
+	double brittleStrength = 0.0;                               // Brittle strength (Pa)
+	double ductileStrength = 0.0;                               // Ductile strength (Pa)
+	double ductileDiff = 0.0;                                   // Dry silicate diffusion (Pa)
+	double ductileDisl = 0.0;                                   // Dry silicate dislocation (Pa)
 
-	return 0;
+	// Brittle strength
+	if (P < 200.0e6) brittleStrength = 0.85*P;
+	else brittleStrength = 0.6*P + 50.0e6;
+
+	// Ductile strength
+	ductileDiff =     1.0/dtime * pow(10.0,-5.25)*pow(d,2.98)*exp((261.0e3 + P* 6.0e-6)/(R_G*T))            ; // Korenaga & Karato (2008), dry diffusion
+	ductileDisl = pow(1.0/dtime * pow(10.0,-6.09)            *exp((610.0e3 + P*13.0e-6)/(R_G*T)) , 1.0/4.94); // Korenaga & Karato (2008), dry dislocation
+	ductileStrength = 1.0/(1.0/ductileDiff + 1.0/ductileDisl); // Parallel combination (Cizkova et al. 2012 eq. 1)
+
+	f = brittleStrength-ductileStrength;
+
+	return f;
+}
+
+/*--------------------------------------------------------------------
+ *
+ * Subroutine brittleductile_prime
+ *
+ * Calculates the temperature derivative of brittleDuctile.
+ *
+ *--------------------------------------------------------------------*/
+
+double brittleDuctile_prime (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double dtime) {
+
+	double f_prime = 0.0;
+
+	double P = rhoCrust*gsurf*zCrust*(T-Tsurf)/(Tmantle-Tsurf); // Pressure (Pa)
+	double dPdT = rhoCrust*gsurf*zCrust/(Tmantle-Tsurf);        // Geotherm (Pa K-1), independent of T
+	double d = 1.0e-3;                                          // Grain size (m)
+	double brittle_prime = 0.0;                                 // Brittle strength (Pa)
+	double ductile_prime = 0.0;                                 // Ductile strength (Pa)
+	double ductileDiff = 0.0;                                   // Dry silicate diffusion (Pa)
+	double ductileDisl = 0.0;                                   // Dry silicate dislocation (Pa)
+	double ductileDiff_prime = 0.0;                             // Dry silicate diffusion (Pa)
+	double ductileDisl_prime = 0.0;                             // Dry silicate dislocation (Pa)
+
+	// Brittle strength
+	if (P < 200.0e6) brittle_prime = 0.85*dPdT;
+	else brittle_prime = 0.6*dPdT;
+
+	// Ductile strength
+	ductileDiff =     1.0/dtime * pow(10.0,-5.25)*pow(d,2.98)*exp((261.0e3 + P* 6.0e-6)/(R_G*T))            ; // Korenaga & Karato (2008), dry diffusion
+	ductileDisl = pow(1.0/dtime * pow(10.0,-6.09)            *exp((610.0e3 + P*13.0e-6)/(R_G*T)) , 1.0/4.94); // Korenaga & Karato (2008), dry dislocation
+
+	ductileDiff_prime =     1.0/dtime * pow(10.0,-5.25) * pow(d,2.98) * exp(dPdT* 6.0e-6/R_G) * exp((261.0e3-dPdT* 6.0e-6*Tsurf)/(R_G*T))
+			* (dPdT* 6.0e-6*Tsurf-261.0e3)/(     R_G*T*T);
+	ductileDisl_prime = pow(1.0/dtime * pow(10.0,-6.09)               * exp(dPdT*13.0e-6/R_G) * exp((610.0e3-dPdT*13.0e-6*Tsurf)/(R_G*T)), 1.0/4.94)
+			* (dPdT*13.0e-6*Tsurf-610.0e3)/(4.94*R_G*T*T);
+
+	// Easiest to take the derivative of the parallel combination as d/dT [Diff*Disl/(Diff+Disl)]
+	ductile_prime = ( (ductileDiff_prime*ductileDisl + ductileDiff*ductileDisl_prime) * (ductileDiff+ductileDisl)
+			         -(ductileDiff_prime+ductileDisl_prime) * ductileDiff*ductileDisl ) / pow(ductileDiff_prime + ductileDisl_prime,2);
+
+	f_prime = brittle_prime - ductile_prime;
+
+	return f_prime;
 }
