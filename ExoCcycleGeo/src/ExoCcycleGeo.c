@@ -487,8 +487,16 @@ int main(int argc, char *argv[]) {
 		// Calculate surface C flux from outgassing
 		//-------------------------------------------------------------------
 
-		// Kinematic viscosity TODO make consistent with laws used to calculate ductile strength?
-		nu = 1.0e-16*exp((2.0e5 + (rhoMantle*gsurf*d/2.0) *1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
+		// Kinematic viscosity
+		// Upper mantle: !! Check the units of the pre-exp factor! Should be for sigmain MPa and grain size in microns. Same for BDT determination.
+		double nuDiff = 1.0e6*    pow(10.0,-5.25)*pow(1.0e3,2.98)*exp((261.0e3 + rhoMantle*gsurf*d/2.0* 6.0e-6)/(R_G*Tmantle))            /rhoMantle; // Korenaga & Karato (2008), dry diffusion
+		double nuDisl = 1.0e6*pow(pow(10.0,-6.09)                *exp((610.0e3 + rhoMantle*gsurf*d/2.0*13.0e-6)/(R_G*Tmantle)) , 1.0/4.94)/rhoMantle
+				        * pow(1.0/dtime, 1.0/4.94-1.0); // Korenaga & Karato (2008), dry dislocation
+		nu = 1.0/(1.0/nuDiff + 1.0/nuDisl); // Parallel combination (Cizkova et al. 2012 eq. 1)
+		printf("nu KK08 = %g\n", nu);
+		// Lower mantle:
+		nu = 1.0e16*exp((2.0e5 + rhoMantle*gsurf*d/2.0*1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
+		printf("nu C12 = %g\n", nu);
 
 		// Compute instantaneous heating rate (Kite et al. 2009 Table 1): H = X_4.5 * W * exp(ln(1/2) / t1/2 * (t-4.5))
 		H =  36.9e-9  * 2.92e-5 * exp(log(0.5)/( 1.26 *Gyr2sec) * (realtime - 4.5*Gyr2sec))  //  40-K
@@ -586,15 +594,15 @@ int main(int argc, char *argv[]) {
 		else yieldStress = 0.6*P_BDT + 50.0e6;
 
 	// Debug -----
-//		printf("T_BDT=%g K, P_BDT=%g MPa, driveStress=%g MPa, yieldStress=%g MPa, zCrust=%g km\n", T_BDT, P_BDT/1.0e6, driveStress/1.0e6, yieldStress/1.0e6, zCrust/km2m);
-//
-//		double ductileDiff = 0.0;                                   // Dry silicate diffusion (Pa)
-//		double ductileDisl = 0.0;                                   // Dry silicate dislocation (Pa)
-//		ductileDiff =     1.0/dtime * pow(10.0,-5.25)*pow(1.0e-3,2.98)*exp((261.0e3 + P_BDT* 6.0e-6)/(R_G*T_BDT))            ; // Korenaga & Karato (2008), dry diffusion
-//		ductileDisl = pow(1.0/dtime * pow(10.0,-6.09)                 *exp((610.0e3 + P_BDT*13.0e-6)/(R_G*T_BDT)) , 1.0/4.94); // Korenaga & Karato (2008), dry dislocation
-//		yieldStress = 1.0/(1.0/ductileDiff + 1.0/ductileDisl); // Parallel combination (Cizkova et al. 2012 eq. 1)
-//
-//		printf("yieldStress=%g MPa\n", yieldStress/1.0e6);
+		printf("T_BDT=%g K, P_BDT=%g MPa, driveStress=%g MPa, yieldStress=%g MPa, zCrust=%g km\n", T_BDT, P_BDT/1.0e6, driveStress/1.0e6, yieldStress/1.0e6, zCrust/km2m);
+
+		double ductileDiff = 0.0;                                   // Dry silicate diffusion (Pa)
+		double ductileDisl = 0.0;                                   // Dry silicate dislocation (Pa)
+		ductileDiff =     1.0/dtime * pow(10.0,-5.25)*pow(1.0e-3,2.98)*exp((261.0e3 + P_BDT* 6.0e-6)/(R_G*T_BDT))            ; // Korenaga & Karato (2008), dry diffusion
+		ductileDisl = pow(1.0/dtime * pow(10.0,-6.09)                 *exp((610.0e3 + P_BDT*13.0e-6)/(R_G*T_BDT)) , 1.0/4.94); // Korenaga & Karato (2008), dry dislocation
+		yieldStress = 1.0/(1.0/ductileDiff + 1.0/ductileDisl); // Parallel combination (Cizkova et al. 2012 eq. 1)
+
+		printf("yieldStress=%g MPa\n", yieldStress/1.0e6);
 	// End debug -----
 
 		// Compare driving and yield stresses to assess tectonic regime
@@ -1225,9 +1233,9 @@ double brittleDuctile (double T, double rhoCrust, double zCrust, double gsurf, d
 	if (P < 200.0e6) brittleStrength = 0.85*P;
 	else brittleStrength = 0.6*P + 50.0e6;
 
-	// Ductile strength
-	ductileDiff =     1.0/dtime * pow(10.0,-5.25)*pow(d,2.98)*exp((261.0e3 + P* 6.0e-6)/(R_G*T))            ; // Korenaga & Karato (2008), dry diffusion
-	ductileDisl = pow(1.0/dtime * pow(10.0,-6.09)            *exp((610.0e3 + P*13.0e-6)/(R_G*T)) , 1.0/4.94); // Korenaga & Karato (2008), dry dislocation
+	// Ductile strength (*1.0e6 because pre-exp factor is for stress in MPa)
+	ductileDiff = 1.0e6*    1.0/dtime * pow(10.0,-5.25)*pow(d,2.98)*exp((261.0e3 + P* 6.0e-6)/(R_G*T))            ; // Korenaga & Karato (2008), dry diffusion
+	ductileDisl = 1.0e6*pow(1.0/dtime * pow(10.0,-6.09)            *exp((610.0e3 + P*13.0e-6)/(R_G*T)) , 1.0/4.94); // Korenaga & Karato (2008), dry dislocation
 	ductileStrength = 1.0/(1.0/ductileDiff + 1.0/ductileDisl); // Parallel combination (Cizkova et al. 2012 eq. 1)
 
 	f = brittleStrength-ductileStrength;
@@ -1249,7 +1257,7 @@ double brittleDuctile_prime (double T, double rhoCrust, double zCrust, double gs
 
 	double P = rhoCrust*gsurf*zCrust*(T-Tsurf)/(Tmantle-Tsurf); // Pressure (Pa)
 	double dPdT = rhoCrust*gsurf*zCrust/(Tmantle-Tsurf);        // Geotherm (Pa K-1), independent of T
-	double d = 1.0e-3;                                          // Grain size (m)
+	double d = 1.0e3;                                           // Grain size (µm)
 	double brittle_prime = 0.0;                                 // Brittle strength (Pa)
 	double ductile_prime = 0.0;                                 // Ductile strength (Pa)
 	double ductileDiff = 0.0;                                   // Dry silicate diffusion (Pa)
@@ -1261,13 +1269,13 @@ double brittleDuctile_prime (double T, double rhoCrust, double zCrust, double gs
 	if (P < 200.0e6) brittle_prime = 0.85*dPdT;
 	else brittle_prime = 0.6*dPdT;
 
-	// Ductile strength
-	ductileDiff =     1.0/dtime * pow(10.0,-5.25)*pow(d,2.98)*exp((261.0e3 + P* 6.0e-6)/(R_G*T))            ; // Korenaga & Karato (2008), dry diffusion
-	ductileDisl = pow(1.0/dtime * pow(10.0,-6.09)            *exp((610.0e3 + P*13.0e-6)/(R_G*T)) , 1.0/4.94); // Korenaga & Karato (2008), dry dislocation
+	// Ductile strength (*1.0e6 because pre-exp factor is for stress in MPa)
+	ductileDiff = 1.0e6*    1.0/dtime * pow(10.0,-5.25)*pow(d,2.98)*exp((261.0e3 + P* 6.0e-6)/(R_G*T))            ; // Korenaga & Karato (2008), dry diffusion
+	ductileDisl = 1.0e6*pow(1.0/dtime * pow(10.0,-6.09)            *exp((610.0e3 + P*13.0e-6)/(R_G*T)) , 1.0/4.94); // Korenaga & Karato (2008), dry dislocation
 
-	ductileDiff_prime =     1.0/dtime * pow(10.0,-5.25) * pow(d,2.98) * exp(dPdT* 6.0e-6/R_G) * exp((261.0e3-dPdT* 6.0e-6*Tsurf)/(R_G*T))
+	ductileDiff_prime = 1.0e6*    1.0/dtime * pow(10.0,-5.25) * pow(d,2.98) * exp(dPdT* 6.0e-6/R_G) * exp((261.0e3-dPdT* 6.0e-6*Tsurf)/(R_G*T))
 			* (dPdT* 6.0e-6*Tsurf-261.0e3)/(     R_G*T*T);
-	ductileDisl_prime = pow(1.0/dtime * pow(10.0,-6.09)               * exp(dPdT*13.0e-6/R_G) * exp((610.0e3-dPdT*13.0e-6*Tsurf)/(R_G*T)), 1.0/4.94)
+	ductileDisl_prime = 1.0e6*pow(1.0/dtime * pow(10.0,-6.09)               * exp(dPdT*13.0e-6/R_G) * exp((610.0e3-dPdT*13.0e-6*Tsurf)/(R_G*T)), 1.0/4.94)
 			* (dPdT*13.0e-6*Tsurf-610.0e3)/(4.94*R_G*T*T);
 
 	// Easiest to take the derivative of the parallel combination as d/dT [Diff*Disl/(Diff+Disl)]
