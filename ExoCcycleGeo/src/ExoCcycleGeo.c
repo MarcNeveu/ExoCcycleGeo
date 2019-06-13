@@ -44,6 +44,7 @@
 #define km2m 1000.0                     // Convert from km to m
 #define m2cm 100.0                      // Convert m to cm
 #define bar2Pa 1.0e5                    // Convert bar to Pa
+#define MPa2Pa 1.0e6					// Convert MPa to Pa
 #define atm2bar 1.01325                 // Convert atm to bar, same conversion factor as for PHREEQC
 #define Kelvin 273.15                   // Convert between Celsius and Kelvin, same conversion factor as for PHREEQC
 #define Gyr2sec 3.15576e16              // Convert 1 billion years to s
@@ -56,11 +57,11 @@
 #define deltaCvolcEarth 2.2e5           // Surface C flux from subaerial+submarine volcanic outgassing (mol C s-1) Donnadieu et al. 2006; http://dx.doi.org/10.1029/2006GC001278
 #define deltaCcontwEarth 8.4543e-10     // Surface C flux from continental weathering on Earth (mol C m-2 s-1)
 
-// Mantle parameters TODO make function of composition?
+// Mantle parameters
 #define k 4.18                          // Mantle thermal conductivity (W m-1 K-1)
 #define alpha 3.0e-5                    // Mantle thermal expansivity (K-1)
 #define Cp 914.0                        // Mantle heat capacity (J kg-1 K-1)
-#define rhoMantle 4000.0                // Mantle density of the mantle TODO get through compression() routine of IcyDwarf?
+#define rhoMantle 4000.0                // Mantle density (kg m-3)
 
 // Thermal model parameters
 #define beta 0.3                        // Exponent for scaling Nusselt number to Rayleigh number, 1/4 to 1/3 (Schubert et al. 2001)
@@ -92,8 +93,13 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 		double *xgas, double *xaq, int forcedPP, double kintime, int kinsteps, char **tempinput);
 int cleanup (char path[1024]);
 double molmass_atm (double *xgas);
-double brittleDuctile (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double dtime);
-double brittleDuctile_prime (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double dtime);
+double brittleDuctile (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5], double grainSize,
+		double dtime);
+double brittleDuctile_prime (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5],
+		double grainSize, double dtime);
+double viscosity (double T, double P, double flowLaw[5], double grainSize, double dtime);
+double combVisc (double T, double P, double flowLawDiff[5], double flowLawDisl[5], double grainSize, double dtime);
+double dviscdT (double T, double dPdT, double flowLaw[5], double grainSize, double dtime, double Tsurf);
 
 //-------------------------------------------------------------------
 // MAIN PROGRAM
@@ -181,6 +187,23 @@ int main(int argc, char *argv[]) {
 	double NewtRaphThresh = 1.0e5;  // Threshold for the Bisection/Newton-Raphson loop, here in Pa
 	double P_BDT = 0.0;             // Pressure at brittle-ductile transition (Pa)
 
+	// Viscosity law constants (can't be #define'd because they are used as exponents)
+	double flowLawDryDiff[5]; // Dry diffusion creep flow law (Korenaga & Karato 2008)
+	flowLawDryDiff[0] = 261.0e3;    // Activation energy (J)
+	flowLawDryDiff[1] = 6.0e-6;     // Activation volume (m3)
+	flowLawDryDiff[2] = 5.25;       // Exponent of pre-exponential factor
+	flowLawDryDiff[3] = 1.0;        // Stress exponent
+	flowLawDryDiff[4] = 2.98;       // Grain size exponent
+
+	double flowLawDryDisl[5]; // Dry dislocation creep flow law (Korenaga & Karato 2008)
+	flowLawDryDisl[0] = 610.0e3;    // Activation energy (J)
+	flowLawDryDisl[1] = 13.0e-6;    // Activation volume (m3)
+	flowLawDryDisl[2] = 6.09;       // Exponent of pre-exponential factor
+	flowLawDryDisl[3] = 4.94;       // Stress exponent
+	flowLawDryDisl[4] = 0.0;        // Grain size exponent
+
+	const double grainSize = 1.0e3;	// Grain size for computation of viscosity and creep laws (µm)
+
 	// Quantities to be computed by melting model
 	double Rmelt = 0.0;             // Rate of melt generation (m-2 s-1)
 	double vConv = 0.0;             // Convective velocity (m s-1)
@@ -207,7 +230,7 @@ int main(int argc, char *argv[]) {
 	// Inputs
 	//-------------------------------------------------------------------
 
-	double dtime = 1.0e8; // 1.0e-3*Myr2sec;     // Time step (s)
+	double dtime = 1.0e-3*Myr2sec;     // Time step (s)
 
 	ntime = (int) (5000.0*Myr2sec/dtime); // Number of time steps of simulation
 
@@ -488,15 +511,12 @@ int main(int argc, char *argv[]) {
 		//-------------------------------------------------------------------
 
 		// Kinematic viscosity
-		// Upper mantle: !! Check the units of the pre-exp factor! Should be for sigmain MPa and grain size in microns. Same for BDT determination.
-		double nuDiff = 1.0e6*    pow(10.0,-5.25)*pow(1.0e3,2.98)*exp((261.0e3 + rhoMantle*gsurf*d/2.0* 6.0e-6)/(R_G*Tmantle))            /rhoMantle; // Korenaga & Karato (2008), dry diffusion
-		double nuDisl = 1.0e6*pow(pow(10.0,-6.09)                *exp((610.0e3 + rhoMantle*gsurf*d/2.0*13.0e-6)/(R_G*Tmantle)) , 1.0/4.94)/rhoMantle
-				        * pow(1.0/dtime, 1.0/4.94-1.0); // Korenaga & Karato (2008), dry dislocation
-		nu = 1.0/(1.0/nuDiff + 1.0/nuDisl); // Parallel combination (Cizkova et al. 2012 eq. 1)
+		// Upper mantle:
+		nu = combVisc(Tmantle, rhoMantle*gsurf*d/2.0, flowLawDryDiff, flowLawDryDisl, grainSize, dtime)/rhoMantle;
 		printf("nu KK08 = %g\n", nu);
 		// Lower mantle:
-		nu = 1.0e16*exp((2.0e5 + rhoMantle*gsurf*d/2.0*1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
-		printf("nu C12 = %g\n", nu);
+//		nu = 1.0e16*exp((2.0e5 + rhoMantle*gsurf*d/2.0*1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
+//		printf("nu C12 = %g\n", nu);
 
 		// Compute instantaneous heating rate (Kite et al. 2009 Table 1): H = X_4.5 * W * exp(ln(1/2) / t1/2 * (t-4.5))
 		H =  36.9e-9  * 2.92e-5 * exp(log(0.5)/( 1.26 *Gyr2sec) * (realtime - 4.5*Gyr2sec))  //  40-K
@@ -533,8 +553,8 @@ int main(int argc, char *argv[]) {
 
 		// Ensure that f(T_INF)<0 and f(T_SUP)>0
 
-		f_inf = brittleDuctile(T_INF, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, dtime);
-		f_sup = brittleDuctile(T_SUP, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, dtime);
+		f_inf = brittleDuctile(T_INF, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
+		f_sup = brittleDuctile(T_SUP, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
 
 		if (f_inf*f_sup > 0.0) {
 			if (f_sup < 0.0) printf("ExoCcycleGeo: Brittle strength < ductile strength, i.e. brittle regime even at Tmantle=%g K.\n"
@@ -551,8 +571,8 @@ int main(int argc, char *argv[]) {
 			dTold = fabs(T_INF-T_SUP); // Initialize the "stepsize before last"
 			dT = dTold;                // Initialize the last stepsize
 
-			f_x = brittleDuctile(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, dtime);
-			f_prime_x = brittleDuctile_prime(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, dtime);
+			f_x = brittleDuctile(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
+			f_prime_x = brittleDuctile_prime(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
 
 			// Loop over allowed iterations to find T_BDT that is a root of f
 			n_iter = 0;
@@ -571,8 +591,8 @@ int main(int argc, char *argv[]) {
 				}
 
 				// Calculate updated f and f'
-				f_x = brittleDuctile(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, dtime);
-				f_prime_x = brittleDuctile_prime(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, dtime);
+				f_x = brittleDuctile(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
+				f_prime_x = brittleDuctile_prime(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
 
 				if (f_x < 0.0) T_INF = T_BDT; // Maintain the bracket on the root
 				else T_SUP = T_BDT;
@@ -593,21 +613,20 @@ int main(int argc, char *argv[]) {
 		if (P_BDT < 200.0e6) yieldStress = 0.85*P_BDT;
 		else yieldStress = 0.6*P_BDT + 50.0e6;
 
-	// Debug -----
-		printf("T_BDT=%g K, P_BDT=%g MPa, driveStress=%g MPa, yieldStress=%g MPa, zCrust=%g km\n", T_BDT, P_BDT/1.0e6, driveStress/1.0e6, yieldStress/1.0e6, zCrust/km2m);
-
-		double ductileDiff = 0.0;                                   // Dry silicate diffusion (Pa)
-		double ductileDisl = 0.0;                                   // Dry silicate dislocation (Pa)
-		ductileDiff =     1.0/dtime * pow(10.0,-5.25)*pow(1.0e-3,2.98)*exp((261.0e3 + P_BDT* 6.0e-6)/(R_G*T_BDT))            ; // Korenaga & Karato (2008), dry diffusion
-		ductileDisl = pow(1.0/dtime * pow(10.0,-6.09)                 *exp((610.0e3 + P_BDT*13.0e-6)/(R_G*T_BDT)) , 1.0/4.94); // Korenaga & Karato (2008), dry dislocation
-		yieldStress = 1.0/(1.0/ductileDiff + 1.0/ductileDisl); // Parallel combination (Cizkova et al. 2012 eq. 1)
-
-		printf("yieldStress=%g MPa\n", yieldStress/1.0e6);
-	// End debug -----
-
 		// Compare driving and yield stresses to assess tectonic regime
 		if (yieldStress < driveStress) staglid = 0; // Mobile-lid regime, i.e. plate tectonics
 		else staglid = 1;                           // Stagnant-lid regime
+
+	// Debug: Check brittle and ductile yield stresses equal
+		printf("T_BDT=%g K, P_BDT=%g MPa, driveStress=%g MPa, yieldStress=%g MPa, zCrust=%g km\n", T_BDT, P_BDT/MPa2Pa, driveStress/MPa2Pa, yieldStress/MPa2Pa, zCrust/km2m);
+
+		if (yieldStress != combVisc(T_BDT, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, dtime)/dtime)
+			printf("Brittle yield stress=%g MPa different from ductile yield stress=%g MPa\n", yieldStress/MPa2Pa,
+					combVisc(T_BDT, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, dtime)/dtime/MPa2Pa);
+
+		if (staglid) printf("stagnant lid\n\n");
+		else printf ("plate tectonics\n\n");
+	// End debug -----
 
 		// Melting model of Kite et al. (2009)
 		if (!staglid) Pf = 0.0; // K09 equations (10-12)
@@ -1218,27 +1237,21 @@ double molmass_atm (double *xgas) {
  *
  *--------------------------------------------------------------------*/
 
-double brittleDuctile (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double dtime) {
+double brittleDuctile (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5], double grainSize,
+		double dtime) {
 
 	double f = 0.0;
 
 	double P = rhoCrust*gsurf*zCrust*(T-Tsurf)/(Tmantle-Tsurf); // Pressure (Pa)
-	double d = 1.0e-3;                                          // Grain size (m)
 	double brittleStrength = 0.0;                               // Brittle strength (Pa)
 	double ductileStrength = 0.0;                               // Ductile strength (Pa)
-	double ductileDiff = 0.0;                                   // Dry silicate diffusion (Pa)
-	double ductileDisl = 0.0;                                   // Dry silicate dislocation (Pa)
 
-	// Brittle strength
 	if (P < 200.0e6) brittleStrength = 0.85*P;
 	else brittleStrength = 0.6*P + 50.0e6;
 
-	// Ductile strength (*1.0e6 because pre-exp factor is for stress in MPa)
-	ductileDiff = 1.0e6*    1.0/dtime * pow(10.0,-5.25)*pow(d,2.98)*exp((261.0e3 + P* 6.0e-6)/(R_G*T))            ; // Korenaga & Karato (2008), dry diffusion
-	ductileDisl = 1.0e6*pow(1.0/dtime * pow(10.0,-6.09)            *exp((610.0e3 + P*13.0e-6)/(R_G*T)) , 1.0/4.94); // Korenaga & Karato (2008), dry dislocation
-	ductileStrength = 1.0/(1.0/ductileDiff + 1.0/ductileDisl); // Parallel combination (Cizkova et al. 2012 eq. 1)
+	ductileStrength = combVisc(T, P, flowLawDiff, flowLawDisl, grainSize, dtime)/dtime;
 
-	f = brittleStrength-ductileStrength;
+	f = brittleStrength - ductileStrength;
 
 	return f;
 }
@@ -1251,13 +1264,13 @@ double brittleDuctile (double T, double rhoCrust, double zCrust, double gsurf, d
  *
  *--------------------------------------------------------------------*/
 
-double brittleDuctile_prime (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double dtime) {
+double brittleDuctile_prime (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5],
+		double grainSize, double dtime) {
 
 	double f_prime = 0.0;
 
 	double P = rhoCrust*gsurf*zCrust*(T-Tsurf)/(Tmantle-Tsurf); // Pressure (Pa)
 	double dPdT = rhoCrust*gsurf*zCrust/(Tmantle-Tsurf);        // Geotherm (Pa K-1), independent of T
-	double d = 1.0e3;                                           // Grain size (µm)
 	double brittle_prime = 0.0;                                 // Brittle strength (Pa)
 	double ductile_prime = 0.0;                                 // Ductile strength (Pa)
 	double ductileDiff = 0.0;                                   // Dry silicate diffusion (Pa)
@@ -1265,18 +1278,16 @@ double brittleDuctile_prime (double T, double rhoCrust, double zCrust, double gs
 	double ductileDiff_prime = 0.0;                             // Dry silicate diffusion (Pa)
 	double ductileDisl_prime = 0.0;                             // Dry silicate dislocation (Pa)
 
-	// Brittle strength
+	// Temperature derivative of brittle strength
 	if (P < 200.0e6) brittle_prime = 0.85*dPdT;
 	else brittle_prime = 0.6*dPdT;
 
-	// Ductile strength (*1.0e6 because pre-exp factor is for stress in MPa)
-	ductileDiff = 1.0e6*    1.0/dtime * pow(10.0,-5.25)*pow(d,2.98)*exp((261.0e3 + P* 6.0e-6)/(R_G*T))            ; // Korenaga & Karato (2008), dry diffusion
-	ductileDisl = 1.0e6*pow(1.0/dtime * pow(10.0,-6.09)            *exp((610.0e3 + P*13.0e-6)/(R_G*T)) , 1.0/4.94); // Korenaga & Karato (2008), dry dislocation
+	// Temperature derivative of ductile strength
+	ductileDiff = viscosity(T, P, flowLawDiff, grainSize, dtime); // Korenaga & Karato (2008), dry diffusion
+	ductileDisl = viscosity(T, P, flowLawDisl, grainSize, dtime); // Korenaga & Karato (2008), dry dislocation
 
-	ductileDiff_prime = 1.0e6*    1.0/dtime * pow(10.0,-5.25) * pow(d,2.98) * exp(dPdT* 6.0e-6/R_G) * exp((261.0e3-dPdT* 6.0e-6*Tsurf)/(R_G*T))
-			* (dPdT* 6.0e-6*Tsurf-261.0e3)/(     R_G*T*T);
-	ductileDisl_prime = 1.0e6*pow(1.0/dtime * pow(10.0,-6.09)               * exp(dPdT*13.0e-6/R_G) * exp((610.0e3-dPdT*13.0e-6*Tsurf)/(R_G*T)), 1.0/4.94)
-			* (dPdT*13.0e-6*Tsurf-610.0e3)/(4.94*R_G*T*T);
+	ductileDiff_prime = dviscdT(T, dPdT, flowLawDiff, grainSize,  dtime, Tsurf)/dtime;
+	ductileDisl_prime = dviscdT(T, dPdT, flowLawDisl, grainSize,  dtime, Tsurf)/dtime;
 
 	// Easiest to take the derivative of the parallel combination as d/dT [Diff*Disl/(Diff+Disl)]
 	ductile_prime = ( (ductileDiff_prime*ductileDisl + ductileDiff*ductileDisl_prime) * (ductileDiff+ductileDisl)
@@ -1285,4 +1296,62 @@ double brittleDuctile_prime (double T, double rhoCrust, double zCrust, double gs
 	f_prime = brittle_prime - ductile_prime;
 
 	return f_prime;
+}
+
+/*--------------------------------------------------------------------
+ *
+ * Subroutine viscosity
+ *
+ * Calculates non-Newtonian viscosity in Pa s.
+ *
+ *--------------------------------------------------------------------*/
+
+double viscosity (double T, double P, double flowLaw[5], double grainSize, double dtime) {
+
+	double visc = 0.0;
+
+	visc = MPa2Pa*pow(pow(10.0,-flowLaw[2]) * pow(grainSize,flowLaw[4]) * exp((flowLaw[0] + P*flowLaw[1])/(R_G*T)), 1.0/flowLaw[3]) * pow(1.0/dtime, 1.0/flowLaw[3]-1.0);
+
+	return visc;
+}
+
+/*--------------------------------------------------------------------
+ *
+ * Subroutine comboVisc
+ *
+ * Calculates non-Newtonian viscosity in Pa s combined from parallel
+ * diffusion and dislocation flow laws (e.g. Cizkova et al. 2012 eq. 1).
+ *
+ *--------------------------------------------------------------------*/
+
+double combVisc (double T, double P, double flowLawDiff[5], double flowLawDisl[5], double grainSize, double dtime) {
+
+	double visc = 0.0;
+	double viscDryDiff = 0.0;
+	double viscDryDisl = 0.0;
+
+	viscDryDiff = viscosity(T, P, flowLawDiff, grainSize, dtime); // Korenaga & Karato (2008), dry diffusion
+	viscDryDisl = viscosity(T, P, flowLawDisl, grainSize, dtime); // Korenaga & Karato (2008), dry dislocation
+	visc = 1.0/(1.0/viscDryDiff + 1.0/viscDryDisl); // Parallel combination
+
+	return visc;
+}
+
+/*--------------------------------------------------------------------
+ *
+ * Subroutine dviscdT
+ *
+ * Calculates temperature derivative of non-Newtonian viscosity along
+ * linear geotherm in Pa s K-1.
+ *
+ *--------------------------------------------------------------------*/
+
+double dviscdT (double T, double dPdT, double flowLaw[5], double grainSize, double dtime, double Tsurf) {
+
+	double dviscdT = 0.0;
+
+	dviscdT = MPa2Pa*pow(pow(10.0,-flowLaw[2]) * pow(grainSize,flowLaw[4]) * exp(dPdT*flowLaw[1]/R_G) * exp((flowLaw[0] - dPdT*flowLaw[1]*Tsurf)/(R_G*T)), 1.0/flowLaw[3])
+	          * (dPdT*flowLaw[1]*Tsurf-flowLaw[0])/(flowLaw[3]*R_G*T*T) * pow(1.0/dtime, 1.0/flowLaw[3]-1.0);
+
+	return dviscdT;
 }
