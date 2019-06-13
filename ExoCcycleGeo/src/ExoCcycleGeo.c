@@ -19,67 +19,9 @@
  ============================================================================
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <R.h>                          // To use the external R software package
-#include <Rdefines.h>
-#include <Rinternals.h>
-#include <Rembedded.h>
-#include <IPhreeqc.h>                   // To use the external PHREEQC geochemical code
+#include "ExoCcycleGeo.h"
 #include "CHNOSZcmds.h"
-#include <unistd.h>
-#include <fcntl.h>
-
-#define cmdline 0						// If execution from terminal as "./ExoCcycleGeo"
-
-// Constants and conversion factors
-#define PI_greek 3.14159265358979323846
-#define G 6.67e-11                      // Gravitational constant (SI)
-#define R_G 8.314                       // Universal gas constant, same number of decimal places as in PHREEQC (J mol-1 K-1)
-#define sigStefBoltz 5.6704e-8          // Stefan-Boltzmann constant (W m-2 K-4)
-#define rEarth 6378000.0                // Earth radius (m)
-#define mEarth 6.0e24                   // Earth mass (kg)
-#define km2m 1000.0                     // Convert from km to m
-#define m2cm 100.0                      // Convert m to cm
-#define bar2Pa 1.0e5                    // Convert bar to Pa
-#define MPa2Pa 1.0e6					// Convert MPa to Pa
-#define atm2bar 1.01325                 // Convert atm to bar, same conversion factor as for PHREEQC
-#define Kelvin 273.15                   // Convert between Celsius and Kelvin, same conversion factor as for PHREEQC
-#define Gyr2sec 3.15576e16              // Convert 1 billion years to s
-#define Myr2sec 3.15576e13              // Convert 1 million years to s
-#define Yr2sec 3.15576e7                // Convert 1 year to s
-
-// Earth scalings
-#define TsurfEarth 288.0                // Mean equilibrium surface temperature on Earth (K)
-#define RmeltEarth 3.8e-19              // Rate of melt generation on Earth (s-1) Kite et al. 2009 Fig. 15; http://dx.doi.org/10.1088/0004-637X/700/2/1732
-#define deltaCvolcEarth 2.2e5           // Surface C flux from subaerial+submarine volcanic outgassing (mol C s-1) Donnadieu et al. 2006; http://dx.doi.org/10.1029/2006GC001278
-#define deltaCcontwEarth 8.4543e-10     // Surface C flux from continental weathering on Earth (mol C m-2 s-1)
-
-// Mantle parameters
-#define k 4.18                          // Mantle thermal conductivity (W m-1 K-1)
-#define alpha 3.0e-5                    // Mantle thermal expansivity (K-1)
-#define Cp 914.0                        // Mantle heat capacity (J kg-1 K-1)
-#define rhoMantle 4000.0                // Mantle density (kg m-3)
-
-// Thermal model parameters
-#define beta 0.3                        // Exponent for scaling Nusselt number to Rayleigh number, 1/4 to 1/3 (Schubert et al. 2001)
-#define Ra_c 1707.762                   // Critical Rayleigh number for convection, http://home.iitk.ac.in/~sghorai/NOTES/benard/node15.html, see also Koschmieder EL (1993) Benard cells and Taylor vortices, Cambridge U Press, p. 20.
-#define A0 70000.0                      // Activation temperature for thermal model (K)
-
-// Atmosphere parameters
-#define xCO2g0 355.0e-6                 // Reference atmospheric CO2 mixing ratio (ppmv)
-#define runoff_0 7.70e-9                // Reference runoff (m s-1) = 0.665e-3 m day-1 (Edson et al. 2012, http://dx.doi.org/10.1089/ast.2011.0762)
-
-// Geochem parameters
-#define nAtmSpecies 5                   // Number of atmospheric species whose abundances are passed between the physical and chemical models
-#define nAqSpecies 6                    // Number of aqueous species whose concentrations are passed between the physical and chemical models
-#define nvarEq 1036                     // Number of geochemical variables stored in each PHREEQC equilibrium simulation
-#define nvarKin 60                      // Number of geochemical variables stored in each PHREEQC kinetic simulation
-#define naq 258                         // Number of aqueous species (+ physical parameters)
-#define nmingas 389                     // Number of minerals and gases
-#define nelts 31                        // 30 elements + 1 extra column in WaterRock/Molar_masses.txt
+#include "Compression.h"
 
 //-------------------------------------------------------------------
 // SUBROUTINE DECLARATIONS
@@ -109,6 +51,8 @@ int main(int argc, char *argv[]) {
 
 	int i = 0;
 	int j = 0;
+	int NR = 100;                   // Number of radial grid zones used in determining planetary structure at setup
+	int cmbindex = 0;				// Index of core-mantle boundary
 	int itime = 0;                  // Time step counter
 	int ntime = 0;                  // Total number of steps
 
@@ -123,6 +67,15 @@ int main(int argc, char *argv[]) {
 	double gsurf = 0.0;             // Surface gravity (m s-2)
 	double Asurf = 0.0;             // Planet surface area (m2)
 	double Tsurf = 0.0;             // Surface temperature (K)
+
+	double *r = (double*) malloc((NR+1)*sizeof(double)); // Radius
+	if (r == NULL) printf("Compression: Not enough memory to create r[NR]\n");
+
+	double *rho = (double*) malloc((NR+1)*sizeof(double)); // Density
+	if (rho == NULL) printf("Compression: Not enough memory to create rho[NR]\n");
+
+	double *P = (double*) malloc((NR+1)*sizeof(double)); // Pressure
+	if (P == NULL) printf("Compression: Not enough memory to create P[NR]\n");
 
 	// Reservoirs
 //	double RCplate = 0.0;           // Plate/crust C reservoir (mol)
@@ -235,7 +188,8 @@ int main(int argc, char *argv[]) {
 	ntime = (int) (5000.0*Myr2sec/dtime); // Number of time steps of simulation
 
 	// Planet parameters
-	double m_p = 0.5*mEarth;    // Planet mass (kg)
+	double m_p = 1.0*mEarth;    // Planet mass (kg)
+	double m_c = 0.3*m_p;       // Core mass (kg), default ≈0.3*m_p for Earth
 	double L = 0.29;            // Fraction of planet surface covered by land
 	double Mocean = 1.4e21;     // Mass of ocean (kg, default: Earth=1.4e21)
 	double rhoMagma = 3500.0;   // Magma density (kg m-3)
@@ -275,7 +229,7 @@ int main(int argc, char *argv[]) {
 
 	printf("\n");
 	printf("-------------------------------------------------------------------\n");
-	printf("ExoCcycleGeo v18.12\n");
+	printf("ExoCcycleGeo v19.6\n");
 	printf("This code is in development and cannot be used for science yet.\n");
 	if (cmdline == 1) printf("Command line mode\n");
 	printf("-------------------------------------------------------------------\n");
@@ -310,9 +264,11 @@ int main(int argc, char *argv[]) {
 	if (_NSGetExecutablePath(path, &size) == 0) printf("\n");
 	else printf("ExoCcycleGeo: Couldn't retrieve executable directory. Buffer too small; need size %u\n", size);
 
-	r_p = pow(m_p/mEarth,0.27)*rEarth; // Planet radius, determined from mass scaling (m) // TODO implement IcyDwarf compression model or ExoPLEX for more accurate mass-radius relationship
-	r_c = pow(0.007*pow(r_p,3.0),1.0/3.0); // Radius of planet core (m) such that the volume of the core is 0.7% of the overall volume as for Earth (r_c = 1220 km)
-	printf("Core radius = %g km\n", r_c/1000.0);
+	compression(NR, m_p, m_c, Tsurf, 101, 101, 202, &r, &P, &rho, &cmbindex, path);
+
+	r_p = r[NR];
+	r_c = r[cmbindex];
+	printf("Planet radius = %g km, Core radius = %g km\n", r_p/km2m, r_c/km2m);
 	d = r_p-r_c;
 	gsurf = G*m_p/r_p/r_p;
 	Asurf = 4.0*PI_greek*r_p*r_p;
@@ -524,7 +480,7 @@ int main(int argc, char *argv[]) {
 		  +   0.22e-9 * 56.9e-5 * exp(log(0.5)/( 0.704*Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 235-U
 		  +  30.8e-9  * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * (realtime - 4.5*Gyr2sec)); // 238-U
 
-		// Compute effective thermal conductivity
+		// Compute effective thermal conductivity, assuming whole-mantle convection (Kite et al. 2009)
 		if (!staglid) Tref = Tsurf; // TODO circular logic to then have value of !staglid depend on Tref below.
 		else          Tref = Tmantle - 2.23*Tmantle*Tmantle/A0; // Tmantle - Tc in K09
 
@@ -534,7 +490,7 @@ int main(int argc, char *argv[]) {
 		// Convective velocity (K09 equation 24), replaced Tc (temp at base of stagnant lid) with Tref for compatibility with !staglid regime
 		vConv = 2.0*(Nu-1.0) * (k/(rhoMagma*Cp*(r_p-r_c))) * (Tmantle-Tsurf) / (Tmantle-Tref); // Check against eq. (6.379) of Turcotte & Schubert (2002), p. 514
 
-		// Determine if convective driving stress exceeds lithosphere yield stress, in which case switch to mobile-lid (plate tectonics) regime
+		// Determine if convective driving stress exceeds lithosphere yield stress, in which case switch to mobile-lid (plate tectonics) regime (O'Neill & Lenardic 2007)
 		/* Convective drive stress:
 		 * Viscosity = stress / strain rate (assumed Newtonian - see Deschamps & Sotin 2000), i.e. stress = viscosity * vConv/δ, w/ δ: boundary layer thickness
 		 * δ = thickness of thermal gradient = 2.32*(kappa*δ/vConv)^0.5 (Turcotte & Schubert 2002, eq. 6.327 with δ/vConv = conduction timescale)
@@ -548,11 +504,10 @@ int main(int argc, char *argv[]) {
 		 * Initiate zCrust. Solve for temperature of BDT: brittleStrength-ductileStrength = f(P,T) = f(T) = 0. Get updated zCrust from [2] (= depth). */
 
 		// Initialize bounds for T_BDT
-		T_INF = Tsurf;                     // Extreme lower bound: T physically needs to be > 0 K
-		T_SUP = Tmantle;                   // Assumes f(T_SUP) = brittle-ductile (T_sup) will always be positive (mantle hot enough)
+		T_INF = Tsurf;
+		T_SUP = Tmantle;
 
 		// Ensure that f(T_INF)<0 and f(T_SUP)>0
-
 		f_inf = brittleDuctile(T_INF, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
 		f_sup = brittleDuctile(T_SUP, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
 
@@ -777,6 +732,9 @@ int main(int argc, char *argv[]) {
 	free (title);
 	free (xgas);
 	free (xaq);
+	free (r);
+	free (rho);
+	free (P);
 
 	Rf_endEmbeddedR(0);                                     // Close R and CHNOSZ
 
