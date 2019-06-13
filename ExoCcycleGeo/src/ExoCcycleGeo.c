@@ -121,10 +121,10 @@ int main(int argc, char *argv[]) {
 	// Quantities to be computed by thermal/geodynamic model
 	int staglid = 1;                // 1 if stagnant-lid, 0 if mobile-lid
 	int n_iter = 0, n_iter_max = 100; // Iteration counter and max for the Bisection/Newton-Raphson loop to determine T_BDT
-	double d = 0.0;                 // Depth to core-mantle boundary (m)
 	double Tmantle = 0.0;           // Mantle temperature (K)
+	double rhoMantle = 0.0;			// Mantle density (kg m-3)
 	double H = 0.0;                 // Specific radiogenic heating rate (J s-1 kg-1)
-	double kappa = k/(rhoMantle*Cp); // Mantle thermal diffusivity (m2 s-1)
+	double kappa = 0.0;             // Mantle thermal diffusivity (m2 s-1)
 	double nu = 0.0;                // Mantle kinematic viscosity (m2 s-1)
 	double zCrust = 10.0*km2m;      // Crustal thickness (m)
 	double Ra = 0.0;                // Rayleigh number for mantle convection (no dim)
@@ -188,8 +188,8 @@ int main(int argc, char *argv[]) {
 	ntime = (int) (5000.0*Myr2sec/dtime); // Number of time steps of simulation
 
 	// Planet parameters
-	double m_p = 1.0*mEarth;    // Planet mass (kg)
-	double m_c = 0.3*m_p;       // Core mass (kg), default ≈0.3*m_p for Earth
+	double m_p = 0.5*mEarth;    // Planet mass (kg)
+	double m_c = 0.325*m_p;     // Core mass (kg), default ≈0.3*m_p for Earth, Kite et al. (2009) use 0.325*m_p
 	double L = 0.29;            // Fraction of planet surface covered by land
 	double Mocean = 1.4e21;     // Mass of ocean (kg, default: Earth=1.4e21)
 	double rhoMagma = 3500.0;   // Magma density (kg m-3)
@@ -268,8 +268,9 @@ int main(int argc, char *argv[]) {
 
 	r_p = r[NR];
 	r_c = r[cmbindex];
+	rhoMantle = rho[(NR+cmbindex)/2];
+	kappa = k/(rhoMantle*Cp);
 	printf("Planet radius = %g km, Core radius = %g km\n", r_p/km2m, r_c/km2m);
-	d = r_p-r_c;
 	gsurf = G*m_p/r_p/r_p;
 	Asurf = 4.0*PI_greek*r_p*r_p;
 	Tsurf = Tsurf0;
@@ -468,7 +469,7 @@ int main(int argc, char *argv[]) {
 
 		// Kinematic viscosity
 		// Upper mantle:
-		nu = combVisc(Tmantle, rhoMantle*gsurf*d/2.0, flowLawDryDiff, flowLawDryDisl, grainSize, dtime)/rhoMantle;
+		nu = combVisc(Tmantle, P[(NR+cmbindex)/2], flowLawDryDiff, flowLawDryDisl, grainSize, dtime)/rhoMantle;
 		printf("nu KK08 = %g\n", nu);
 		// Lower mantle:
 //		nu = 1.0e16*exp((2.0e5 + rhoMantle*gsurf*d/2.0*1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
@@ -484,7 +485,7 @@ int main(int argc, char *argv[]) {
 		if (!staglid) Tref = Tsurf; // TODO circular logic to then have value of !staglid depend on Tref below.
 		else          Tref = Tmantle - 2.23*Tmantle*Tmantle/A0; // Tmantle - Tc in K09
 
-		Ra = alpha*gsurf*(Tmantle-Tref)*pow(d,3)/(kappa*nu);
+		Ra = alpha*gsurf*(Tmantle-Tref)*pow(r[NR]-r[cmbindex],3)/(kappa*nu);
 		Nu = pow(Ra/Ra_c, beta);
 
 		// Convective velocity (K09 equation 24), replaced Tc (temp at base of stagnant lid) with Tref for compatibility with !staglid regime
@@ -583,12 +584,10 @@ int main(int argc, char *argv[]) {
 		else printf ("plate tectonics\n\n");
 	// End debug -----
 
-		// Melting model of Kite et al. (2009)
+		// Melting model of Kite et al. (2009), focuses solely on mid-ocean ridges (their Sec. 2.3)
 		if (!staglid) Pf = 0.0; // K09 equations (10-12)
 		else Pf = rhoCrust*gsurf*zCrust;
 		P0 = 2.0*P_BDT; // Should be higher than Pf. Arbitrary for now, rhoCrust*gsurf*2.0*zCrust results in 50% melting rate
-
-		double MORlength = 60000*km2m; // Unconstrained parameter, default 60000 km (Earth today), likely did not vary monotonically in the past
 
 		if (!staglid) Rmelt = vConv*MORlength*zCrust*rhoCrust; // Enhancement of rate of melting due to plate tectonics. Also a function of age. See Sasaki & Tajika 1995.
 		else Rmelt = Asurf*vConv*rhoMagma * (rhoCrust*gsurf*zCrust/(P0-Pf)); // kg s-1, Kite et al. (2009) eq. 25 not normalized by planet mass. Note typo: P0>Pf
@@ -596,7 +595,9 @@ int main(int argc, char *argv[]) {
 		FCoutgas = deltaCvolcEarth * Rmelt/(RmeltEarth*mEarth);         // mol C s-1. Accurate for Earth magma C concentrations, but for other mantle concentrations, should be calculated explicitly (MELTS?)
 
 		// Update mantle temperature using effective thermal conductivity scaled with Nu
-		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/(d*d));
+		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/pow(r[NR]-r[cmbindex],2)); // TODO compute T in each grid zone, convectively below BDT, conductively above.
+		// This will get rid of circular reasoning on Tref and allow direct computation of melting volumes
+		// via comparison of the T(P) profile with the solidus.
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from continental weathering

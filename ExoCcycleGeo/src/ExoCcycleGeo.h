@@ -41,12 +41,12 @@
 #define RmeltEarth 3.8e-19              // Rate of melt generation on Earth (s-1) Kite et al. 2009 Fig. 15; http://dx.doi.org/10.1088/0004-637X/700/2/1732
 #define deltaCvolcEarth 2.2e5           // Surface C flux from subaerial+submarine volcanic outgassing (mol C s-1) Donnadieu et al. 2006; http://dx.doi.org/10.1029/2006GC001278
 #define deltaCcontwEarth 8.4543e-10     // Surface C flux from continental weathering on Earth (mol C m-2 s-1)
+#define MORlength 60000.0*km2m          // Length of mid-ocean ridges, unconstrained parameter, default 60000 km (Earth today), likely did not vary monotonically in the past
 
 // Mantle parameters
 #define k 4.18                          // Mantle thermal conductivity (W m-1 K-1)
 #define alpha 3.0e-5                    // Mantle thermal expansivity (K-1)
 #define Cp 914.0                        // Mantle heat capacity (J kg-1 K-1)
-#define rhoMantle 4000.0                // Mantle density (kg m-3)
 
 // Thermal model parameters
 #define beta 0.3                        // Exponent for scaling Nusselt number to Rayleigh number, 1/4 to 1/3 (Schubert et al. 2001)
