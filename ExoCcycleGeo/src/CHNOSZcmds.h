@@ -11,10 +11,22 @@
 #ifndef CHNOSZCMDS_H_
 #define CHNOSZCMDS_H_
 
+//-------------------------------------------------------------------
+// SUBROUTINE DECLARATIONS
+//-------------------------------------------------------------------
+
 int CHNOSZ_init(int silent);
 double CHNOSZ_logK (const char species[128], const char state[32], float T, float P, const char H2OEoS[128]);
 double CHNOSZ_water_SUPCRT92 (const char property[32], float T, float P);
 SEXP getvar(SEXP name, SEXP rho);
+
+/*--------------------------------------------------------------------
+ *
+ * Subroutine CHNOSZ_init
+ *
+ * Initialize CHNOSZ
+ *
+ *--------------------------------------------------------------------*/
 
 int CHNOSZ_init(int silent) {
 
@@ -58,6 +70,15 @@ int CHNOSZ_init(int silent) {
 
     return 0;
 }
+
+/*--------------------------------------------------------------------
+ *
+ * Subroutine CHNOSZ_logK
+ *
+ * Returns the log K equivalent to the Delta_f_Gº of a given species
+ * (e.g. Anderson, 2005).
+ *
+ *--------------------------------------------------------------------*/
 
 double CHNOSZ_logK (const char species[128], const char state[32], float T, float P, const char H2OEoS[128]) {
 
@@ -125,6 +146,16 @@ double CHNOSZ_logK (const char species[128], const char state[32], float T, floa
 	return logK;
 }
 
+/*--------------------------------------------------------------------
+ *
+ * Subroutine CHNOSZ_water_SUPCRT92
+ *
+ * Returns a property of liquid water (e.g., density, thermal
+ * expansivity) at given T and P. See CHNOSZ manual for a list of
+ * properties: http://www.chnosz.net/download/CHNOSZ.pdf
+ *
+ *--------------------------------------------------------------------*/
+
 double CHNOSZ_water_SUPCRT92 (const char property[32], float T, float P) {
 
 	// Assumes R is already open
@@ -144,6 +175,14 @@ double CHNOSZ_water_SUPCRT92 (const char property[32], float T, float P) {
 
 	return water_prop;
 }
+
+/*--------------------------------------------------------------------
+ *
+ * Subroutine getvar
+ *
+ * Used to facilitate handling of R commands.
+ *
+ *--------------------------------------------------------------------*/
 
 SEXP getvar(SEXP name, SEXP rho)
 {

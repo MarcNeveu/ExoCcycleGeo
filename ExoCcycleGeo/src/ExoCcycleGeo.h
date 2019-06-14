@@ -2,7 +2,7 @@
  * ExoCcycleGeo.h
  *
  *  Created on: Jun 13, 2019
- *      Author: mneveu
+ *      Author: Marc Neveu (marc.f.neveu@nasa.gov)
  */
 
 #include <stdio.h>

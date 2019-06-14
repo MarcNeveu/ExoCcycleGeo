@@ -11,7 +11,7 @@ SOLUTION 1 Planetary ocean surface waters (PHREEQC v3 manual p. 282)
 # Moles of air in Earth’s atmosphere: 1.775e20 mol
 # Mass of Earth’s oceans: 1.4e21 kg (/(1-L): water-world)
 # Mass of ocean per mole of air: 7.9 kg
-	-water 	 	11.5324
+	-water 	 	13.8114
 	units		mol/kgw
 	Ca		0.010287     # 412.3 ppm -> 412.3e-6 kg / 40.078 g/mol * 1000
 	Mg		0.05315      # 1291.8e-6/(24.305/1000)

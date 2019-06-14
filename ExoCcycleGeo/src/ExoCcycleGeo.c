@@ -22,26 +22,8 @@
 #include "ExoCcycleGeo.h"
 #include "CHNOSZcmds.h"
 #include "Compression.h"
-
-//-------------------------------------------------------------------
-// SUBROUTINE DECLARATIONS
-//-------------------------------------------------------------------
-
-int AqueousChem (char path[1024], char filename[64], int itime, double T, double *P, double *V, double *nAir, double *pH, double *pe,
-		double *mass_w, double **xgas, double **xaq, double ***xrain, int forcedPP, double kintime, int kinsteps, int nvar);
-int ExtractWrite(int instance, double*** data, int line, int nvar);
-const char* ConCat (const char *str1, const char *str2);
-int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
-		double *xgas, double *xaq, int forcedPP, double kintime, int kinsteps, char **tempinput);
-int cleanup (char path[1024]);
-double molmass_atm (double *xgas);
-double brittleDuctile (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5], double grainSize,
-		double dtime);
-double brittleDuctile_prime (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5],
-		double grainSize, double dtime);
-double viscosity (double T, double P, double flowLaw[5], double grainSize, double dtime);
-double combVisc (double T, double P, double flowLawDiff[5], double flowLawDisl[5], double grainSize, double dtime);
-double dviscdT (double T, double dPdT, double flowLaw[5], double grainSize, double dtime, double Tsurf);
+#include "Geochem.h"
+#include "Geodynamics.h"
 
 //-------------------------------------------------------------------
 // MAIN PROGRAM
@@ -50,6 +32,7 @@ double dviscdT (double T, double dPdT, double flowLaw[5], double grainSize, doub
 int main(int argc, char *argv[]) {
 
 	int i = 0;
+	int ir = 0;
 	int j = 0;
 	int NR = 100;                   // Number of radial grid zones used in determining planetary structure at setup
 	int cmbindex = 0;				// Index of core-mantle boundary
@@ -68,14 +51,17 @@ int main(int argc, char *argv[]) {
 	double Asurf = 0.0;             // Planet surface area (m2)
 	double Tsurf = 0.0;             // Surface temperature (K)
 
-	double *r = (double*) malloc((NR+1)*sizeof(double)); // Radius
-	if (r == NULL) printf("Compression: Not enough memory to create r[NR]\n");
+	double *r = (double*) malloc((NR+1)*sizeof(double)); // Radius (m)
+	if (r == NULL) printf("Compression: Not enough memory to create r[NR+1]\n");
+	for (ir=0;ir<NR+1;ir++) r[ir] = 0.0;
 
-	double *rho = (double*) malloc((NR+1)*sizeof(double)); // Density
+	double *rho = (double*) malloc((NR+1)*sizeof(double)); // Density (kg m-3)
 	if (rho == NULL) printf("Compression: Not enough memory to create rho[NR]\n");
+	for (ir=0;ir<NR+1;ir++) rho[ir] = 0.0;
 
-	double *P = (double*) malloc((NR+1)*sizeof(double)); // Pressure
+	double *P = (double*) malloc((NR+1)*sizeof(double)); // Pressure (Pa)
 	if (P == NULL) printf("Compression: Not enough memory to create P[NR]\n");
+	for (ir=0;ir<NR+1;ir++) P[ir] = 0.0;
 
 	// Reservoirs
 //	double RCplate = 0.0;           // Plate/crust C reservoir (mol)
@@ -272,8 +258,8 @@ int main(int argc, char *argv[]) {
 	kappa = k/(rhoMantle*Cp);
 	printf("Planet radius = %g km, Core radius = %g km\n", r_p/km2m, r_c/km2m);
 	gsurf = G*m_p/r_p/r_p;
-	Asurf = 4.0*PI_greek*r_p*r_p;
 	Tsurf = Tsurf0;
+	Asurf = 4.0*PI_greek*r_p*r_p;
 	nAir = Psurf*bar2Pa*Asurf/gsurf/molmass_atm(xgas);
 
 	//-------------------------------------------------------------------
@@ -467,38 +453,12 @@ int main(int argc, char *argv[]) {
 		// Calculate surface C flux from outgassing
 		//-------------------------------------------------------------------
 
-		// Kinematic viscosity
-		// Upper mantle:
-		nu = combVisc(Tmantle, P[(NR+cmbindex)/2], flowLawDryDiff, flowLawDryDisl, grainSize, dtime)/rhoMantle;
-		printf("nu KK08 = %g\n", nu);
-		// Lower mantle:
-//		nu = 1.0e16*exp((2.0e5 + rhoMantle*gsurf*d/2.0*1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
-//		printf("nu C12 = %g\n", nu);
+		// 1. Determine tectonic mode
+		// If convective driving stress > lithospheric yield stress, mobile-lid (plate tectonics) regime. Otherwise, stagnant lid regime (O'Neill & Lenardic 2007).
 
-		// Compute instantaneous heating rate (Kite et al. 2009 Table 1): H = X_4.5 * W * exp(ln(1/2) / t1/2 * (t-4.5))
-		H =  36.9e-9  * 2.92e-5 * exp(log(0.5)/( 1.26 *Gyr2sec) * (realtime - 4.5*Gyr2sec))  //  40-K
-		  + 124.0e-9  * 2.64e-5 * exp(log(0.5)/(14.0  *Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 232-Th
-		  +   0.22e-9 * 56.9e-5 * exp(log(0.5)/( 0.704*Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 235-U
-		  +  30.8e-9  * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * (realtime - 4.5*Gyr2sec)); // 238-U
+		// 1a. Determine lithospheric yield stress
 
-		// Compute effective thermal conductivity, assuming whole-mantle convection (Kite et al. 2009)
-		if (!staglid) Tref = Tsurf; // TODO circular logic to then have value of !staglid depend on Tref below.
-		else          Tref = Tmantle - 2.23*Tmantle*Tmantle/A0; // Tmantle - Tc in K09
-
-		Ra = alpha*gsurf*(Tmantle-Tref)*pow(r[NR]-r[cmbindex],3)/(kappa*nu);
-		Nu = pow(Ra/Ra_c, beta);
-
-		// Convective velocity (K09 equation 24), replaced Tc (temp at base of stagnant lid) with Tref for compatibility with !staglid regime
-		vConv = 2.0*(Nu-1.0) * (k/(rhoMagma*Cp*(r_p-r_c))) * (Tmantle-Tsurf) / (Tmantle-Tref); // Check against eq. (6.379) of Turcotte & Schubert (2002), p. 514
-
-		// Determine if convective driving stress exceeds lithosphere yield stress, in which case switch to mobile-lid (plate tectonics) regime (O'Neill & Lenardic 2007)
-		/* Convective drive stress:
-		 * Viscosity = stress / strain rate (assumed Newtonian - see Deschamps & Sotin 2000), i.e. stress = viscosity * vConv/δ, w/ δ: boundary layer thickness
-		 * δ = thickness of thermal gradient = 2.32*(kappa*δ/vConv)^0.5 (Turcotte & Schubert 2002, eq. 6.327 with δ/vConv = conduction timescale)
-		 * So δ^0.5 = 2.32*(kappa/vConv)^0.5 and δ ≈ 5.38*kappa/vConv */
-		driveStress = nu*rhoMantle*vConv*vConv/(5.38*kappa);
-
-		/* Lithospheric yield stress = strength at brittle-ductile transition (BDT).
+		/* = strength at brittle-ductile transition (BDT)
 		 * Geotherm near surface is T prop to depth, with T=Tsurf at depth = 0 and T=Tmantle at depth = zCrust = P(BDT)/(rhoCrust*gsurf). [1]
 		 * So T = (Tmantle-Tsurf)*depth/zCrust + Tsurf. [2]
 		 * P ≈ rhoCrust*gsurf*depth = rhoCrust*gsurf*zCrust*(T-Tsurf)/(Tmantle-Tsurf) [3]
@@ -545,7 +505,6 @@ int main(int argc, char *argv[]) {
 					dT = f_x/f_prime_x;
 					T_BDT = T_BDT - dT;
 				}
-
 				// Calculate updated f and f'
 				f_x = brittleDuctile(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
 				f_prime_x = brittleDuctile_prime(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
@@ -559,45 +518,69 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 			}
-
 			zCrust = (T_BDT-Tsurf)/(Tmantle-Tsurf)*zCrust; // Crustal thickness is the depth of the brittle-ductile transition
 		}
 
-		P_BDT = rhoCrust*gsurf*zCrust; // Pressure at brittle-ductile transition (Pa)
+		P_BDT = rhoCrust*gsurf*zCrust; // Pressure at BDT (Pa)
 
-		// Equate yield stress to brittle strength at brittle-ductie transition (equivalently, ductile strength but that expression is more complicated)
+		// Yield stress equated to brittle strength at BDT (equivalently, ductile strength)
 		if (P_BDT < 200.0e6) yieldStress = 0.85*P_BDT;
 		else yieldStress = 0.6*P_BDT + 50.0e6;
 
-		// Compare driving and yield stresses to assess tectonic regime
+		// ------------------------------------
+		// 1b. Determine convective drive stress
+
+		/* Stress = viscosity * strain rate (assumed Newtonian at base of crust - see Deschamps & Sotin 2000, confirmed because diffusion creep dominates over
+		 * dislocation creep at base of crust), i.e. stress = viscosity * vConv/δ, w/ δ: boundary layer thickness
+		 * δ = thickness of thermal gradient = 2.32*(kappa*δ/vConv)^0.5 (Turcotte & Schubert 2002, eq. 6.327 with δ/vConv = conduction timescale)
+		 * So δ^0.5 = 2.32*(kappa/vConv)^0.5 and δ ≈ 5.38*kappa/vConv */
+
+		// Upper mantle:
+		nu = combVisc(Tmantle, P[(NR+cmbindex)/2], flowLawDryDiff, flowLawDryDisl, grainSize, dtime)/rhoMantle;
+		printf("nu KK08 = %g\n", nu);
+		// Lower mantle:
+//		nu = 1.0e16*exp((2.0e5 + rhoMantle*gsurf*d/2.0*1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
+//		printf("nu C12 = %g\n", nu);
+
+		// Compute effective thermal conductivity, assuming whole-mantle convection (Kite et al. 2009)
+		if (staglid) Tref = T_BDT; // Instead of scaling used by Kite et al. (2009, equation 8)
+		else Tref = Tsurf;
+
+		Ra = alpha*gsurf*(Tmantle-Tref)*pow(r[NR]-r[cmbindex],3)/(kappa*nu);
+		Nu = pow(Ra/Ra_c, beta);
+
+		// Convective velocity (Kite et al. 2009 equation 24)
+		vConv = 2.0*(Nu-1.0) * (k/(rhoMagma*Cp*(r_p-r_c))) * (Tmantle-Tsurf) / (Tmantle-Tref); // Check against eq. (6.379) of Turcotte & Schubert (2002), p. 514
+		driveStress = nu*rhoMantle*vConv*vConv/(5.38*kappa);
+
+		// ------------------------------------
+		// 1c. Determine tectonic regime
 		if (yieldStress < driveStress) staglid = 0; // Mobile-lid regime, i.e. plate tectonics
 		else staglid = 1;                           // Stagnant-lid regime
 
-	// Debug: Check brittle and ductile yield stresses equal
-		printf("T_BDT=%g K, P_BDT=%g MPa, driveStress=%g MPa, yieldStress=%g MPa, zCrust=%g km\n", T_BDT, P_BDT/MPa2Pa, driveStress/MPa2Pa, yieldStress/MPa2Pa, zCrust/km2m);
-
-		if (yieldStress != combVisc(T_BDT, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, dtime)/dtime)
-			printf("Brittle yield stress=%g MPa different from ductile yield stress=%g MPa\n", yieldStress/MPa2Pa,
-					combVisc(T_BDT, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, dtime)/dtime/MPa2Pa);
-
+		printf("Tmantle=%g K, T_BDT=%g K, Tref=%g K, P_BDT=%g MPa, driveStress=%g MPa, yieldStress=%g MPa, zCrust=%g km\n", Tmantle, T_BDT, Tref, P_BDT/MPa2Pa, driveStress/MPa2Pa, yieldStress/MPa2Pa, zCrust/km2m);
 		if (staglid) printf("stagnant lid\n\n");
 		else printf ("plate tectonics\n\n");
-	// End debug -----
 
-		// Melting model of Kite et al. (2009), focuses solely on mid-ocean ridges (their Sec. 2.3)
-		if (!staglid) Pf = 0.0; // K09 equations (10-12)
-		else Pf = rhoCrust*gsurf*zCrust;
-		P0 = 2.0*P_BDT; // Should be higher than Pf. Arbitrary for now, rhoCrust*gsurf*2.0*zCrust results in 50% melting rate
+		// ------------------------------------
+		// 2. Melting & outgassing model (Kite et al. 2009)
+		// Stagnant lid: Kite et al. (2009) eq. 25 not normalized by planet mass. Note typo: P0>Pf=P_BDT. Here P0=2.0*P_BDT=rhoCrust*gsurf*2.0*zCrust results in 100% avg melting fraction
+		double Psolidus = 0.0; // TODO compute Psolidus explicitly (with MELTS?) and look at K09 Sec. 4 for difference between crust (compositional) and lithosphere (rheological)
+		if (staglid) Rmelt = Asurf*vConv*rhoMagma * (P_BDT/(Psolidus-P_BDT)); // kg s-1
+		// Enhancement of rate of melting due to plate tectonics. Focuses solely on mid-ocean ridges (their Sec. 2.3). Also a function of age. See Sasaki & Tajika 1995.
+		else Rmelt = vConv*MORlength*zCrust*rhoCrust;
 
-		if (!staglid) Rmelt = vConv*MORlength*zCrust*rhoCrust; // Enhancement of rate of melting due to plate tectonics. Also a function of age. See Sasaki & Tajika 1995.
-		else Rmelt = Asurf*vConv*rhoMagma * (rhoCrust*gsurf*zCrust/(P0-Pf)); // kg s-1, Kite et al. (2009) eq. 25 not normalized by planet mass. Note typo: P0>Pf
+		FCoutgas = deltaCvolcEarth * Rmelt/(RmeltEarth*mEarth); // mol C s-1. Accurate for Earth magma C concentrations, but for other mantle concentrations, should be calculated explicitly (MELTS?)
 
-		FCoutgas = deltaCvolcEarth * Rmelt/(RmeltEarth*mEarth);         // mol C s-1. Accurate for Earth magma C concentrations, but for other mantle concentrations, should be calculated explicitly (MELTS?)
-
-		// Update mantle temperature using effective thermal conductivity scaled with Nu
-		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/pow(r[NR]-r[cmbindex],2)); // TODO compute T in each grid zone, convectively below BDT, conductively above.
-		// This will get rid of circular reasoning on Tref and allow direct computation of melting volumes
-		// via comparison of the T(P) profile with the solidus.
+		// ------------------------------------
+		// 3. Mantle thermal evolution
+		// Instantaneous heating rate (Kite et al. 2009 Table 1): H = X_4.5 * W * exp(ln(1/2) / t1/2 * (t-4.5))
+		H =  36.9e-9  * 2.92e-5 * exp(log(0.5)/( 1.26 *Gyr2sec) * (realtime - 4.5*Gyr2sec))  //  40-K
+		  + 124.0e-9  * 2.64e-5 * exp(log(0.5)/(14.0  *Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 232-Th
+		  +   0.22e-9 * 56.9e-5 * exp(log(0.5)/( 0.704*Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 235-U
+		  +  30.8e-9  * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * (realtime - 4.5*Gyr2sec)); // 238-U
+		// Effective thermal conductivity scaled with Nu TODO improve realism, this is simplistic
+		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/pow(r[NR]-r[cmbindex],2));
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from continental weathering
@@ -740,577 +723,4 @@ int main(int argc, char *argv[]) {
 	Rf_endEmbeddedR(0);                                     // Close R and CHNOSZ
 
 	return EXIT_SUCCESS;
-}
-
-/*--------------------------------------------------------------------
- *
- * Subroutine AqueousChem
- *
- * Calculates aqueous chemistry, including:
- * - ocean-atmospheric equilibrium
- * - continental weathering
- *
- * forced PP forces the aqueous phase to be in equilibrium with gas
- * partial pressures
- *
- *--------------------------------------------------------------------*/
-
-int AqueousChem (char path[1024], char filename[64], int itime, double T, double *P, double *V, double *nAir, double *pH, double *pe,
-		double *mass_w, double **xgas, double **xaq, double ***xrain, int forcedPP, double kintime, int kinsteps, int nvar) {
-
-	int phreeqc = 0;
-	int i = 0;
-	int j = 0;
-
-	char *dbase = (char*)malloc(1024);                           // Path to thermodynamic database
-	char *infile = (char*)malloc(1024);                          // Path to initial (template) input file
-	char *tempinput = (char*)malloc(1024);                       // Temporary PHREEQC input file, modified from template
-
-	double nAir0 = *nAir; // Scaling factor for gas volume and water mass, so PHREEQC doesn't have to handle large numbers
-
-	double **simdata = (double**) malloc(nvar*sizeof(double*));
-	if (simdata == NULL) printf("AqueousChem: Not enough memory to create simdata[nvar][kinsteps]\n");
-	for (i=0;i<nvar;i++) {
-		simdata[i] = (double*) malloc(kinsteps*sizeof(double));
-		if (simdata[i] == NULL) printf("AqueousChem: Not enough memory to create simdata[nvar][kinsteps]\n");
-	}
-
-	// Initializations
-	dbase[0] = '\0';
-	infile[0] = '\0';
-	tempinput[0] = '\0';
-	for (i=0;i<nvar;i++) {
-		for (j=0;j<kinsteps;j++) simdata[i][j] = 0.0;
-	}
-
-	if (cmdline == 1) strncat(dbase,path,strlen(path)-20);
-	else strncat(dbase,path,strlen(path)-18);
-	strcat(dbase,"PHREEQC-3.1.2/core10_idealgas.dat");
-
-	strncat(infile,dbase,strlen(dbase)-19);
-	strcat(infile, filename);
-
-	WritePHREEQCInput(infile, itime, T-Kelvin, *P, *V/nAir0, *pH, *pe, *mass_w/nAir0, *xgas, *xaq, forcedPP, kintime, kinsteps, &tempinput);
-
-	phreeqc = CreateIPhreeqc(); // Run PHREEQC
-	if (LoadDatabase(phreeqc,dbase) != 0) OutputErrorString(phreeqc);
-	SetSelectedOutputFileOn(phreeqc,1);
-	if (RunFile(phreeqc,tempinput) != 0) OutputErrorString(phreeqc);
-
-	if      (strcmp(filename, "io/OceanStart") == 0) ExtractWrite(phreeqc, &simdata, 1, nvarEq); // 1st line of selected output has initial solution composition = equilibrium when there are no equilibrium phases
-	else if (strcmp(filename, "io/OceanDiss") == 0) ExtractWrite(phreeqc, &simdata, 2, nvarEq);  // 2nd line of PHREEQC selected output solution and mineral+gas composition at equilibrium
-	else if (strcmp(filename, "io/ContWeather") == 0) ExtractWrite(phreeqc, &simdata, kinsteps, nvarKin);
-	else printf("AqueousChem: Cannot extract PHREEQC output data because input path %s is inaccurate. Exiting.\n", filename);
-
-	if (DestroyIPhreeqc(phreeqc) != IPQ_OK) OutputErrorString(phreeqc);
-
-//	if (strcmp(filename, "io/OceanDiss") == 0) {
-//		for (i=0;i<nvar;i++) {
-//			printf("%d\t", i);
-//			for (j=0;j<kinsteps;j++) printf("%g\t", simdata[i][j]);
-//			printf("\n");
-//		}
-//		exit(0);
-//	}
-
-	// Setting initial ocean chemistry
-	if (strcmp(filename, "io/OceanStart") == 0) {
-		(*pH) = simdata[7][0];
-		(*pe) = simdata[8][0];
-
-		(*xaq)[0] = simdata[45][0];             // C(4), i.e. dissolved CO2 and carbonate
-		(*xaq)[1] = simdata[43][0];             // C(-4), i.e. dissolved methane
-		(*xaq)[2] = simdata[72][0];             // O(0), i.e. dissolved O2
-		(*xaq)[3] = simdata[28][0];             // Total dissolved N
-		(*xaq)[4] = simdata[69][0];             // N(0), i.e. dissolved N2
-		(*xaq)[5] = simdata[68][0];             // N(-3), i.e. dissolved NH3 and NH4+
-	}
-
-	// Ocean dissolution
-	if (strcmp(filename, "io/OceanDiss") == 0) {
-		(*pH) = simdata[7][0];
-		(*pe) = simdata[8][0];
-		(*nAir) = simdata[1007][0]*nAir0;
-		(*P) = simdata[1006][0]*atm2bar;
-		(*V) = simdata[1008][0]/1000.0*nAir0;
-		(*mass_w) = simdata[11][0]*nAir0;
-
-		(*xaq)[0] = simdata[45][0];             // C(4), i.e. dissolved CO2 and carbonate
-		(*xaq)[1] = simdata[43][0];             // C(-4), i.e. dissolved methane
-		(*xaq)[2] = simdata[72][0];             // O(0), i.e. dissolved O2
-		(*xaq)[3] = simdata[28][0];             // Total dissolved N
-		(*xaq)[4] = simdata[69][0];             // N(0), i.e. dissolved N2
-		(*xaq)[5] = simdata[68][0];             // N(-3), i.e. dissolved NH3 and NH4+
-
-		(*xgas)[0] = simdata[1014][0];          // CO2(g)
-		(*xgas)[1] = simdata[1012][0];          // CH4(g)
-		(*xgas)[2] = simdata[1022][0];          // O2(g)
-		(*xgas)[3] = simdata[1018][0];          // N2(g)
-		(*xgas)[4] = simdata[1016][0];          // H2O(g)
-
-		for (i=0;i<nAtmSpecies;i++) (*xgas)[i] = (*xgas)[i]/simdata[1007][0]; // Divide by total mol gas to return mixing ratio
-	}
-
-	// Continental weathering
-	if (strcmp(filename, "io/ContWeather") == 0) {
-
-		(*xrain)[1][1] = simdata[3][1]; // Rainwater pH
-		(*xrain)[2][1] = simdata[9][1]; // Initial total dissolved C
-		for (i=2;i<kinsteps;i++) {
-			(*xrain)[0][i] = simdata[1][i]; // Time (s)
-			(*xrain)[1][i] = simdata[3][i]; // pH
-			(*xrain)[2][i] = simdata[9][i]; // Total dissolved C
-		}
-	}
-
-	for (i=0;i<nvar;i++) free (simdata[i]);
-	free (dbase);
-	free (infile);
-	free (tempinput);
-	free (simdata);
-
-	return 0;
-}
-
-/*--------------------------------------------------------------------
- *
- * Subroutine ExtractWrite
- *
- * Write selected output from PHREEQC
- *
- *--------------------------------------------------------------------*/
-
-int ExtractWrite(int instance, double*** data, int line, int nvar) {
-	VAR v;
-	int i = 0;
-	int j = 0;
-	VarInit(&v);
-
-	if (nvar == nvarEq) { // Equilibrium simulation
-		GetSelectedOutputValue(instance,1,3,&v);           // temp
-		(*data)[0][0] = v.dVal;
-
-		GetSelectedOutputValue(instance,1,1,&v);           // pH
-		(*data)[2][0] = v.dVal;
-
-		GetSelectedOutputValue(instance,1,2,&v);           // pe
-		(*data)[3][0] = v.dVal;
-
-		GetSelectedOutputValue(instance,1,5,&v);           // W:R
-		(*data)[6][0] = v.dVal;
-
-		for (i=1;i<nvar-6;i++) {                           // Rest of parameters
-			GetSelectedOutputValue(instance,line,i,&v);
-			if (fabs(v.dVal) < 1e-50) (*data)[i+6][0] = 0.0;
-			else (*data)[i+6][0] = v.dVal;
-		}
-	}
-	else if (nvar == nvarKin) { // Kinetic simulation
-		for (i=0;i<nvar;i++) {
-			for (j=0;j<line;j++) {
-				GetSelectedOutputValue(instance,j,i,&v);
-				if (fabs(v.dVal) < 1e-50) (*data)[i][j] = 0.0;
-				else (*data)[i][j] = v.dVal;
-			}
-		}
-	}
-	else printf("ExtractWrite: nvar=%d different from nvarEq=%d and nvarKin=%d, must be equal to one of these. Exiting\n", nvar, nvarEq, nvarKin);
-
-	return 0;
-}
-
-/*--------------------------------------------------------------------
- *
- * Subroutine ConCat
- *
- * Concatenation. Takes 2 strings and returns the concatenated string.
- *
- *--------------------------------------------------------------------*/
-
-const char* ConCat(const char *str1, const char *str2) {
-	char buffer[100];
-	buffer[0] = '\0';
-
-	strcpy(buffer,str1);
-	return strcat(buffer,str2);
-}
-
-/*--------------------------------------------------------------------
- *
- * Subroutine WritePHREEQCInput
- *
- * Generate input file from a template.
- *
- *--------------------------------------------------------------------*/
-
-int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
-		double *xgas, double *xaq, int forcedPP, double kintime, int kinsteps, char **tempinput) {
-
-	int i = 0;
-	int eqphases = 0; // Switch: is the EQUILIBRIUM_PHASES block being read?
-	int gasphase = 0; // Switch: is the GAS_PHASE block being read?
-	int sel = 0;      // Switch: is the SELECTED_OUTPUT block being read?
-
-	FILE *fin;
-	FILE *fout;
-	char itime_str[32];
-	char temp_str[32];
-	char pressure_str[32];
-	char vol_str[32];
-	char pH_str[32];
-	char pe_str[32];
-	char mass_w_str[32];
-	char steps_str1[64]; char steps_str2[64];
-
-	char **gas_str1 = (char**)malloc(nAtmSpecies*sizeof(char*));
-	for (i=0;i<nAtmSpecies;i++) gas_str1[i] = (char*)malloc(1024);
-
-	char **gas_str2 = (char**)malloc(nAtmSpecies*sizeof(char*));
-	for (i=0;i<nAtmSpecies;i++) gas_str2[i] = (char*)malloc(1024);
-
-	char **gas_str3 = (char**)malloc(nAtmSpecies*sizeof(char*));
-	for (i=0;i<nAtmSpecies;i++) gas_str3[i] = (char*)malloc(1024);
-
-	char **aq_str = (char**) malloc(nAqSpecies*sizeof(char*));
-	for (i=0;i<nAqSpecies;i++) aq_str[i] = (char*)malloc(1024);
-
-	itime_str[0] = '\0';
-	temp_str[0] = '\0';
-	pressure_str[0] = '\0';
-	vol_str[0] = '\0';
-	pH_str[0] = '\0';
-	pe_str[0] = '\0';
-	mass_w_str[0] = '\0';
-	steps_str1[0] = '\0'; steps_str2[0] = '\0';
-
-	for (i=0;i<nAtmSpecies;i++) {
-		gas_str1[i][0] = '\0';
-		gas_str2[i][0] = '\0';
-		gas_str3[i][0] = '\0';
-	}
-	for (i=0;i<nAqSpecies;i++) aq_str[i][0] = '\0';
-
-	int line_length = 300;
-	char line[line_length]; // Individual line
-
-	// Convert to PHREEQC input units
-	pressure = pressure/atm2bar; // Convert from bar to atm
-	gasvol = gasvol*1000.0;      // Convert from m3 to L
-
-	// Assemble file title
-	sprintf(itime_str, "%d", itime);
-	sprintf(temp_str, "%g", temp);
-	sprintf(pressure_str, "%g", pressure);
-	sprintf(vol_str, "%g", gasvol);
-	sprintf(pH_str, "%g", pH);
-	sprintf(pe_str, "%g", pe);
-	sprintf(mass_w_str, "%g", mass_w);
-
-	if (!forcedPP) {
-		for (i=0;i<nAtmSpecies;i++) {
-			if (xgas[i] > 0.0)
-				sprintf(gas_str2[i], "%g", log(xgas[i]*pressure)/log(10.0)); // Convert from mixing ratio to -log partial pressure
-			else
-				sprintf(gas_str2[i], "%g", 0.0);
-			strcat(gas_str1[i], gas_str2[i]);
-			sprintf(gas_str2[i], "%g", xgas[i]);
-			strcat(gas_str1[i], "\t");
-			strcat(gas_str1[i], gas_str2[i]);
-		}
-	}
-	else {
-		for (i=0;i<nAtmSpecies;i++) {
-			if (xgas[i] > 0.0)
-				sprintf(gas_str2[i], "%g", log(xgas[i]*pressure)/log(10.0)); // Convert from mixing ratio to -log partial pressure
-			else
-				sprintf(gas_str2[i], "%g", 0.0);
-		}
-	}
-	for (i=0;i<nAtmSpecies;i++) sprintf(gas_str3[i], "%g", xgas[i]*pressure); // Partial pressure
-
-	strcpy(*tempinput,TemplateFile);
-//	strcat(*tempinput,itime_str);
-	strcat(*tempinput,"Exec"); // File title complete
-
-	sprintf(aq_str[0],"%g mol/kgw", xaq[0]);  // mol per kg H2O of oxidized C
-	sprintf(aq_str[1],"%g mol/kgw", xaq[1]);  // mol per kg H2O of reduced C
-	sprintf(aq_str[3],"%g mol/kgw", xaq[3]);  // mol per kg H2O of N
-
-	sprintf(steps_str1,"%g in ", kintime);    // Duration of kinetic simulation
-	sprintf(steps_str2,"%d steps", kinsteps); // Number of time steps of kinetic simulation
-	strcat(steps_str1, steps_str2);           // "kintime in kinsteps steps"
-
-	fin = fopen (TemplateFile,"r"); 	// Open input file
-	if (fin == NULL) printf("WritePHREEQCInput: Missing input file. Path: %s\n", TemplateFile);
-	fout = fopen (*tempinput,"w");      // Open output file
-	if (fout == NULL) printf("WritePHREEQCInput: Missing output file. Path: %s\n", *tempinput);
-
-	while (fgets(line, line_length, fin)) {
-		// Block switches
-		if (line[0] == 'E' && line[1] == 'Q' && line[2] == 'U' && line[3] == 'I') eqphases = 1; // EQUILIBRIUM_PHASES block
-		if (line[0] == 'G' && line[1] == 'A' && line[2] == 'S' && line[3] == '_') gasphase = 1; // EQUILIBRIUM_PHASES block
-		if (line[0] == 'S' && line[1] == 'E' && line[2] == 'L' && line[3] == 'E') sel = 1;      // SELECTED_OUTPUT block
-		// SOLUTION
-		if (line[1] == 'p' && line[2] == 'H')                                                  fprintf(fout, "%s charge\n", ConCat("\tpH \t \t",pH_str));
-		else if (line[1] == 't' && line[2] == 'e' && line[3] == 'm' && line[4] == 'p')         fprintf(fout, "%s\n", ConCat("\ttemp \t \t",temp_str));
-		else if (line[1] == 'p' && line[2] == 'r' && line[3] == 'e' && line[4] == 's')         fprintf(fout, "%s\n", ConCat("\tpressure \t",pressure_str));
-		else if (line[1] == 'p' && line[2] == 'e')                                             fprintf(fout, "%s\n", ConCat("\tpe \t \t",pe_str));
-		else if (!sel && line[1] == '-' && line[2] == 'w' && line[3] == 'a' && line[4] == 't') fprintf(fout, "%s\n", ConCat("\t-water \t \t",mass_w_str));
-		else if (!eqphases && line[1] == 'C' && line[2] == '(' && line[3] == '4' && line[4] == ')') {
-			if (forcedPP && xgas[0] > 0.0) {
-				strcat(aq_str[0], "\tCO2(g) \t");
-				strcat(aq_str[0], gas_str2[0]);
-				fprintf(fout, "%s\n", ConCat("\tC(4) \t\t", aq_str[0]));
-			}
-			else          fprintf(fout, "%s\n", ConCat("\tC(4) \t\t",aq_str[0]));
-		}
-		else if (!eqphases && line[1] == 'C' && line[2] == '(' && line[3] == '-' && line[4] == '4') {
-			if (forcedPP && xgas[1] > 0.0) {
-				strcat(aq_str[1], "\tCH4(g) \t");
-				strcat(aq_str[1], gas_str2[1]);
-				fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t", aq_str[1]));
-			}
-			else          fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t",aq_str[1]));
-		}
-		else if (!eqphases && line[1] == 'N' && line[2] == '\t') {
-			if (forcedPP && xgas[3] > 0.0) {
-				strcat(aq_str[3], "\tN2(g) \t");
-				strcat(aq_str[3], gas_str2[3]);
-				fprintf(fout, "%s\n", ConCat("\tN \t\t", aq_str[3]));
-			}
-			else          fprintf(fout, "%s\n", ConCat("\tN \t\t",aq_str[3]));
-		}
-		// KINETICS
-		else if (line[0] == '-' && line[1] == 's' && line[2] == 't' && line[3] == 'e')         fprintf(fout, "%s\n", ConCat("-steps\t",steps_str1));
-		// GAS_PHASE
-		else if (gasphase && line[1] == 'v' && line[2] == 'o' && line[3] == 'l') fprintf(fout, "%s\n", ConCat("\tvolume \t\t",vol_str));
-		else if (gasphase && line[1] == 'C' && line[2] == 'O' && line[3] == '2' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tCO2(g) \t\t",gas_str3[0]));
-		else if (gasphase && line[1] == 'C' && line[2] == 'H' && line[3] == '4' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tCH4(g) \t\t",gas_str3[1]));
-		else if (gasphase && line[1] == 'O' && line[2] == '2' && line[3] == '(' && line[4] == 'g') fprintf(fout, "%s\n", ConCat("\tO2(g) \t\t",gas_str3[2]));
-		else if (gasphase && line[1] == 'N' && line[2] == '2' && line[3] == '(' && line[4] == 'g') fprintf(fout, "%s\n", ConCat("\tN2(g) \t\t",gas_str3[3]));
-		else if (gasphase && line[1] == 'H' && line[2] == '2' && line[3] == 'O' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tH2O(g) \t\t",gas_str3[4]));
-		// EQUILIBRIUM_PHASES
-		else if (eqphases && line[2] == 'C' && line[3] == 'O' && line[4] == '2' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tCO2(g) \t\t",gas_str1[0]));
-		else if (eqphases && line[2] == 'C' && line[3] == 'H' && line[4] == '4' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tCH4(g) \t\t",gas_str1[1]));
-		else if (eqphases && line[2] == 'O' && line[3] == '2' && line[4] == '(' && line[5] == 'g' && line[6] == ')') fprintf(fout, "%s\n", ConCat("\tO2(g) \t\t",gas_str1[2]));
-		else if (eqphases && line[2] == 'N' && line[3] == '2' && line[4] == '(' && line[5] == 'g' && line[6] == ')') fprintf(fout, "%s\n", ConCat("\tN2(g) \t\t",gas_str1[3]));
-		else if (eqphases && line[2] == 'H' && line[3] == '2' && line[4] == 'O' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tH2O(g) \t\t",gas_str1[4]));
-
-		else fputs(line,fout);
-	}
-	if (ferror(fin)) {
-		printf("WritePHREEQCInput: Error reading template input file %s\n",TemplateFile);
-		return 1;
-	}
-
-	fclose(fin);
-	fclose(fout);
-
-	for (i=0;i<nAtmSpecies;i++) {
-		free(gas_str1[i]);
-		free(gas_str2[i]);
-		free(gas_str3[i]);
-	}
-	for (i=0;i<nAqSpecies;i++) free(aq_str[i]);
-	free(gas_str1);
-	free(gas_str2);
-	free(gas_str3);
-	free(aq_str);
-
-	return 0;
-}
-
-/*--------------------------------------------------------------------
- *
- * Subroutine cleanup
- *
- * Remove PHREEQC selected output files so as not to clutter the
- * ExoCcycleGeo folder.
- *
- *--------------------------------------------------------------------*/
-
-int cleanup (char path[1024]) {
-
-	char *cmd = (char*)malloc(1024*sizeof(char)); // Don't forget to free!
-
-	cmd[0] = '\0';
-	strcat(cmd,"rm ");
-	if (cmdline == 1) strncat(cmd,path,strlen(path)-20);
-	else strncat(cmd,path,strlen(path)-18);
-	strcat(cmd,"sel*");
-	system(cmd);
-
-	free(cmd);
-
-	return(0);
-}
-
-/*--------------------------------------------------------------------
- *
- * Subroutine molmass_atm
- *
- * Compute the average molecular mass of the atmosphere in kg mol-1.
- *
- *--------------------------------------------------------------------*/
-
-double molmass_atm (double *xgas) {
-
-	double molmass = 0.0;
-
-	// Masses of core10.dat
-	double M_H = 1.0079;
-	double M_C = 12.011;
-	double M_N = 14.0067;
-	double M_O = 15.994;
-
-	molmass = (xgas[0]*(M_C + 2.0*M_O) // CO2
-			 + xgas[1]*(M_C + 4.0*M_H) // CH4
-			 + xgas[2]*2.0*M_O         // O2
-			 + xgas[3]*2.0*M_N         // N2
-		     + xgas[4]*(2.0*M_H+M_O))  // H2O
-					 /(xgas[0]+xgas[1]+xgas[2]+xgas[3]+xgas[4])*0.001;
-
-	return molmass;
-}
-
-/*--------------------------------------------------------------------
- *
- * Subroutine brittleductile
- *
- * Calculates the difference between the brittle strength and ductile
- * strength of the interior, both in Pa.
- * Brittle-ductile and brittle-plastic transitions are
- * mixed up, although they shouldn't (Kohlstedt et al. 1995).
- *
- * The brittle strength is given by a friction/low-P Byerlee type law:
- * strength = mu*P, assuming negligible water pressure since in practice
- * the brittle-ductile transition occurs in dehydrated rock (T>700 K)
- * even over long time scales.
- *
- * The ductile strength sigma is given by a flow law:
- * d epsilon/dt = A*sigma^n*d^-p*exp[(-Ea+P*V)/RT].
- * This law requires choosing timescale for mantle convection =
- * time step (3e-11 s-1 for dtime = 1e3 years, relatively insensitive
- * to that time step because viscosity varies by orders of mag with
- * temperature).
- *
- *--------------------------------------------------------------------*/
-
-double brittleDuctile (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5], double grainSize,
-		double dtime) {
-
-	double f = 0.0;
-
-	double P = rhoCrust*gsurf*zCrust*(T-Tsurf)/(Tmantle-Tsurf); // Pressure (Pa)
-	double brittleStrength = 0.0;                               // Brittle strength (Pa)
-	double ductileStrength = 0.0;                               // Ductile strength (Pa)
-
-	if (P < 200.0e6) brittleStrength = 0.85*P;
-	else brittleStrength = 0.6*P + 50.0e6;
-
-	ductileStrength = combVisc(T, P, flowLawDiff, flowLawDisl, grainSize, dtime)/dtime;
-
-	f = brittleStrength - ductileStrength;
-
-	return f;
-}
-
-/*--------------------------------------------------------------------
- *
- * Subroutine brittleductile_prime
- *
- * Calculates the temperature derivative of brittleDuctile.
- *
- *--------------------------------------------------------------------*/
-
-double brittleDuctile_prime (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5],
-		double grainSize, double dtime) {
-
-	double f_prime = 0.0;
-
-	double P = rhoCrust*gsurf*zCrust*(T-Tsurf)/(Tmantle-Tsurf); // Pressure (Pa)
-	double dPdT = rhoCrust*gsurf*zCrust/(Tmantle-Tsurf);        // Geotherm (Pa K-1), independent of T
-	double brittle_prime = 0.0;                                 // Brittle strength (Pa)
-	double ductile_prime = 0.0;                                 // Ductile strength (Pa)
-	double ductileDiff = 0.0;                                   // Dry silicate diffusion (Pa)
-	double ductileDisl = 0.0;                                   // Dry silicate dislocation (Pa)
-	double ductileDiff_prime = 0.0;                             // Dry silicate diffusion (Pa)
-	double ductileDisl_prime = 0.0;                             // Dry silicate dislocation (Pa)
-
-	// Temperature derivative of brittle strength
-	if (P < 200.0e6) brittle_prime = 0.85*dPdT;
-	else brittle_prime = 0.6*dPdT;
-
-	// Temperature derivative of ductile strength
-	ductileDiff = viscosity(T, P, flowLawDiff, grainSize, dtime); // Korenaga & Karato (2008), dry diffusion
-	ductileDisl = viscosity(T, P, flowLawDisl, grainSize, dtime); // Korenaga & Karato (2008), dry dislocation
-
-	ductileDiff_prime = dviscdT(T, dPdT, flowLawDiff, grainSize,  dtime, Tsurf)/dtime;
-	ductileDisl_prime = dviscdT(T, dPdT, flowLawDisl, grainSize,  dtime, Tsurf)/dtime;
-
-	// Easiest to take the derivative of the parallel combination as d/dT [Diff*Disl/(Diff+Disl)]
-	ductile_prime = ( (ductileDiff_prime*ductileDisl + ductileDiff*ductileDisl_prime) * (ductileDiff+ductileDisl)
-			         -(ductileDiff_prime+ductileDisl_prime) * ductileDiff*ductileDisl ) / pow(ductileDiff_prime + ductileDisl_prime,2);
-
-	f_prime = brittle_prime - ductile_prime;
-
-	return f_prime;
-}
-
-/*--------------------------------------------------------------------
- *
- * Subroutine viscosity
- *
- * Calculates non-Newtonian viscosity in Pa s.
- *
- *--------------------------------------------------------------------*/
-
-double viscosity (double T, double P, double flowLaw[5], double grainSize, double dtime) {
-
-	double visc = 0.0;
-
-	visc = MPa2Pa*pow(pow(10.0,-flowLaw[2]) * pow(grainSize,flowLaw[4]) * exp((flowLaw[0] + P*flowLaw[1])/(R_G*T)), 1.0/flowLaw[3]) * pow(1.0/dtime, 1.0/flowLaw[3]-1.0);
-
-	return visc;
-}
-
-/*--------------------------------------------------------------------
- *
- * Subroutine comboVisc
- *
- * Calculates non-Newtonian viscosity in Pa s combined from parallel
- * diffusion and dislocation flow laws (e.g. Cizkova et al. 2012 eq. 1).
- *
- *--------------------------------------------------------------------*/
-
-double combVisc (double T, double P, double flowLawDiff[5], double flowLawDisl[5], double grainSize, double dtime) {
-
-	double visc = 0.0;
-	double viscDryDiff = 0.0;
-	double viscDryDisl = 0.0;
-
-	viscDryDiff = viscosity(T, P, flowLawDiff, grainSize, dtime); // Korenaga & Karato (2008), dry diffusion
-	viscDryDisl = viscosity(T, P, flowLawDisl, grainSize, dtime); // Korenaga & Karato (2008), dry dislocation
-	visc = 1.0/(1.0/viscDryDiff + 1.0/viscDryDisl); // Parallel combination
-
-	return visc;
-}
-
-/*--------------------------------------------------------------------
- *
- * Subroutine dviscdT
- *
- * Calculates temperature derivative of non-Newtonian viscosity along
- * linear geotherm in Pa s K-1.
- *
- *--------------------------------------------------------------------*/
-
-double dviscdT (double T, double dPdT, double flowLaw[5], double grainSize, double dtime, double Tsurf) {
-
-	double dviscdT = 0.0;
-
-	dviscdT = MPa2Pa*pow(pow(10.0,-flowLaw[2]) * pow(grainSize,flowLaw[4]) * exp(dPdT*flowLaw[1]/R_G) * exp((flowLaw[0] - dPdT*flowLaw[1]*Tsurf)/(R_G*T)), 1.0/flowLaw[3])
-	          * (dPdT*flowLaw[1]*Tsurf-flowLaw[0])/(flowLaw[3]*R_G*T*T) * pow(1.0/dtime, 1.0/flowLaw[3]-1.0);
-
-	return dviscdT;
 }

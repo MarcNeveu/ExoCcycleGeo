@@ -24,6 +24,10 @@
 #ifndef COMPRESSION_H_
 #define COMPRESSION_H_
 
+//-------------------------------------------------------------------
+// SUBROUTINE DECLARATIONS
+//-------------------------------------------------------------------
+
 int compression(int NR, double m_p, double m_c, double Tsurf, int dbincore, int dboutcore, int dbmantle, double **r,
 		double **P, double **rho, int *cmbindex, char path[1024]);
 
@@ -31,6 +35,16 @@ int planmat(int ncomp, int **dbindex, int **eos, double **rho0, double **c, doub
 		double **V0, double **Tref, double **a0, double **a1, double **b0, double **b1, double **b2, char path[1024]);
 
 int planmat_index(int mat, int ncomp, int *dbindex);
+
+/*--------------------------------------------------------------------
+ *
+ * Subroutine Compression
+ *
+ * Calculates pressure ad density radial profiles inside a planetary
+ * body by allowing the materials to compress. Handles up to 3
+ * compositional layers (e.g. core, mantle, crust).
+ *
+ *--------------------------------------------------------------------*/
 
 int compression(int NR, double m_p, double m_c, double Tsurf, int dbincore, int dboutcore, int dbmantle, double **r,
 		double **P, double **rho, int *cmbindex, char path[1024]) {
