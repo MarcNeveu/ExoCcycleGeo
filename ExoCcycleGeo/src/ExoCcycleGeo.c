@@ -112,7 +112,8 @@ int main(int argc, char *argv[]) {
 	double H = 0.0;                 // Specific radiogenic heating rate (J s-1 kg-1)
 	double kappa = 0.0;             // Mantle thermal diffusivity (m2 s-1)
 	double nu = 0.0;                // Mantle kinematic viscosity (m2 s-1)
-	double zCrust = 10.0*km2m;      // Crustal thickness (m)
+	double zCrust = 10.0*km2m;      // Crustal thickness (m), i.e. depth of layer crystallized from a melt
+	double zLith = 100.0*km2m;      // Lithospheric thickness (m), i.e. depth to brittle-ductile transition
 	double Ra = 0.0;                // Rayleigh number for mantle convection (no dim)
 	double Nu = 0.0;                // Nusselt number (no dim)
 	double Tref = 0.0;              // Temperature at outer boundary of convective zone (surface or base of stagnant lid)
@@ -146,8 +147,7 @@ int main(int argc, char *argv[]) {
 	// Quantities to be computed by melting model
 	double Rmelt = 0.0;             // Rate of melt generation (m-2 s-1)
 	double vConv = 0.0;             // Convective velocity (m s-1)
-	double P0 = 0.0;                // Pressure at which geotherm crosses mantle solidus (Pa)
-	double Pf = 0.0;                // Pressure at base of crust (Pa)
+	double Psolidus = 0.0;          // Pressure at which geotherm crosses mantle solidus (Pa)
 
 	// Quantities to be computed by seafloor weathering model
 	double zCrack = 0.0;            // Depth of fracturing below seafloor (m)
@@ -180,6 +180,7 @@ int main(int argc, char *argv[]) {
 	double Mocean = 1.4e21;     // Mass of ocean (kg, default: Earth=1.4e21)
 	double rhoMagma = 3500.0;   // Magma density (kg m-3)
 	double rhoCrust = 3500.0;   // Crustal density (kg m-3)
+	double rhoLith = 3500.0;    // Lithospheric density (kg m-3)
     int redox = 2; // 1: current Earth surface, 2: hematite-magnetite, 3: fayalite-magnetite-quartz, 4: iron-wustite, code won't run with other values.
     Tmantle = 1850.0;
 
@@ -459,9 +460,9 @@ int main(int argc, char *argv[]) {
 		// 1a. Determine lithospheric yield stress
 
 		/* = strength at brittle-ductile transition (BDT)
-		 * Geotherm near surface is T prop to depth, with T=Tsurf at depth = 0 and T=Tmantle at depth = zCrust = P(BDT)/(rhoCrust*gsurf). [1]
-		 * So T = (Tmantle-Tsurf)*depth/zCrust + Tsurf. [2]
-		 * P ≈ rhoCrust*gsurf*depth = rhoCrust*gsurf*zCrust*(T-Tsurf)/(Tmantle-Tsurf) [3]
+		 * Geotherm through lithosphere is T prop to depth, with T=Tsurf at depth = 0 and T=Tmantle at depth = zLith = P(BDT)/(rhoLith*gsurf). [1]
+		 * So T = (Tmantle-Tsurf)*depth/zLith + Tsurf. [2]
+		 * P ≈ rhoLith*gsurf*depth = rhoLith*gsurf*zCrust*(T-Tsurf)/(Tmantle-Tsurf) [3]
 		 * Initiate zCrust. Solve for temperature of BDT: brittleStrength-ductileStrength = f(P,T) = f(T) = 0. Get updated zCrust from [2] (= depth). */
 
 		// Initialize bounds for T_BDT
@@ -469,13 +470,13 @@ int main(int argc, char *argv[]) {
 		T_SUP = Tmantle;
 
 		// Ensure that f(T_INF)<0 and f(T_SUP)>0
-		f_inf = brittleDuctile(T_INF, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
-		f_sup = brittleDuctile(T_SUP, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
+		f_inf = brittleDuctile(T_INF, rhoLith, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
+		f_sup = brittleDuctile(T_SUP, rhoLith, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
 
 		if (f_inf*f_sup > 0.0) {
 			if (f_sup < 0.0) printf("ExoCcycleGeo: Brittle strength < ductile strength, i.e. brittle regime even at Tmantle=%g K.\n"
 					                 "Brittle-ductile transition could not be determined.\n", Tmantle); // Brittle regime in mantle
-			else zCrust = 0.0; // Ductile regime at surface
+			else zLith = 0.0; // Ductile regime at surface
 		}
 		else {
 			if (f_inf > 0.0) { // Swap INF and SUP if f_inf > 0 and f_sup < 0
@@ -487,8 +488,8 @@ int main(int argc, char *argv[]) {
 			dTold = fabs(T_INF-T_SUP); // Initialize the "stepsize before last"
 			dT = dTold;                // Initialize the last stepsize
 
-			f_x = brittleDuctile(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
-			f_prime_x = brittleDuctile_prime(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
+			f_x = brittleDuctile(T_BDT, rhoLith, zLith, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
+			f_prime_x = brittleDuctile_prime(T_BDT, rhoLith, zLith, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
 
 			// Loop over allowed iterations to find T_BDT that is a root of f
 			n_iter = 0;
@@ -506,8 +507,8 @@ int main(int argc, char *argv[]) {
 					T_BDT = T_BDT - dT;
 				}
 				// Calculate updated f and f'
-				f_x = brittleDuctile(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
-				f_prime_x = brittleDuctile_prime(T_BDT, rhoCrust, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
+				f_x = brittleDuctile(T_BDT, rhoLith, zLith, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
+				f_prime_x = brittleDuctile_prime(T_BDT, rhoLith, zLith, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
 
 				if (f_x < 0.0) T_INF = T_BDT; // Maintain the bracket on the root
 				else T_SUP = T_BDT;
@@ -518,10 +519,10 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 			}
-			zCrust = (T_BDT-Tsurf)/(Tmantle-Tsurf)*zCrust; // Crustal thickness is the depth of the brittle-ductile transition
+			zLith = (T_BDT-Tsurf)/(Tmantle-Tsurf)*zLith; // Crustal thickness is the depth of the brittle-ductile transition
 		}
 
-		P_BDT = rhoCrust*gsurf*zCrust; // Pressure at BDT (Pa)
+		P_BDT = rhoLith*gsurf*zLith; // Pressure at BDT (Pa)
 
 		// Yield stress equated to brittle strength at BDT (equivalently, ductile strength)
 		if (P_BDT < 200.0e6) yieldStress = 0.85*P_BDT;
@@ -555,21 +556,54 @@ int main(int argc, char *argv[]) {
 
 		// ------------------------------------
 		// 1c. Determine tectonic regime
-		if (yieldStress < driveStress) staglid = 0; // Mobile-lid regime, i.e. plate tectonics
+		if (yieldStress < driveStress) staglid = 0; // Mobile-lid regime, i.e. plate tectonics, also requires surface liquid water to weaken the lithosphere. TODO Use wet rheologies for yield stress calculations?
 		else staglid = 1;                           // Stagnant-lid regime
 
-		printf("Tmantle=%g K, T_BDT=%g K, Tref=%g K, P_BDT=%g MPa, driveStress=%g MPa, yieldStress=%g MPa, zCrust=%g km\n", Tmantle, T_BDT, Tref, P_BDT/MPa2Pa, driveStress/MPa2Pa, yieldStress/MPa2Pa, zCrust/km2m);
+		printf("Tmantle=%g K, T_BDT=%g K, Tref=%g K, P_BDT=%g MPa, driveStress=%g MPa, yieldStress=%g MPa, zLith=%g km\n", Tmantle, T_BDT, Tref, P_BDT/MPa2Pa, driveStress/MPa2Pa, yieldStress/MPa2Pa, zLith/km2m);
 		if (staglid) printf("stagnant lid\n\n");
 		else printf ("plate tectonics\n\n");
 
 		// ------------------------------------
 		// 2. Melting & outgassing model (Kite et al. 2009)
-		// Stagnant lid: Kite et al. (2009) eq. 25 not normalized by planet mass. Note typo: P0>Pf=P_BDT. Here P0=2.0*P_BDT=rhoCrust*gsurf*2.0*zCrust results in 100% avg melting fraction
-		double Psolidus = 0.0; // TODO compute Psolidus explicitly (with MELTS?) and look at K09 Sec. 4 for difference between crust (compositional) and lithosphere (rheological)
-		if (staglid) Rmelt = Asurf*vConv*rhoMagma * (P_BDT/(Psolidus-P_BDT)); // kg s-1
-		// Enhancement of rate of melting due to plate tectonics. Focuses solely on mid-ocean ridges (their Sec. 2.3). Also a function of age. See Sasaki & Tajika 1995.
-		else Rmelt = vConv*MORlength*zCrust*rhoCrust;
+		// Stagnant lid: Kite et al. (2009) eq. 25 not normalized by planet mass. Note typo: P0>Pf=P_BDT. Here P0=2.0*P_BDT=rhoLith*gsurf*2.0*zCrust results in 100% avg melting fraction
+		// TODO compute Psolidus and zCrust explicitly with MELTS
 
+		// 2a. Output P-T profile in lithosphere to be fed into alphaMELTS
+		FILE *f;
+		char *PTfile = (char*)malloc(1024); // Path to PT file input into alphaMELTS
+		double Tgeotherm = 0.0; // Geotherm temperature (K)
+		double Pgeotherm = 0.0; // Geotherm pressure (Pa)
+
+		if (cmdline == 1) strncat(PTfile,path,strlen(path)-20);
+		else strncat(PTfile,path,strlen(path)-18);
+		strcat(PTfile,"alphaMELTS-1.9/ExoC/PTexoC.txt");
+
+		f = fopen (PTfile,"w");
+		if (f == NULL) printf("ExoCcycleGeo: Missing PT file path: %s\n", PTfile);
+		for (i=100;i>0;i--) {
+			Tgeotherm = Tsurf + (Tmantle-Tsurf)*(double)i/100.0;
+			Pgeotherm = rhoLith*gsurf*zLith*(Tgeotherm-Tsurf)/(Tmantle-Tsurf);
+			fprintf(f, "%g %g\n", Pgeotherm/bar2Pa, Tgeotherm-Kelvin);
+		}
+		free(PTfile);
+		exit(0);
+
+		// 2b. Run alphaMELTS to compute melt mass fraction in lithosphere as a function of pressure, convert to depth
+		// Melts crashes with default composition around 960 K. Make it run down to 1000 K = 727 C and then check that the melt fraction is 0 (should be below 1075 K)
+
+		// 2c. Run alphaMELTS to compute melt mass fraction in mantle as a function of pressure. Extract Psolidus = highest pressure at which there is a melt
+
+		// 2d. Determine amount of crust generated
+		// Assumes that all melt generated reaches the surface (complete melt extraction), and that all ascending mantle parcels reach pressures below Psolidus
+		// Concatenate 2b and 2c and convert to melt fraction = f(depth).
+		// Scale with mass (which Kite et al. 2009 didn't do): [sum melt fraction (depth)] * [mass (depth)] / [total mass between surf and Psolidus]
+		// Multiply Rmelt below by the result.
+
+		if (staglid) Rmelt = Asurf*vConv*rhoMagma; // *  (rhoCrust*gsurf*zCrust/(Psolidus-Psurf)); // kg s-1
+		// Enhancement of rate of melting due to plate tectonics. Focuses solely on mid-ocean ridges (their Sec. 2.3). Also a function of age. See Sasaki & Tajika 1995.
+		else Rmelt = vConv*MORlength*zCrust*rhoCrust; // TODO change MORlength over time? Sasaki & Tajika 1995
+
+		// Includes extrusive and intrusive melting because both degas (K09).
 		FCoutgas = deltaCvolcEarth * Rmelt/(RmeltEarth*mEarth); // mol C s-1. Accurate for Earth magma C concentrations, but for other mantle concentrations, should be calculated explicitly (MELTS?)
 
 		// ------------------------------------
@@ -579,7 +613,7 @@ int main(int argc, char *argv[]) {
 		  + 124.0e-9  * 2.64e-5 * exp(log(0.5)/(14.0  *Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 232-Th
 		  +   0.22e-9 * 56.9e-5 * exp(log(0.5)/( 0.704*Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 235-U
 		  +  30.8e-9  * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * (realtime - 4.5*Gyr2sec)); // 238-U
-		// Effective thermal conductivity scaled with Nu TODO improve realism, this is simplistic
+		// Effective thermal conductivity scaled with Nu
 		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/pow(r[NR]-r[cmbindex],2));
 
 		//-------------------------------------------------------------------

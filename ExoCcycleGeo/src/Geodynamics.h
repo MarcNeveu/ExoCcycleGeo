@@ -14,9 +14,9 @@
 // SUBROUTINE DECLARATIONS
 //-------------------------------------------------------------------
 
-double brittleDuctile (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5], double grainSize,
+double brittleDuctile (double T, double rhoLith, double zLith, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5], double grainSize,
 		double dtime);
-double brittleDuctile_prime (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5],
+double brittleDuctile_prime (double T, double rhoLith, double zLith, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5],
 		double grainSize, double dtime);
 double viscosity (double T, double P, double flowLaw[5], double grainSize, double dtime);
 double combVisc (double T, double P, double flowLawDiff[5], double flowLawDisl[5], double grainSize, double dtime);
@@ -45,12 +45,12 @@ double dviscdT (double T, double dPdT, double flowLaw[5], double grainSize, doub
  *
  *--------------------------------------------------------------------*/
 
-double brittleDuctile (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5], double grainSize,
+double brittleDuctile (double T, double rhoLith, double zLith, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5], double grainSize,
 		double dtime) {
 
 	double f = 0.0;
 
-	double P = rhoCrust*gsurf*zCrust*(T-Tsurf)/(Tmantle-Tsurf); // Pressure (Pa)
+	double P = rhoLith*gsurf*zLith*(T-Tsurf)/(Tmantle-Tsurf); // Pressure (Pa)
 	double brittleStrength = 0.0;                               // Brittle strength (Pa)
 	double ductileStrength = 0.0;                               // Ductile strength (Pa)
 
@@ -72,13 +72,13 @@ double brittleDuctile (double T, double rhoCrust, double zCrust, double gsurf, d
  *
  *--------------------------------------------------------------------*/
 
-double brittleDuctile_prime (double T, double rhoCrust, double zCrust, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5],
+double brittleDuctile_prime (double T, double rhoLith, double zLith, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5],
 		double grainSize, double dtime) {
 
 	double f_prime = 0.0;
 
-	double P = rhoCrust*gsurf*zCrust*(T-Tsurf)/(Tmantle-Tsurf); // Pressure (Pa)
-	double dPdT = rhoCrust*gsurf*zCrust/(Tmantle-Tsurf);        // Geotherm (Pa K-1), independent of T
+	double P = rhoLith*gsurf*zLith*(T-Tsurf)/(Tmantle-Tsurf); // Pressure (Pa)
+	double dPdT = rhoLith*gsurf*zLith/(Tmantle-Tsurf);        // Geotherm (Pa K-1), independent of T
 	double brittle_prime = 0.0;                                 // Brittle strength (Pa)
 	double ductile_prime = 0.0;                                 // Ductile strength (Pa)
 	double ductileDiff = 0.0;                                   // Dry silicate diffusion (Pa)
