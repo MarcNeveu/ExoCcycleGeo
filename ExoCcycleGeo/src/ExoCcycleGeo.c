@@ -462,14 +462,14 @@ int main(int argc, char *argv[]) {
 		/* = strength at brittle-ductile transition (BDT)
 		 * Geotherm through lithosphere is T prop to depth, with T=Tsurf at depth = 0 and T=Tmantle at depth = zLith = P(BDT)/(rhoLith*gsurf). [1]
 		 * So T = (Tmantle-Tsurf)*depth/zLith + Tsurf. [2]
-		 * P ≈ rhoLith*gsurf*depth = rhoLith*gsurf*zCrust*(T-Tsurf)/(Tmantle-Tsurf) [3]
-		 * Initiate zCrust. Solve for temperature of BDT: brittleStrength-ductileStrength = f(P,T) = f(T) = 0. Get updated zCrust from [2] (= depth). */
+		 * P ≈ rhoLith*gsurf*depth = rhoLith*gsurf*zLith*(T-Tsurf)/(Tmantle-Tsurf) [3]
+		 * Initiate zLith. Solve for temperature of BDT: brittleStrength-ductileStrength = f(P,T) = f(T) = 0. Get updated zLith from [2] (= depth). */
 
 		// Initialize bounds for T_BDT
 		T_INF = Tsurf;
 		T_SUP = Tmantle;
 
-		// Ensure that f(T_INF)<0 and f(T_SUP)>0
+		// Ensure that f(T_INF)<0 and f(T_SUP)>0 TODO Ductile strength depends on time step (deps/dt). Make time step-independent?
 		f_inf = brittleDuctile(T_INF, rhoLith, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
 		f_sup = brittleDuctile(T_SUP, rhoLith, zCrust, gsurf, Tmantle, Tsurf, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
 
@@ -519,7 +519,7 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 			}
-			zLith = (T_BDT-Tsurf)/(Tmantle-Tsurf)*zLith; // Crustal thickness is the depth of the brittle-ductile transition
+			zLith = (T_BDT-Tsurf)/(Tmantle-Tsurf)*zLith; // Update lithospheric thickness !! Possibility of non-convergence if updating zLith back and forth moves the solution back and forth
 		}
 
 		P_BDT = rhoLith*gsurf*zLith; // Pressure at BDT (Pa)
@@ -589,9 +589,47 @@ int main(int argc, char *argv[]) {
 		exit(0);
 
 		// 2b. Run alphaMELTS to compute melt mass fraction in lithosphere as a function of pressure, convert to depth
-		// Melts crashes with default composition around 960 K. Make it run down to 1000 K = 727 C and then check that the melt fraction is 0 (should be below 1075 K)
+		// MELTS crashes with default composition around 960 K. Make it run down to 1000 K = 727 C and then check that the melt fraction is 0 (should be below 1075 K)
+		// Use ExoCcycleGeo.melts with Geotherm.env and PTexoC.txt
+		// Command sequence:
+		// run_alphamelts.command -f /.../Geotherm_env.txt (goes high P,T to low)
+		// Option 1 (read MELTS file)
+		// MELTS filename: ExoCcycleGeo.melts (MELTS composition file)
+		// Option 4 (execute)
+		// Option 1 (superliquidus initial guess)
+		// Goes all the way up from BDT to solidus pressure but crashes after that:
+		/* alphaMELTS at: P 5851.170000, T 962.162000
+		 * garnet: 35.804841 g, composition (Ca0.18Fe''0.41Mg0.41)3Al2Si3O12
+		 * clinopyroxene: 32.209942 g, composition cpx Na0.09Ca0.87Fe''0.09Mg0.77Fe'''0.01Ti0.02Al0.27Si1.88O6
+		 * clinopyroxene: 4.872682 g, composition cpx Na0.05Ca0.94Fe''0.10Mg0.46Fe'''0.01Ti0.44Al0.85Si1.15O6
+		 * amphibole: 0.646825 g, composition cAph Ca1.89Fe0.45Mg4.67Si8O22(OH)2
+		 * biotite: 0.174596 g, composition K(Fe''0.15Mg0.85)3AlSi3O10(OH)2
+		 * feldspar: 24.028088 g, composition K0.00Na0.68Ca0.32Al1.32Si2.68O8
+		 * leucite: 2.285922 g, composition K0.00Na1.00AlSi2O5.07(OH)1.86
+		 * spinel: 0.062711 g, composition Fe''0.61Mg0.39Fe'''0.15Al0.60Cr1.24Ti0.00O4
+		 * apatite: 0.189 g, composition Ca5(PO4)3OH
+		 * Numerical Recipes run-time error...
+		 * GAUSSJ: Singular Matrix-2
+		 * ...now exiting to system...
+		 * RUN_ALPHAMELTS.COMMAND WARNING: alphamelts may have crashed!
+		 */
+
+		// Extract result from System_main_tbl_geotherm.txt: melt fraction vs. P, convert to melt fraction vs. depth.
 
 		// 2c. Run alphaMELTS to compute melt mass fraction in mantle as a function of pressure. Extract Psolidus = highest pressure at which there is a melt
+		// Use ExoCcycleGeo.melts with Mantle.env and isentropic from P_BDT to 40000+ bar
+		// Extract result from System_main_tbl_mantle.txt: melt fraction vs. P, convert to melt fraction vs. depth.
+		// Problem: max pressure of MELTS is nowhere near high enough to reach pressure at which melt is suppressed.
+		/* alphaMELTS at: P 40000.000000, T 2030.875840
+		 * liquid: 79.947 g 50.16 1.26 15.99 1.10 0.04 7.59 6.99 13.16 3.31 0.04 0.10 0.25
+		 * Activity of H2O = 0.00360363  Melt fraction = 0.796686
+		 * garnet: 20.402378 g, composition (Ca0.24Fe''0.15Mg0.61)3Al2Si3O12
+		 * ...Adding the solid phase spinel to the assemblage.
+		 * THE QUADRATIC MINIMIZATION ALGORITHM HAS FAILED TO CONVERGE.
+		 * ...Quadratic convergence failure. Aborting.
+		 * Failure in silmin (41000.000000 bars, 2038.011022 K)
+		 * Not all calculations performed! */
+		// Use analytical expression cited in Kite et al. (2009) instead, at the expense of compositional versatility?
 
 		// 2d. Determine amount of crust generated
 		// Assumes that all melt generated reaches the surface (complete melt extraction), and that all ascending mantle parcels reach pressures below Psolidus
