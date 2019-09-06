@@ -412,16 +412,28 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 
 int cleanup (char path[1024]) {
 
-	char *cmd = (char*)malloc(1024*sizeof(char)); // Don't forget to free!
+	char *temp = (char*)malloc(1024*sizeof(char));
+	char *cmd = (char*)malloc(1024*sizeof(char));
 
+	temp[0] = '\0';
 	cmd[0] = '\0';
+
+	// Store path
+	strcat(temp,path);
+
+	// Do cleanup (rm command)
 	strcat(cmd,"rm ");
 	if (cmdline == 1) strncat(cmd,path,strlen(path)-20);
 	else strncat(cmd,path,strlen(path)-18);
 	strcat(cmd,"sel*");
 	system(cmd);
 
+	// Restore path
+	path[0] = '\0';
+	strcat(path,temp);
+
 	free(cmd);
+	free(temp);
 
 	return(0);
 }

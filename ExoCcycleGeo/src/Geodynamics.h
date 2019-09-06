@@ -21,6 +21,8 @@ double brittleDuctile_prime (double T, double rhoLith, double zLith, double gsur
 double viscosity (double T, double P, double flowLaw[5], double grainSize, double dtime);
 double combVisc (double T, double P, double flowLawDiff[5], double flowLawDisl[5], double grainSize, double dtime);
 double dviscdT (double T, double dPdT, double flowLaw[5], double grainSize, double dtime, double Tsurf);
+double Psolidus (double T);
+double dPsolidusdT (double T);
 
 /*--------------------------------------------------------------------
  *
@@ -162,6 +164,44 @@ double dviscdT (double T, double dPdT, double flowLaw[5], double grainSize, doub
 	          * (dPdT*flowLaw[1]*Tsurf-flowLaw[0])/(flowLaw[3]*R_G*T*T) * pow(1.0/dtime, 1.0/flowLaw[3]-1.0);
 
 	return dviscdT;
+}
+
+/*--------------------------------------------------------------------
+ *
+ * Subroutine Psolidus
+ *
+ * Calculates solidus pressure as a function of temperature using
+ * expression of McKenzie & Bickle (1988)
+ *
+ *--------------------------------------------------------------------*/
+
+double Psolidus (double T) {
+
+	double Psol = 0.0;
+
+	Psol = (T-Kelvin - 1100.0)/136.0 + 4.968e-4*exp(1.2e-2*(T-Kelvin-1100.0)); // in GPa
+	Psol = Psol*1.0e9;
+
+	return Psol;
+}
+
+/*--------------------------------------------------------------------
+ *
+ * Subroutine dPsolidusdT
+ *
+ * Calculates derivative of solidus pressure as a function of
+ * temperature using expression of McKenzie & Bickle (1988)
+ *
+ *--------------------------------------------------------------------*/
+
+double dPsolidusdT (double T) {
+
+	double dPsoldT = 0.0;
+
+	dPsoldT = (T-Kelvin)/136.0 + 4.968e-4*1.2e-2*(T-Kelvin)*exp(1.2e-2*(T-Kelvin-1100.0));
+	dPsoldT = dPsoldT*1.0e9;
+
+	return dPsoldT;
 }
 
 #endif /* GEODYNAMICS_H_ */
