@@ -22,6 +22,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 		double *xgas, double *xaq, int forcedPP, double kintime, int kinsteps, char **tempinput);
 int cleanup (char path[1024]);
 double molmass_atm (double *xgas);
+int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, double ***sys_tbl);
 
 /*--------------------------------------------------------------------
  *
@@ -464,6 +465,106 @@ double molmass_atm (double *xgas) {
 					 /(xgas[0]+xgas[1]+xgas[2]+xgas[3]+xgas[4])*0.001;
 
 	return molmass;
+}
+
+/*--------------------------------------------------------------------
+ *
+ * Subroutine alphaMELTS
+ *
+ * Compute the amount of melting in the mantle and crust using the
+ * alphaMELTS implementation of the MELTS model
+ * (https://magmasource.caltech.edu/alphamelts). See:
+ *
+ * Smith & Asimow (2005) doi: 10.1029/2004GC000816
+ * Ghiorso & Sack (1995) Cont Min Petr 119, 197-212
+ * Asimow & Ghiorso (1998) Am Min 83, 1127-1132
+ *
+ *--------------------------------------------------------------------*/
+
+int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, double ***sys_tbl) {
+
+	int i = 0;
+	int j = 0;
+	int scan = 0;
+	int lineno = 0;
+	char tmp = '\0';
+	FILE *f;
+
+	// --- Build system command ---
+	// /.../ExoCcycleGeo/alphaMELTS-1.9/run_alphameltsExoC.command -f /.../ExoCcycleGeo/alphaMELTS-1.9/ExoC/Geotherm_env.txt -b /.../ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCbatch.txt -p /.../ExoCcycleGeo/alphaMELTS-1.9/
+	char *aMELTSsys = (char*)malloc(65536); // System command
+	aMELTSsys[0] = '\0';
+	char *aMELTStmp = (char*)malloc(1024);  // Temporary path
+	aMELTStmp[0] = '\0';
+
+	// Executable
+	if (cmdline == 1) strncat(aMELTStmp,path,strlen(path)-20);
+	else strncat(aMELTStmp,path,strlen(path)-18);
+	strcat(aMELTStmp,"alphaMELTS-1.9/run_alphameltsExoC.command -f ");
+	strcat(aMELTSsys, aMELTStmp);
+
+	// Settings file
+	aMELTStmp[0] = '\0';
+	if (cmdline == 1) strncat(aMELTStmp,path,strlen(path)-20);
+	else strncat(aMELTStmp,path,strlen(path)-18);
+	strcat(aMELTStmp,"alphaMELTS-1.9/");
+	strcat(aMELTStmp,aMELTS_setfile);
+	strcat(aMELTStmp," -b ");
+	strcat(aMELTSsys, aMELTStmp);
+
+	// Batch file
+	aMELTStmp[0] = '\0';
+	if (cmdline == 1) strncat(aMELTStmp,path,strlen(path)-20);
+	else strncat(aMELTStmp,path,strlen(path)-18);
+	strcat(aMELTStmp,"alphaMELTS-1.9/ExoC/ExoCbatch.txt -p "); // Uses ExoCcycleGeo.melts
+	strcat(aMELTSsys, aMELTStmp);
+
+	// Output path
+	aMELTStmp[0] = '\0';
+	if (cmdline == 1) strncat(aMELTStmp,path,strlen(path)-20);
+	else strncat(aMELTStmp,path,strlen(path)-18);
+	strcat(aMELTStmp,"alphaMELTS-1.9/");
+	strcat(aMELTSsys, aMELTStmp);
+
+	// --- Run alphaMELTS ---
+	system(aMELTSsys);
+	// Alternative if ever needed: echo [interactive inputs] |.
+	// system("echo \"1 /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCcycleGeo.melts 4 1 0\" | /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/run_alphameltsExoC.command -f /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/Mantle_env.txt");
+
+	// --- Extract melt fraction vs. P from System_main_tbl_geotherm.txt ---
+
+	char *f_sys_tbl = (char*)malloc(1024); // Path to PT file input into alphaMELTS
+	f_sys_tbl[0] = '\0';
+
+	if (cmdline == 1) strncat(f_sys_tbl,path,strlen(path)-20);
+	else strncat(f_sys_tbl,path,strlen(path)-18);
+	strcat(f_sys_tbl,"alphaMELTS-1.9/System_main_tbl.txt");
+
+	f = fopen (f_sys_tbl,"r");
+	if (f == NULL) printf("ExoCcycleGeo: Missing f_sys_tbl file path: %s\n", f_sys_tbl);
+
+	// Skip first 4 lines, which are text
+	while (lineno < 4) {
+		scan = fscanf(f, "%c", &tmp);
+		if (!scan) printf("Error scanning alphaMELTS System_main_tbl.txt at line number %d\n",lineno);
+		if (tmp == '\n') lineno++;
+	}
+	// Store the rest, won't fill full table if alphaMELTS run crashed but that's OK
+	for(i=nPTstart;i<nPTend;i++) {
+		for(j=0;j<18;j++) {
+			if (nPTstart == 0) scan = fscanf(f, "%lg", &(*sys_tbl)[nPTend-i-1][j]); // Lithosphere: fill from bottom to top to order by increasing T,P
+			else scan = fscanf(f, "%lg", &(*sys_tbl)[i][j]); // Mantle: fill normally
+			if (!scan) printf("Error scanning alphaMELTS System_main_tbl.txt at line number %d, column number %d\n", lineno+i+1,j+1);
+		}
+	}
+
+	fclose(f);
+	free(f_sys_tbl);
+
+	free(aMELTSsys);
+	free(aMELTStmp);
+
+	return 0;
 }
 
 #endif /* GEOCHEM_H_ */

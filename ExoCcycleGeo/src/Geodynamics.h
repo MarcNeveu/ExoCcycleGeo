@@ -14,10 +14,8 @@
 // SUBROUTINE DECLARATIONS
 //-------------------------------------------------------------------
 
-double brittleDuctile (double T, double rhoLith, double zLith, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5], double grainSize,
-		double dtime);
-double brittleDuctile_prime (double T, double rhoLith, double zLith, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5],
-		double grainSize, double dtime);
+double brittleDuctile (double T, double P, double flowLawDiff[5], double flowLawDisl[5], double grainSize, double dtime);
+double brittleDuctile_prime (double T, double P, double Tsurf, double Psurf, double flowLawDiff[5], double flowLawDisl[5], double grainSize, double dtime);
 double viscosity (double T, double P, double flowLaw[5], double grainSize, double dtime);
 double combVisc (double T, double P, double flowLawDiff[5], double flowLawDisl[5], double grainSize, double dtime);
 double dviscdT (double T, double dPdT, double flowLaw[5], double grainSize, double dtime, double Tsurf);
@@ -47,14 +45,12 @@ double dPsolidusdT (double T);
  *
  *--------------------------------------------------------------------*/
 
-double brittleDuctile (double T, double rhoLith, double zLith, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5], double grainSize,
-		double dtime) {
+double brittleDuctile (double T, double P, double flowLawDiff[5], double flowLawDisl[5], double grainSize, double dtime) {
 
 	double f = 0.0;
 
-	double P = rhoLith*gsurf*zLith*(T-Tsurf)/(Tmantle-Tsurf); // Pressure (Pa)
-	double brittleStrength = 0.0;                               // Brittle strength (Pa)
-	double ductileStrength = 0.0;                               // Ductile strength (Pa)
+	double brittleStrength = 0.0;     // Brittle strength (Pa)
+	double ductileStrength = 0.0;     // Ductile strength (Pa)
 
 	if (P < 200.0e6) brittleStrength = 0.85*P;
 	else brittleStrength = 0.6*P + 50.0e6;
@@ -74,19 +70,24 @@ double brittleDuctile (double T, double rhoLith, double zLith, double gsurf, dou
  *
  *--------------------------------------------------------------------*/
 
-double brittleDuctile_prime (double T, double rhoLith, double zLith, double gsurf, double Tmantle, double Tsurf, double flowLawDiff[5], double flowLawDisl[5],
-		double grainSize, double dtime) {
+double brittleDuctile_prime (double T, double P, double Tsurf, double Psurf, double flowLawDiff[5], double flowLawDisl[5], double grainSize, double dtime) {
 
 	double f_prime = 0.0;
 
-	double P = rhoLith*gsurf*zLith*(T-Tsurf)/(Tmantle-Tsurf); // Pressure (Pa)
-	double dPdT = rhoLith*gsurf*zLith/(Tmantle-Tsurf);        // Geotherm (Pa K-1), independent of T
-	double brittle_prime = 0.0;                                 // Brittle strength (Pa)
-	double ductile_prime = 0.0;                                 // Ductile strength (Pa)
-	double ductileDiff = 0.0;                                   // Dry silicate diffusion (Pa)
-	double ductileDisl = 0.0;                                   // Dry silicate dislocation (Pa)
-	double ductileDiff_prime = 0.0;                             // Dry silicate diffusion (Pa)
-	double ductileDisl_prime = 0.0;                             // Dry silicate dislocation (Pa)
+	double dPdT = (P-Psurf)/(T-Tsurf);   // Geotherm (Pa K-1)
+
+	// dPdT is discontinuous at BDT. Considered mantle adiabat rather than lithosphere geotherm for ductile strength,
+	// yielded the same result. But this may not always be the case.
+	// dPdT = 1/dTdz dPdz = 1/(alpha*gsurf*Tmantle/Cp) rho gsurf
+//	double rhoMantle = 5000.0; double Tmantle = 2500.0;
+//	dPdT = Cp/(alpha*Tmantle) * rhoMantle;
+
+	double brittle_prime = 0.0;          // Brittle strength (Pa)
+	double ductile_prime = 0.0;          // Ductile strength (Pa)
+	double ductileDiff = 0.0;            // Dry silicate diffusion (Pa)
+	double ductileDisl = 0.0;            // Dry silicate dislocation (Pa)
+	double ductileDiff_prime = 0.0;      // Dry silicate diffusion (Pa)
+	double ductileDisl_prime = 0.0;      // Dry silicate dislocation (Pa)
 
 	// Temperature derivative of brittle strength
 	if (P < 200.0e6) brittle_prime = 0.85*dPdT;

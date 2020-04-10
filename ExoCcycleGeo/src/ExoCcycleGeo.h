@@ -46,7 +46,7 @@
 // Mantle parameters
 #define k 4.18                          // Mantle thermal conductivity (W m-1 K-1)
 #define alpha 3.0e-5                    // Mantle thermal expansivity (K-1)
-#define Cp 914.0                        // Mantle heat capacity (J kg-1 K-1)
+#define Cp 914.0                        // Mantle specific heat capacity (J kg-1 K-1)
 
 // Thermal model parameters
 #define beta 0.3                        // Exponent for scaling Nusselt number to Rayleigh number, 1/4 to 1/3 (Schubert et al. 2001)
