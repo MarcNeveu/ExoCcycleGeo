@@ -201,6 +201,10 @@ int main(int argc, char *argv[]) {
 	FILE *fout;
 	char *title = (char*)malloc(1024*sizeof(char)); title[0] = '\0';
 	char *intitle = (char*)malloc(1024*sizeof(char)); intitle[0] = '\0';
+	int line_length = 300;          // Length of individual line in file
+	char line[line_length];         // Individual line in file
+	char minPstr[32];               // String storing minimum pressure of alphaMELTS calculation
+	char minTstr[32];               // String storing minimum temperature of alphaMELTS calculation
 
 	//-------------------------------------------------------------------
 	// Inputs
@@ -495,11 +499,11 @@ int main(int argc, char *argv[]) {
 		// 1. Determine tectonic mode
 		// If convective driving stress > lithospheric yield stress, mobile-lid (plate tectonics) regime. Otherwise, stagnant lid regime (O'Neill & Lenardic 2007).
 
+		// 1a. Determine T and P at the brittle-ductile transition (base of lithosphere)
+		// First guess: temperature where the mantle adiabat intersects the current base of the lithosphere
 		T_BDT = Tmantle - alpha*gsurf*Tmantle/Cp * (r_p-r_c-zLith)/2.0; // Equation (1) of Katsura et al. (2010) with T=Tmantle (mid-mantle depth), although g and T should be taken as a function of depth
 		T_BDT_old = T_BDT;
 		P_BDT = rhoLith*gsurf*zLith;
-
-		// 1a. Determine T and P at the brittle-ductile transition (base of lithosphere)
 
 		/* = strength at brittle-ductile transition (BDT)
 		 * Geotherm through lithosphere is T prop to depth, with T=Tsurf at depth = 0 and T=Tmantle at depth = zLith = P(BDT)/(rhoLith*gsurf). [1]
@@ -564,7 +568,7 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 			}
-			T_BDT = T_BDT + 700.0; // !!!!!! TODO REMOVE
+			T_BDT = T_BDT + 700.0; // !!!!!! TODO REMOVE. This arbitrary bump up is to make the BDT like the Earth's.
 			zLith = (T_BDT-Tsurf)/(T_BDT_old-Tsurf)*zLith; // Participates in the calculation of T_BDT, but we just have to use the previous guess for that
 			P_BDT = rhoLith*gsurf*zLith; // Pressure at BDT (Pa)
 		}
@@ -636,26 +640,64 @@ int main(int argc, char *argv[]) {
 		}
 		fclose(fout);
 
-		// Output P_BDT and T_BDT as the starting points of alphaMELTS calculation along mantle adiabat
+//		// Not needed (turns out to mess up isentropic alphaMELTS)
+//		// Output P_BDT and T_BDT as the starting points of alphaMELTS calculation along mantle adiabat in Mantle_env.txt. All other inputs are copied from a template.
+//		title[0] = '\0';
+//		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+//		else strncat(title,path,strlen(path)-18);
+//		strcat(title,"alphaMELTS-1.9/ExoC/Mantle_env.txt");
+//
+//		intitle[0] = '\0';
+//		if (cmdline == 1) strncat(intitle,path,strlen(path)-20);
+//		else strncat(intitle,path,strlen(path)-18);
+//		strcat(intitle,"alphaMELTS-1.9/ExoC/Mantle_env_template.txt");
+//
+//		fout = fopen (title,"w");
+//		if (fout == NULL) printf("ExoCcycleGeo: Missing Mantle_env path: %s\n", title);
+//		fin = fopen (intitle,"r");
+//		if (fout == NULL) printf("ExoCcycleGeo: Missing Mantle_env_template path: %s\n", intitle);
+//
+//		int line_length = 300;
+//		char line[line_length]; // Individual line
+//		char minPstr[32];
+//		char minTstr[32];
+//
+//		line[0] = '\0';
+//		minPstr[0] = '\0';
+//		minTstr[0] = '\0';
+//
+//		sprintf(minPstr, "%g", P_BDT/bar2Pa);
+//		sprintf(minTstr, "%g", T_BDT-Kelvin);
+//
+//		while (fgets(line, line_length, fin)) {
+//			if (line[11] == 'M' && line[12] == 'I' && line[13] == 'N' && line[14] == 'P') fprintf(fout, "%s !P_BDT from ExoCcycleGeo\n", ConCat("ALPHAMELTS_MINP +",minPstr));
+//			else if (line[11] == 'M' && line[12] == 'I' && line[13] == 'N' && line[14] == 'T') fprintf(fout, "%s !T_BDT from ExoCcycleGeo\n", ConCat("ALPHAMELTS_MINT +",minTstr));
+//			else fputs(line,fout);
+//		}
+//		if (ferror(fout)) {
+//			printf("ExoCccycleGeo: Error writing to %s\n",title);
+//			return 1;
+//		}
+//		fclose(fin);
+//		fclose(fout);
+
+		// Output P_BDT and T_BDT as the starting points of isentropic alphaMELTS calculation along mantle adiabat in ExoCcycleGeo.melts.
+		// All other inputs are copied from a template.
+		// Somehow the only thing that matters from Mantle_env are the isentropic setting and the max pressure, which don't change so Mantle_env.txt is not modified.
 		title[0] = '\0';
 		if (cmdline == 1) strncat(title,path,strlen(path)-20);
 		else strncat(title,path,strlen(path)-18);
-		strcat(title,"alphaMELTS-1.9/ExoC/Mantle_env.txt");
+		strcat(title,"alphaMELTS-1.9/ExoC/ExoCcycleGeo.melts");
 
 		intitle[0] = '\0';
 		if (cmdline == 1) strncat(intitle,path,strlen(path)-20);
 		else strncat(intitle,path,strlen(path)-18);
-		strcat(intitle,"alphaMELTS-1.9/ExoC/Mantle_env_template.txt");
+		strcat(intitle,"alphaMELTS-1.9/ExoC/ExoCcycleGeo_template.melts");
 
 		fout = fopen (title,"w");
-		if (fout == NULL) printf("ExoCcycleGeo: Missing Mantle_env path: %s\n", title);
+		if (fout == NULL) printf("ExoCcycleGeo: Missing ExoCcycleGeo.melts path: %s\n", title);
 		fin = fopen (intitle,"r");
-		if (fout == NULL) printf("ExoCcycleGeo: Missing Mantle_env_template path: %s\n", intitle);
-
-		int line_length = 300;
-		char line[line_length]; // Individual line
-		char minPstr[32];
-		char minTstr[32];
+		if (fout == NULL) printf("ExoCcycleGeo: Missing ExoCcycleGeo_template path: %s\n", intitle);
 
 		line[0] = '\0';
 		minPstr[0] = '\0';
@@ -665,14 +707,15 @@ int main(int argc, char *argv[]) {
 		sprintf(minTstr, "%g", T_BDT-Kelvin);
 
 		while (fgets(line, line_length, fin)) {
-			if (line[11] == 'M' && line[12] == 'I' && line[13] == 'N' && line[14] == 'P') fprintf(fout, "%s !P_BDT from ExoCcycleGeo\n", ConCat("ALPHAMELTS_MINP +",minPstr));
-			else if (line[11] == 'M' && line[12] == 'I' && line[13] == 'N' && line[14] == 'T') fprintf(fout, "%s !T_BDT from ExoCcycleGeo\n", ConCat("ALPHAMELTS_MINT +",minTstr));
+			if (line[8] == 'P' && line[9] == 'r' && line[10] == 'e' && line[11] == 's') fprintf(fout, "%s !P_BDT from ExoCcycleGeo\n", ConCat("Initial Pressure: ",minPstr));
+			else if (line[8] == 'T' && line[9] == 'e' && line[10] == 'm' && line[11] == 'p') fprintf(fout, "%s !T_BDT from ExoCcycleGeo\n", ConCat("Initial Temperature: ",minTstr));
 			else fputs(line,fout);
 		}
 		if (ferror(fout)) {
 			printf("ExoCccycleGeo: Error writing to %s\n",title);
 			return 1;
 		}
+		fclose(fin);
 		fclose(fout);
 
 		// 2b. Run alphaMELTS to compute melt fraction along P-T profile in lithosphere and mantle
@@ -703,7 +746,14 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		for (i=1;i<nPTgeotherm+nPTmantle;i++) {
-			if (sys_tbl[i][0] == 0.0 && sys_tbl[i-1][0] > 0.0) imax = i;
+			if (sys_tbl[i][0] == 0.0 && sys_tbl[i-1][0] > 0.0) {
+				imax = i; // Don't store if no more rows printed in sys_tbl
+				break;
+			}
+			else if (sys_tbl[i][4] < 0.0) {
+				imax = i; // Don't store once melt fraction negative
+				break;
+			}
 		}
 
 		for (i=imin;i<imax;i++) {
@@ -711,27 +761,30 @@ int main(int argc, char *argv[]) {
 			P_meltfrac[i-imin][1] = sys_tbl[i][4];
 		}
 
-		// Extrapolate starting from last 5 indices, provided melt fraction of all is < 1 (otherwise, use less indices)
-		if (imax-imin < nslopeAvg) nslopeAvg = imax-imin; // Case with < 5 grid zones of melt
-		for (i=imax-imin-nslopeAvg;i<imax-imin;i++) {
-			if (P_meltfrac[i][0]-P_meltfrac[i-1][0] == 0) printf("ExoCcycleGeo: Can't extrapolate rock melting curve with pressure because denominator is zero\n");
-			else {
-				if (P_meltfrac[i-1][1] < 1.0) {
-					slope = slope + (P_meltfrac[i][1]-P_meltfrac[i-1][1])/(P_meltfrac[i][0]-P_meltfrac[i-1][0]);
-					islope++;
+		if (P_meltfrac[imax-imin-1][1] > 0.1) {
+			printf("ExoCcycleGeo: alphaMELTS could not calculate melting all the way down, extrapolating melting curve to 0 linearly with depth\n");
+			// Extrapolate starting from last 5 indices, provided melt fraction of all is < 1 (otherwise, use less indices)
+			if (imax-imin < nslopeAvg) nslopeAvg = imax-imin; // Case with < 5 grid zones of melt
+			for (i=imax-imin-nslopeAvg;i<imax-imin;i++) {
+				if (P_meltfrac[i][0]-P_meltfrac[i-1][0] == 0) printf("ExoCcycleGeo: Can't extrapolate rock melting curve with pressure because denominator is zero\n");
+				else {
+					if (P_meltfrac[i-1][1] < 1.0) {
+						slope = slope + (P_meltfrac[i][1]-P_meltfrac[i-1][1])/(P_meltfrac[i][0]-P_meltfrac[i-1][0]);
+						islope++;
+					}
 				}
 			}
-		}
-		slope = slope/(double) islope;
+			slope = slope/(double) islope;
 
-		if (islope) {
-			for (i=imax-imin;nPmelt;i++) {
-				meltfrac = P_meltfrac[i-1][1] + slope*(double) deltaPmantle;
-				if (meltfrac > 0.0) {
-					P_meltfrac[i][0] = P_meltfrac[i-1][0] + (double) deltaPmantle;
-					P_meltfrac[i][1] = meltfrac;
+			if (islope) {
+				for (i=imax-imin;nPmelt;i++) {
+					meltfrac = P_meltfrac[i-1][1] + slope*(double) deltaPmantle;
+					if (meltfrac > 0.0) {
+						P_meltfrac[i][0] = P_meltfrac[i-1][0] + (double) deltaPmantle;
+						P_meltfrac[i][1] = meltfrac;
+					}
+					else break;
 				}
-				else break;
 			}
 		}
 
@@ -904,9 +957,7 @@ int main(int argc, char *argv[]) {
 		// Scale with mass (which Kite et al. 2009 didn't do): [sum melt fraction (depth)] * [mass (depth)] / [total mass between surf and Psolidus]
 		// Multiply Rmelt below by the result.
 
-		for(i=0;i<nPmelt;i++) {
-			printf("%g \t %g \n", P_meltfrac[i][0], P_meltfrac[i][1]);
-		}
+		for(i=0;i<imax-imin;i++) printf("%g \t %g \n", P_meltfrac[i][1], P_meltfrac[i][0]);
 
 		exit(0);
 
