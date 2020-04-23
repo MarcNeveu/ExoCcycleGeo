@@ -44,18 +44,18 @@ int main(int argc, char *argv[]) {
 	int iter = 0;                   // Iteration counter
 	int niter = 10;                 // Number of iterations for ocean-atmosphere equilibrium
 
-	int nPTgeotherm = 100;          // Number of (P,T) points in lithosphere geotherm for alphaMELTS
+	int nPTlith = 100;              // Number of (P,T) points in lithosphere geotherm for alphaMELTS
 	int deltaPmantle = 1e3;         // DELTAP in Mantle_env.txt of alphaMELTS (bar)
 	int nPTmantle = (int)((100e3)/deltaPmantle); // Number of (P,T) points in asthenosphere for alphaMELTS, = (MAXP-MINP)/DELTAP in Mantle_env.txt
-	int nPmelt = nPTgeotherm+nPTmantle+100; // Number of data points in full extrapolated curve of melt fraction vs. pressure
+	int nPmelt = nPTlith+nPTmantle+100; // Number of data points in full extrapolated curve of melt fraction vs. pressure
 	int nslopeAvg = 5;                   // Target number of data points used for averaging melt fraction slope in the mantle
 	int islope = 0;                 // Actual numbers of data points used for averaging melt fraction slope in the mantle
 
 	double slope = 0.0;             // Average melt fraction slope in the mantle (bar-1)
 	double meltfrac = 0.0;          // Melt fraction extrapolated at higher pressures than MELTS can handle
 
-	double Tgeotherm[nPTgeotherm];  // Lithosphere geotherm temperature (K)
-	double Pgeotherm[nPTgeotherm];  // Lithosphere geotherm pressure (Pa)
+	double Tlith[nPTlith];  // Lithosphere geotherm temperature (K)
+	double Plith[nPTlith];  // Lithosphere geotherm pressure (Pa)
 
 	double realtime = 0;            // Real time since birth of planetary system (s)
 
@@ -177,24 +177,24 @@ int main(int argc, char *argv[]) {
 	if (xaq == NULL) printf("ExoCcycleGeo: Not enough memory to create xaq[nAqSpecies]\n"); // Molalities of aqueous species (mol (kg H2O)-1)
     for (i=0;i<nAqSpecies;i++) xaq[i] = 0.0;
 
-	double **sys_tbl = (double**) malloc((nPTgeotherm+nPTmantle)*sizeof(double*));
-	if (sys_tbl == NULL) printf("ExoCcycleGeo: Not enough memory to create sys_tbl[%d]\n", nPTgeotherm+nPTmantle); // Storage of System_main_tbl.txt alphaMELTS output
-	for (i=0;i<nPTgeotherm+nPTmantle;i++) {
+	double **sys_tbl = (double**) malloc((nPTlith+nPTmantle)*sizeof(double*));
+	if (sys_tbl == NULL) printf("ExoCcycleGeo: Not enough memory to create sys_tbl[%d]\n", nPTlith+nPTmantle); // Storage of System_main_tbl.txt alphaMELTS output
+	for (i=0;i<nPTlith+nPTmantle;i++) {
 		sys_tbl[i] = (double*) malloc(18*sizeof(double));
-		if (sys_tbl[i] == NULL) printf("ExoCcycleGeo: Not enough memory to create sys_tbl[%d][18]\n", nPTgeotherm+nPTmantle); // 18 columns in System_main_tbl.txt
+		if (sys_tbl[i] == NULL) printf("ExoCcycleGeo: Not enough memory to create sys_tbl[%d][18]\n", nPTlith+nPTmantle); // 18 columns in System_main_tbl.txt
 	}
-	for (i=0;i<nPTgeotherm+nPTmantle;i++) {
+	for (i=0;i<nPTlith+nPTmantle;i++) {
 		for (j=0;j<18;j++) sys_tbl[i][j] = 0.0;
 	}
 
-	double **P_meltfrac = (double**) malloc((nPmelt)*sizeof(double*));
-	if (P_meltfrac == NULL) printf("ExoCcycleGeo: Not enough memory to create P_meltfrac[%d]\n", nPmelt); // Full curve of melt fraction vs. pressure
+	double **Meltfrac_geoth = (double**) malloc((nPmelt)*sizeof(double*));
+	if (Meltfrac_geoth == NULL) printf("ExoCcycleGeo: Not enough memory to create Meltfrac_geoth[%d]\n", nPmelt); // Full curves of melt fraction vs. pressure + geotherm
 	for (i=0;i<nPmelt;i++) {
-		P_meltfrac[i] = (double*) malloc(2*sizeof(double));
-		if (P_meltfrac[i] == NULL) printf("ExoCcycleGeo: Not enough memory to create P_meltfrac[%d][2]\n", nPmelt);
+		Meltfrac_geoth[i] = (double*) malloc(3*sizeof(double));
+		if (Meltfrac_geoth[i] == NULL) printf("ExoCcycleGeo: Not enough memory to create Meltfrac_geoth[%d][2]\n", nPmelt);
 	}
 	for (i=0;i<nPmelt;i++) {
-		for (j=0;j<2;j++) P_meltfrac[i][j] = 0.0;
+		for (j=0;j<3;j++) Meltfrac_geoth[i][j] = 0.0;
 	}
 
 	FILE *fin;
@@ -620,9 +620,9 @@ int main(int argc, char *argv[]) {
 		// 2a. Update alphaMELTS input files
 		// Output P-T profile in lithosphere to be fed into alphaMELTS through PTexoC.txt
 		// MELTS crashes below solidus for default composition, but that's enough to capture all depths above BDT at which melting occurs.
-		for (i=0;i<nPTgeotherm;i++) {
-			Tgeotherm[i] = 0.0;
-			Pgeotherm[i] = 0.0;
+		for (i=0;i<nPTlith;i++) {
+			Tlith[i] = 0.0;
+			Plith[i] = 0.0;
 		}
 
 		title[0] = '\0';
@@ -633,9 +633,9 @@ int main(int argc, char *argv[]) {
 		fout = fopen (title,"w");
 		if (fout == NULL) printf("ExoCcycleGeo: Missing PT file path: %s\n", title);
 		for (i=100;i>0;i--) {
-			Tgeotherm[i-1] = Tsurf + (T_BDT-Tsurf)*(double)i/(double)nPTgeotherm;
-			Pgeotherm[i-1] = P_BDT*(Tgeotherm[i-1]-Tsurf)/(T_BDT-Tsurf);
-			if (Tgeotherm[i-1]-Kelvin > 750.0) fprintf(fout, "%g %g\n", Pgeotherm[i-1]/bar2Pa, Tgeotherm[i-1]-Kelvin); // Don't input below 950 C to avoid MELTS crashing
+			Tlith[i-1] = Tsurf + (T_BDT-Tsurf)*(double)i/(double)nPTlith;
+			Plith[i-1] = P_BDT*(Tlith[i-1]-Tsurf)/(T_BDT-Tsurf);
+			if (Tlith[i-1]-Kelvin > 750.0) fprintf(fout, "%g %g\n", Plith[i-1]/bar2Pa, Tlith[i-1]-Kelvin); // Don't input below 950 C to avoid MELTS crashing
 			else break;
 		}
 		fclose(fout);
@@ -720,32 +720,32 @@ int main(int argc, char *argv[]) {
 
 		// 2b. Run alphaMELTS to compute melt fraction along P-T profile in lithosphere and mantle
 		// Reset sys_tbl
-		for (i=0;i<nPTgeotherm+nPTmantle;i++) {
+		for (i=0;i<nPTlith+nPTmantle;i++) {
 			for (j=0;j<18;j++) sys_tbl[i][j] = 0.0;
 		}
 
-		// In lithosphere, use Geotherm.env and PTexoC.txt (goes high P,T to low)
-		alphaMELTS(path, 0, nPTgeotherm, "ExoC/Geotherm_env.txt", &sys_tbl);
+		// In lithosphere, use Lith_env and PTexoC.txt (goes high P = P_BDT,T = T_BDT to low)
+		alphaMELTS(path, 0, nPTlith, "ExoC/Lith_env.txt", &sys_tbl);
 
-		// In mantle, use Mantle.env and isentropic from P_BDT to 40000+ bar. Fills second part of sys_tbl
-		alphaMELTS(path, nPTgeotherm, nPTgeotherm+nPTmantle, "ExoC/Mantle_env.txt", &sys_tbl);
+		// In mantle, use Mantle_env and isentropic from P_BDT to 100000 bar. Fills second part of sys_tbl
+		alphaMELTS(path, nPTlith-1, nPTlith+nPTmantle-1, "ExoC/Mantle_env.txt", &sys_tbl);
 
 		// Max pressure of MELTS < pressure at which melt is suppressed. Extrapolate linearly to highest pressure of melt (deeper solidus)
-        // Reset P_meltfrac
+        // Reset Meltfrac_geoth
 		for (i=0;i<nPmelt;i++) {
-			for (j=0;j<2;j++) P_meltfrac[i][j] = 0.0;
+			for (j=0;j<3;j++) Meltfrac_geoth[i][j] = 0.0;
 		}
 
 		// Find min and max nonzero rows in sys_tbl
 		imin = 0;
 		imax = 0;
-		for (i=0;i<nPTgeotherm+nPTmantle;i++) {
+		for (i=0;i<nPTlith+nPTmantle;i++) {
 			if (sys_tbl[i][0] > 0.0) {
 				imin = i;
 				break;
 			}
 		}
-		for (i=1;i<nPTgeotherm+nPTmantle;i++) {
+		for (i=1;i<nPTlith+nPTmantle;i++) {
 			if (sys_tbl[i][0] == 0.0 && sys_tbl[i-1][0] > 0.0) {
 				imax = i; // Don't store if no more rows printed in sys_tbl
 				break;
@@ -757,19 +757,20 @@ int main(int argc, char *argv[]) {
 		}
 
 		for (i=imin;i<imax;i++) {
-			P_meltfrac[i-imin][0] = sys_tbl[i][0];
-			P_meltfrac[i-imin][1] = sys_tbl[i][4];
+			Meltfrac_geoth[i-imin][0] = sys_tbl[i][0];
+			Meltfrac_geoth[i-imin][1] = sys_tbl[i][4];
+			Meltfrac_geoth[i-imin][2] = sys_tbl[i][1];
 		}
 
-		if (P_meltfrac[imax-imin-1][1] > 0.1) {
+		if (Meltfrac_geoth[imax-imin-1][1] > 0.1) {
 			printf("ExoCcycleGeo: alphaMELTS could not calculate melting all the way down, extrapolating melting curve to 0 linearly with depth\n");
 			// Extrapolate starting from last 5 indices, provided melt fraction of all is < 1 (otherwise, use less indices)
 			if (imax-imin < nslopeAvg) nslopeAvg = imax-imin; // Case with < 5 grid zones of melt
 			for (i=imax-imin-nslopeAvg;i<imax-imin;i++) {
-				if (P_meltfrac[i][0]-P_meltfrac[i-1][0] == 0) printf("ExoCcycleGeo: Can't extrapolate rock melting curve with pressure because denominator is zero\n");
+				if (Meltfrac_geoth[i][0]-Meltfrac_geoth[i-1][0] == 0) printf("ExoCcycleGeo: Can't extrapolate rock melting curve with pressure because denominator is zero\n");
 				else {
-					if (P_meltfrac[i-1][1] < 1.0) {
-						slope = slope + (P_meltfrac[i][1]-P_meltfrac[i-1][1])/(P_meltfrac[i][0]-P_meltfrac[i-1][0]);
+					if (Meltfrac_geoth[i-1][1] < 1.0) {
+						slope = slope + (Meltfrac_geoth[i][1]-Meltfrac_geoth[i-1][1])/(Meltfrac_geoth[i][0]-Meltfrac_geoth[i-1][0]);
 						islope++;
 					}
 				}
@@ -778,10 +779,10 @@ int main(int argc, char *argv[]) {
 
 			if (islope) {
 				for (i=imax-imin;nPmelt;i++) {
-					meltfrac = P_meltfrac[i-1][1] + slope*(double) deltaPmantle;
+					meltfrac = Meltfrac_geoth[i-1][1] + slope*(double) deltaPmantle;
 					if (meltfrac > 0.0) {
-						P_meltfrac[i][0] = P_meltfrac[i-1][0] + (double) deltaPmantle;
-						P_meltfrac[i][1] = meltfrac;
+						Meltfrac_geoth[i][0] = Meltfrac_geoth[i-1][0] + (double) deltaPmantle;
+						Meltfrac_geoth[i][1] = meltfrac;
 					}
 					else break;
 				}
@@ -874,9 +875,9 @@ int main(int argc, char *argv[]) {
 //		for (ir=0;ir<NR;ir++) T[ir] = 0.0;
 //
 //		for (ir=NR-1;ir>=0;ir--) {
-//			if (P[ir] > Pgeotherm[99] && P[ir] < 100000.0*bar2Pa) {
+//			if (P[ir] > P_BDT && P[ir] < 100000.0*bar2Pa) {
 //				// Adiabat
-//				T[ir] = Tmantle + gsurf*alpha*Tmantle/Cp*(r_p-zLith-r[ir]);
+//				T[ir] = T_BDT + gsurf*alpha*Tmantle/Cp*(r_p-zLith-r[ir]);
 //
 //				// Determine Tsolidus
 //
@@ -957,7 +958,7 @@ int main(int argc, char *argv[]) {
 		// Scale with mass (which Kite et al. 2009 didn't do): [sum melt fraction (depth)] * [mass (depth)] / [total mass between surf and Psolidus]
 		// Multiply Rmelt below by the result.
 
-		for(i=0;i<imax-imin;i++) printf("%g \t %g \n", P_meltfrac[i][1], P_meltfrac[i][0]);
+		for(i=0;i<imax-imin;i++) printf("%g \t %g \t %g \n", Meltfrac_geoth[i][0], Meltfrac_geoth[i][1], Meltfrac_geoth[i][2]);
 
 		exit(0);
 
@@ -1109,11 +1110,11 @@ int main(int argc, char *argv[]) {
 
 	printf("\nExiting ExoCcycleGeo...\n");
 
-	for (i=0;i<nPTgeotherm+nPTmantle;i++) free (sys_tbl[i]);
+	for (i=0;i<nPTlith+nPTmantle;i++) free (sys_tbl[i]);
 	free (sys_tbl);
 
-	for (i=0;i<nPmelt;i++) free (P_meltfrac[i]);
-	free (P_meltfrac);
+	for (i=0;i<nPmelt;i++) free (Meltfrac_geoth[i]);
+	free (Meltfrac_geoth);
 
 	free (intitle);
 	free (title);
