@@ -128,7 +128,7 @@ double viscosity (double T, double P, double flowLaw[5], double grainSize, doubl
 
 /*--------------------------------------------------------------------
  *
- * Subroutine comboVisc
+ * Subroutine combVisc
  *
  * Calculates non-Newtonian viscosity in Pa s combined from parallel
  * diffusion and dislocation flow laws (e.g. Cizkova et al. 2012 eq. 1).

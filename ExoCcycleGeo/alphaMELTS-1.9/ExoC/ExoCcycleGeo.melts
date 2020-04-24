@@ -24,10 +24,10 @@ Initial Composition: Na2O 2.65
 Initial Composition: K2O 0.03
 Initial Composition: P2O5 0.08
 Initial Composition: H2O 0.20
-Initial Temperature: 762.741 !T_BDT from ExoCcycleGeo
+Initial Temperature: 683.723 !T_BDT from ExoCcycleGeo
 Final Temperature: 1576.85
 Increment Temperature: 3.00
-Initial Pressure: 17558.4 !P_BDT from ExoCcycleGeo
+Initial Pressure: 15506.7 !P_BDT from ExoCcycleGeo
 Final Pressure: 40000.00
 Increment Pressure: 1000.00
 dp/dt: 0.00

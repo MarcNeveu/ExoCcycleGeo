@@ -147,18 +147,30 @@ int main(int argc, char *argv[]) {
 
 	// Viscosity law constants (can't be #define'd because they are used as exponents)
 	double flowLawDryDiff[5];          // Dry diffusion creep flow law (Korenaga & Karato 2008)
-	flowLawDryDiff[0] = 261.0e3;       // Activation energy (J)
-	flowLawDryDiff[1] = 6.0e-6;        // Activation volume (m3)
-	flowLawDryDiff[2] = 5.25;          // Exponent of pre-exponential factor
+	flowLawDryDiff[0] = 271.0e3;       // Activation energy (J mol-1), default 261.0±28e3
+	flowLawDryDiff[1] = 6.0e-6;        // Activation volume (m3 mol-1), default 6±5e-6
+	flowLawDryDiff[2] = 5.25;          // Exponent of pre-exponential factor, default 5.25±0.03
 	flowLawDryDiff[3] = 1.0;           // Stress exponent
-	flowLawDryDiff[4] = 2.98;          // Grain size exponent
+	flowLawDryDiff[4] = 2.98;          // Grain size exponent, default 2.98±0.02
+	// Wet diffusion creep flow law
+//	flowLawDryDiff[0] = 387.0e3;       // Activation energy (J mol-1), default 387±53e3
+//	flowLawDryDiff[1] = 25.0e-6;       // Activation volume (m3 mol-1), default 25±4e-6
+//	flowLawDryDiff[2] = 4.32;          // Exponent of pre-exponential factor, default 4.32±0.38
+//	flowLawDryDiff[3] = 1.0;           // Stress exponent
+//	flowLawDryDiff[4] = 2.56;          // Grain size exponent, default 2.56±0.24
 
 	double flowLawDryDisl[5];          // Dry dislocation creep flow law (Korenaga & Karato 2008)
-	flowLawDryDisl[0] = 610.0e3;       // Activation energy (J)
-	flowLawDryDisl[1] = 13.0e-6;       // Activation volume (m3)
-	flowLawDryDisl[2] = 6.09;          // Exponent of pre-exponential factor
-	flowLawDryDisl[3] = 4.94;          // Stress exponent
+	flowLawDryDisl[0] = 640.0e3;       // Activation energy (J mol-1), default 610±30e3
+	flowLawDryDisl[1] = 21.0e-6;       // Activation volume (m3 mol-1), default 13±8e-6
+	flowLawDryDisl[2] = 5.98;          // Exponent of pre-exponential factor, default 6.09±0.11
+	flowLawDryDisl[3] = 4.89;          // Stress exponent, default 4.94±0.05
 	flowLawDryDisl[4] = 0.0;           // Grain size exponent
+	// Wet dislocation creep flow law
+//	flowLawDryDisl[0] = 523.0e3;       // Activation energy (J mol-1), default 523±100e3
+//	flowLawDryDisl[1] = 4.0e-6;        // Activation volume (m3 mol-1), default 4±3e-6
+//	flowLawDryDisl[2] = 0.6;           // Exponent of pre-exponential factor, default 0.6±0.5
+//	flowLawDryDisl[3] = 3.60;          // Stress exponent, default 3.60±0.24
+//	flowLawDryDisl[4] = 0.0;           // Grain size exponent
 
 	const double grainSize = 1.0e3;	   // Grain size for computation of viscosity and creep laws (µm)
 
@@ -224,6 +236,7 @@ int main(int argc, char *argv[]) {
     double Tmantle = 2500.0;           // Temperature at mid-mantle depth (K)
     double magmaCmassfrac = 0.005;     // Mass fraction of C in magmas. Default 0.005 = 0.5% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
 	double zLith = 100.0*km2m;         // Lithospheric thickness (m), i.e. depth to brittle-ductile transition
+	double tConv = 200.0*Myr2sec;      // Convection timescale (s), default 200 Myr for deep Earth mantle today
 
 	// Atmospheric inputs
 	double Tsurf0 = 300.0;             // Initial surface temperature (K)
@@ -522,8 +535,8 @@ int main(int argc, char *argv[]) {
 		T_SUP = Tmantle;
 
 		// Ensure that f(T_INF)<0 and f(T_SUP)>0 TODO Ductile strength depends on time step (deps/dt). Make time step-independent?
-		f_inf = brittleDuctile(T_INF, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
-		f_sup = brittleDuctile(T_SUP, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
+		f_inf = brittleDuctile(T_INF, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, tConv);
+		f_sup = brittleDuctile(T_SUP, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, tConv);
 
 		if (f_inf*f_sup > 0.0) {
 			if (f_sup < 0.0) printf("ExoCcycleGeo: Brittle strength < ductile strength, i.e. brittle regime even at Tmantle=%g K.\n"
@@ -543,8 +556,8 @@ int main(int argc, char *argv[]) {
 			dTold = fabs(T_INF-T_SUP); // Initialize the "stepsize before last"
 			dT = dTold;                // Initialize the last stepsize
 
-			f_x = brittleDuctile(T_BDT, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
-			f_prime_x = brittleDuctile_prime(T_BDT, P_BDT, Tsurf, Psurf*bar2Pa, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
+			f_x = brittleDuctile(T_BDT, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, tConv);
+			f_prime_x = brittleDuctile_prime(T_BDT, P_BDT, Tsurf, Psurf*bar2Pa, flowLawDryDiff, flowLawDryDisl, grainSize, tConv);
 
 			// Loop over allowed iterations to find T_BDT that is a root of f
 			n_iter = 0;
@@ -562,8 +575,8 @@ int main(int argc, char *argv[]) {
 					T_BDT = T_BDT - dT;
 				}
 				// Calculate updated f and f'
-				f_x = brittleDuctile(T_BDT, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
-				f_prime_x = brittleDuctile_prime(T_BDT, P_BDT, Tsurf, Psurf*bar2Pa, flowLawDryDiff, flowLawDryDisl, grainSize, dtime);
+				f_x = brittleDuctile(T_BDT, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, tConv);
+				f_prime_x = brittleDuctile_prime(T_BDT, P_BDT, Tsurf, Psurf*bar2Pa, flowLawDryDiff, flowLawDryDisl, grainSize, tConv);
 
 				if (f_x < 0.0) T_INF = T_BDT; // Maintain the bracket on the root
 				else T_SUP = T_BDT;
@@ -598,7 +611,7 @@ int main(int argc, char *argv[]) {
 		 * So δ^0.5 = 2.32*(kappa/vConv)^0.5 and δ ≈ 5.38*kappa/vConv */
 
 		// Upper mantle:
-		nu = combVisc(Tmantle, P[(int)((ilith+icmb)/2)], flowLawDryDiff, flowLawDryDisl, grainSize, dtime)/rho[(int)((ilith+icmb)/2)];
+		nu = combVisc(Tmantle, P[(int)((ilith+icmb)/2)], flowLawDryDiff, flowLawDryDisl, grainSize, tConv)/rho[(int)((ilith+icmb)/2)];
 		printf("nu KK08 = %g\n", nu);
 		// Lower mantle:
 //		nu = 1.0e16*exp((2.0e5 + rhoMantle*gsurf*d/2.0*1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
@@ -608,12 +621,13 @@ int main(int argc, char *argv[]) {
 		if (staglid) Tref = T_BDT; // Instead of scaling used by Kite et al. (2009, equation 8)
 		else Tref = Tsurf;
 
-		Ra = alpha*g[(int)((ilith+icmb)/2)]*(Tmantle-Tref)*pow(r[NR]-r[icmb],3)/(kappa*nu);
+		Ra = alpha*g[(int)((ilith+icmb)/2)]*(Tmantle-Tref)*pow(r[NR]-r[icmb],3.0)/(kappa*nu);
 		Nu = pow(Ra/Ra_c, beta);
 
 		// Convective velocity (Kite et al. 2009 equation 24)
 		vConv = 2.0*(Nu-1.0) * k / (rho[(int)((ilith+icmb)/2)]*Cp*(r_p-r_c)) * (Tmantle-Tsurf) / (Tmantle-Tref); // Check against eq. (6.379) of Turcotte & Schubert (2002), p. 514
-		driveStress = nu * rho[(int)((ilith+icmb)/2)] * vConv*vConv /(5.38*kappa);
+		driveStress = nu * rho[(int)((ilith+icmb)/2)] * vConv*vConv / (5.38*kappa);
+		tConv = (r[ilith]-r[icmb])/vConv; // Update convection timescale
 
 		// ------------------------------------
 		// 1d. Determine tectonic regime
@@ -644,7 +658,7 @@ int main(int argc, char *argv[]) {
 
 		fout = fopen (title,"w");
 		if (fout == NULL) printf("ExoCcycleGeo: Missing PT file path: %s\n", title);
-		for (i=100;i>0;i--) {
+		for (i=nPTlith;i>0;i--) {
 			Tlith[i-1] = Tsurf + (T_BDT-Tsurf)*(double)i/(double)nPTlith;
 			Plith[i-1] = P_BDT*(Tlith[i-1]-Tsurf)/(T_BDT-Tsurf);
 			if (Tlith[i-1]-Kelvin > 750.0) fprintf(fout, "%g %g\n", Plith[i-1]/bar2Pa, Tlith[i-1]-Kelvin); // Don't input below 950 C to avoid MELTS crashing
@@ -982,7 +996,7 @@ int main(int argc, char *argv[]) {
 			Meltfrac_geoth[i][4] = rho[j-1];   // Density (kg m-3)
 
 			printf("Pressure (bar) \t Melt fraction \t Temp (K) \t Depth (km) \t Density (kg m-3)\n");
-			for(i=0;i<imax-imin+1;i++) printf("%g \t %g \t %g \t %g \t %g\n", Meltfrac_geoth[i][0]/bar2Pa, Meltfrac_geoth[i][1], Meltfrac_geoth[i][2], (r_p-Meltfrac_geoth[i][3])/1000.0, Meltfrac_geoth[i][4]);
+			for (i=0;i<imax-imin+1;i++) printf("%g \t %g \t %g \t %g \t %g\n", Meltfrac_geoth[i][0]/bar2Pa, Meltfrac_geoth[i][1], Meltfrac_geoth[i][2], (r_p-Meltfrac_geoth[i][3])/1000.0, Meltfrac_geoth[i][4]);
 
 			for (i=0;i<imax-imin;i++) {
 				meltmass = meltmass + Meltfrac_geoth[i][1]*4.0/3.0*PI_greek*(pow(Meltfrac_geoth[i][3],3)-pow(Meltfrac_geoth[i+1][3],3))*Meltfrac_geoth[i][4];
@@ -993,7 +1007,6 @@ int main(int argc, char *argv[]) {
 		printf("New crust generation rate = %.3g m Myr-1\n", zNewcrust*Myr2sec);
 		zCrust = zCrust + zNewcrust*dtime;
 
-		// TODO use of dtime makes this time scale-dependent. Need instead to get melt rates either from vigor of convection (material advected) or (as a backup) from Earth scaling.
 		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[ilith]-r[icmb]); // mol C s-1
 
 //      // Alternative: Kite et al. (2009). They didn't scale with mass: [sum melt fraction (depth)] * [mass (depth)] / [total mass between surf and Psolidus]
@@ -1006,7 +1019,11 @@ int main(int argc, char *argv[]) {
 //		FCoutgas = deltaCvolcEarth * Rmelt/(RmeltEarth*mEarth); // mol C s-1. Accurate for Earth magma C concentrations, but for other mantle concentrations, should be calculated explicitly (MELTS?)
 
 		printf("C and H2O outgassing rate: %.5g mol s-1\n", FCoutgas);
-		printf("Convective velocity: %.3g km Myr-1 \t Mantle convection timescale: %.4g Myr\n", vConv/km2m*Myr2sec, (r[ilith]-r[icmb])/vConv/Myr2sec);
+		printf("Convective velocity: %.3g cm yr-1 \t Mantle convection timescale: %.4g Myr \t Rayleigh number: %g\n", vConv*100.0*1.0e-6*Myr2sec, tConv/Myr2sec, Ra);
+		printf("Adiabatic temperature gradient in the mantle: %g K km-1 compared to Earth: 0.5 K km-1, half-mantle depth: %g km\n", alpha*g[(int)((ilith+icmb)/2)]*Tmantle/Cp * km2m, (r_p-r_c-zLith)/2.0/km2m);
+		printf("Tmantle=%g K, T_BDT=%g K, Tref=%g K, P_BDT=%g MPa, driveStress=%g MPa, yieldStress=%g MPa, zLith=%g km\n", Tmantle, T_BDT, Tref, P_BDT/MPa2Pa, driveStress/MPa2Pa, yieldStress/MPa2Pa, zLith/km2m);
+		if (staglid) printf("stagnant lid\n\n");
+		else printf ("plate tectonics\n\n");
 		exit(0);
 
 		// ------------------------------------
