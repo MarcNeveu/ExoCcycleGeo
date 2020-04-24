@@ -60,7 +60,6 @@ int compression(int NR, double m_p, double m_c, double Tsurf, int dbincore, int 
 	double Rincore = 0.0; // Inner core radius
 	double Routcore = 0.0; // Outer core radius
 	double Mmantle = 0.0; // Mantle mass
-	double rhoavg = 0.0; // Average density
 
 	// Grid variables
 	int ir = 0;

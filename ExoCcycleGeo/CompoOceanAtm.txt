@@ -1,3 +1,3 @@
 'Atmospheric species in mixing ratio (by mol, i.e. by volume for ideal gases), aqueous species in mol/(kg H2O), total C and N in mol'
 'Time (Myr)' 	 CO2(g) 	 CH4(g) 	 O2(g) 	 N2(g) 	 H2O(g) 	 'P_surface (bar)' 	 'T_surface (K)' 	 'DeltaT GHE (K)' 	 'Ox C(aq)' 	 'Red C(aq)' 	 'Total N(aq)' 	 'Ocean pH' 	 'Ocean log f(O2) at Tsurf0' 	 'Rain pH' 	 'Total C g+aq' 	 'Total N g+aq' 	 'Mocean (kg)' 	 'nAir (mol)'
-Init 	 0.5 	 0 	 0 	 0.5 	 0 	 1 	 300 	 0 	 0.528316 	 0 	 0.459927 	 7.4785 	 -73.4213 	 0 	 7.99106e+20 	 7.62825e+20 	 1.4e+21 	 1.18927e+20
+Init 	 0.5 	 0 	 0 	 0.5 	 0 	 1 	 300 	 0 	 0.528316 	 0 	 0.459927 	 7.4785 	 -73.4213 	 0 	 8.15517e+20 	 7.95647e+20 	 1.4e+21 	 1.51748e+20

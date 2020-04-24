@@ -79,9 +79,9 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	SetSelectedOutputFileOn(phreeqc,1);
 	if (RunFile(phreeqc,tempinput) != 0) OutputErrorString(phreeqc);
 
-	if      (strcmp(filename, "io/OceanStart") == 0) ExtractWrite(phreeqc, &simdata, 1, nvarEq); // 1st line of selected output has initial solution composition = equilibrium when there are no equilibrium phases
-	else if (strcmp(filename, "io/OceanDiss") == 0) ExtractWrite(phreeqc, &simdata, 2, nvarEq);  // 2nd line of PHREEQC selected output solution and mineral+gas composition at equilibrium
-	else if (strcmp(filename, "io/ContWeather") == 0) ExtractWrite(phreeqc, &simdata, kinsteps, nvarKin);
+	if      (strcmp(filename, "io/OceanStart.txt") == 0) ExtractWrite(phreeqc, &simdata, 1, nvarEq); // 1st line of selected output has initial solution composition = equilibrium when there are no equilibrium phases
+	else if (strcmp(filename, "io/OceanDiss.txt") == 0) ExtractWrite(phreeqc, &simdata, 2, nvarEq);  // 2nd line of PHREEQC selected output solution and mineral+gas composition at equilibrium
+	else if (strcmp(filename, "io/ContWeather.txt") == 0) ExtractWrite(phreeqc, &simdata, kinsteps, nvarKin);
 	else printf("AqueousChem: Cannot extract PHREEQC output data because input path %s is inaccurate. Exiting.\n", filename);
 
 	if (DestroyIPhreeqc(phreeqc) != IPQ_OK) OutputErrorString(phreeqc);
@@ -96,7 +96,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 //	}
 
 	// Setting initial ocean chemistry
-	if (strcmp(filename, "io/OceanStart") == 0) {
+	if (strcmp(filename, "io/OceanStart.txt") == 0) {
 		(*pH) = simdata[7][0];
 		(*pe) = simdata[8][0];
 
@@ -109,7 +109,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	}
 
 	// Ocean dissolution
-	if (strcmp(filename, "io/OceanDiss") == 0) {
+	if (strcmp(filename, "io/OceanDiss.txt") == 0) {
 		(*pH) = simdata[7][0];
 		(*pe) = simdata[8][0];
 		(*nAir) = simdata[1007][0]*nAir0;
@@ -134,7 +134,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	}
 
 	// Continental weathering
-	if (strcmp(filename, "io/ContWeather") == 0) {
+	if (strcmp(filename, "io/ContWeather.txt") == 0) {
 
 		(*xrain)[1][1] = simdata[3][1]; // Rainwater pH
 		(*xrain)[2][1] = simdata[9][1]; // Initial total dissolved C
@@ -312,7 +312,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 
 	strcpy(*tempinput,TemplateFile);
 //	strcat(*tempinput,itime_str);
-	strcat(*tempinput,"Exec"); // File title complete
+	strcat(*tempinput,"Exec.txt"); // File title complete
 
 	sprintf(aq_str[0],"%g mol/kgw", xaq[0]);  // mol per kg H2O of oxidized C
 	sprintf(aq_str[1],"%g mol/kgw", xaq[1]);  // mol per kg H2O of reduced C
