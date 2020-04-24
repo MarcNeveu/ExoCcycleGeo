@@ -29,7 +29,7 @@
 //-------------------------------------------------------------------
 
 int compression(int NR, double m_p, double m_c, double Tsurf, int dbincore, int dboutcore, int dbmantle, double **r,
-		double **P, double **rho, int *cmbindex, char path[1024]);
+		double **P, double **rho, double **g, int *cmbindex, char path[1024]);
 
 int planmat(int ncomp, int **dbindex, int **eos, double **rho0, double **c, double **nn, double **Ks0, double **Ksp,
 		double **V0, double **Tref, double **a0, double **a1, double **b0, double **b1, double **b2, char path[1024]);
@@ -47,7 +47,7 @@ int planmat_index(int mat, int ncomp, int *dbindex);
  *--------------------------------------------------------------------*/
 
 int compression(int NR, double m_p, double m_c, double Tsurf, int dbincore, int dboutcore, int dbmantle, double **r,
-		double **P, double **rho, int *cmbindex, char path[1024]) {
+		double **P, double **rho, double **g, int *cmbindex, char path[1024]) {
 
 	//-------------------------------------------------------------------
 	// Declarations and initializations
@@ -74,9 +74,6 @@ int compression(int NR, double m_p, double m_c, double Tsurf, int dbincore, int 
 
 	double *dM = (double*) malloc((NR+1)*sizeof(double)); // dMass
 	if (dM == NULL) printf("Compression: Not enough memory to create dM[NR]\n");
-
-	double *g = (double*) malloc((NR+1)*sizeof(double)); // Gravitational acceleration
-	if (g == NULL) printf("Compression: Not enough memory to create g[NR]\n");
 
 	double *rhonew = (double*) malloc((NR+1)*sizeof(double)); // New density
 	if (rhonew == NULL) printf("Compression: Not enough memory to create rhonew[NR]\n");
@@ -148,7 +145,7 @@ int compression(int NR, double m_p, double m_c, double Tsurf, int dbincore, int 
 		(*r)[ir] = 0.0;
 		M[ir] = 0.0;
 		dM[ir] = 0.0;
-		g[ir] = 0.0;
+		(*g)[ir] = 0.0;
 		(*rho)[ir] = 0.0;
 		rhonew[ir] = 0.0;
 		(*P)[ir] = 0.0;
@@ -238,10 +235,10 @@ int compression(int NR, double m_p, double m_c, double Tsurf, int dbincore, int 
 		iter++;
 
 		// Calculate gravity at zone boundaries
-		for (ir=1;ir<=NR;ir++) g[ir] = G*M[ir]/(*r)[ir]/(*r)[ir];
+		for (ir=1;ir<=NR;ir++) (*g)[ir] = G*M[ir]/(*r)[ir]/(*r)[ir];
 
 		// Calculate pressure at zone boundaries, for a given density structure, by integrating hydrostatic equilibrium
-		for (ir=NR-1;ir>=0;ir--) (*P)[ir] = (*P)[ir+1] + 0.5*(g[ir+1]+g[ir])*((*r)[ir+1]-(*r)[ir])*(*rho)[ir+1];
+		for (ir=NR-1;ir>=0;ir--) (*P)[ir] = (*P)[ir+1] + 0.5*((*g)[ir+1]+(*g)[ir])*((*r)[ir+1]-(*r)[ir])*(*rho)[ir+1];
 
 		// Calculate what compression is needed to produce this pressure, using rho=rho0+c*P^nn (Seager et al. 2007)
 		for (ir=1;ir<=NR;ir++) {
@@ -295,7 +292,6 @@ int compression(int NR, double m_p, double m_c, double Tsurf, int dbincore, int 
 
 	free(M);
 	free(dM);
-	free(g);
 	free(rhonew);
 	free(icomp);
 	free(dbindex);

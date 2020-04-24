@@ -34,10 +34,11 @@ int main(int argc, char *argv[]) {
 	int i = 0;
 	int ir = 0;
 	int j = 0;
-	int imin = 0;
-	int imax = 0;
-	int NR = 1000;                  // Number of radial grid zones used in determining planetary structure at setup
-	int cmbindex = 0;				// Index of core-mantle boundary
+	int ilith = 0;                  // Index of grid zone that corresponds to brittle-ductile transition
+	int imin = 0;                   // Index of lowest pressure of melting in MELTS output (not a grid zone)
+	int imax = 0;                   // Index of highest pressure of melting in MELTS output (not a grid zone)
+	int NR = 10000;                 // Number of radial grid zones used in determining planetary structure at setup. Default 10000 tends to not undersample nPTlith=100 grid zones in lithosphere and 1000 bar pressure increments in ExoCcycleGeo.melts. TODO Adjust these parameters relative to one another?
+	int icmb = 0;    				// Index of core-mantle boundary
 	int itime = 0;                  // Time step counter
 	int ntime = 0;                  // Total number of steps
 
@@ -73,6 +74,10 @@ int main(int argc, char *argv[]) {
 	double *rho = (double*) malloc((NR+1)*sizeof(double)); // Density (kg m-3)
 	if (rho == NULL) printf("Compression: Not enough memory to create rho[NR]\n");
 	for (ir=0;ir<NR+1;ir++) rho[ir] = 0.0;
+
+	double *g = (double*) malloc((NR+1)*sizeof(double)); // Gravitational acceleration
+	if (g == NULL) printf("Compression: Not enough memory to create g[NR]\n");
+	for (ir=0;ir<NR+1;ir++) g[ir] = 0.0;
 
 	double *P = (double*) malloc((NR+1)*sizeof(double)); // Pressure (Pa)
 	if (P == NULL) printf("Compression: Not enough memory to create P[NR]\n");
@@ -142,6 +147,8 @@ int main(int argc, char *argv[]) {
 	double f_x = 0.0, f_prime_x = 0.0; // Derivatives of the above (Pa K-1)
 	double NewtRaphThresh = 1.0e5;  // Threshold for the Bisection/Newton-Raphson loop, here in Pa
 	double P_BDT = 0.0;             // Pressure at brittle-ductile transition (Pa)
+	double meltmass = 0.0;          // Total mass of outgassing mantle melt (kg)
+	double zNewcrust = 0.0;         // Thickness of crust generated from mantle melt (km)
 
 	// Viscosity law constants (can't be #define'd because they are used as exponents)
 	double flowLawDryDiff[5]; // Dry diffusion creep flow law (Korenaga & Karato 2008)
@@ -190,11 +197,11 @@ int main(int argc, char *argv[]) {
 	double **Meltfrac_geoth = (double**) malloc((nPmelt)*sizeof(double*));
 	if (Meltfrac_geoth == NULL) printf("ExoCcycleGeo: Not enough memory to create Meltfrac_geoth[%d]\n", nPmelt); // Full curves of melt fraction vs. pressure + geotherm
 	for (i=0;i<nPmelt;i++) {
-		Meltfrac_geoth[i] = (double*) malloc(3*sizeof(double));
+		Meltfrac_geoth[i] = (double*) malloc(5*sizeof(double));
 		if (Meltfrac_geoth[i] == NULL) printf("ExoCcycleGeo: Not enough memory to create Meltfrac_geoth[%d][2]\n", nPmelt);
 	}
 	for (i=0;i<nPmelt;i++) {
-		for (j=0;j<3;j++) Meltfrac_geoth[i][j] = 0.0;
+		for (j=0;j<5;j++) Meltfrac_geoth[i][j] = 0.0;
 	}
 
 	FILE *fin;
@@ -215,7 +222,7 @@ int main(int argc, char *argv[]) {
 	ntime = (int) (5000.0*Myr2sec/dtime); // Number of time steps of simulation
 
 	// Planet parameters
-	double m_p = 0.5*mEarth;    // Planet mass (kg)
+	double m_p = 1.0*mEarth;    // Planet mass (kg)
 	double m_c = 0.325*m_p;     // Core mass (kg), default ≈0.3*m_p for Earth, Kite et al. (2009) use 0.325*m_p
 	double L = 0.29;            // Fraction of planet surface covered by land
 	double Mocean = 1.4e21;     // Mass of ocean (kg, default: Earth=1.4e21)
@@ -268,11 +275,12 @@ int main(int argc, char *argv[]) {
 	if (_NSGetExecutablePath(path, &size) == 0) printf("\n");
 	else printf("ExoCcycleGeo: Couldn't retrieve executable directory. Buffer too small; need size %u\n", size);
 
-	compression(NR, m_p, m_c, Tsurf, 101, 101, 202, &r, &P, &rho, &cmbindex, path);
+	// Get pressure and density profiles with depth, accounting for compression and self-gravity
+	compression(NR, m_p, m_c, Tsurf, 101, 101, 202, &r, &P, &rho, &g, &icmb, path);
 
 	r_p = r[NR];
-	r_c = r[cmbindex];
-	rhoMantle = rho[(NR+cmbindex)/2];
+	r_c = r[icmb];
+	rhoMantle = rho[(NR+icmb)/2];
 	kappa = k/(rhoMantle*Cp);
 	printf("Planet radius = %g km, Core radius = %g km, Mid-mantle density= %g kg m-3\n", r_p/km2m, r_c/km2m, rhoMantle);
 	gsurf = G*m_p/r_p/r_p;
@@ -501,14 +509,14 @@ int main(int argc, char *argv[]) {
 
 		// 1a. Determine T and P at the brittle-ductile transition (base of lithosphere)
 		// First guess: temperature where the mantle adiabat intersects the current base of the lithosphere
-		T_BDT = Tmantle - alpha*gsurf*Tmantle/Cp * (r_p-r_c-zLith)/2.0; // Equation (1) of Katsura et al. (2010) with T=Tmantle (mid-mantle depth), although g and T should be taken as a function of depth
+		T_BDT = Tmantle - alpha*g[(int)(NR/2)]*Tmantle/Cp * (r_p-r_c-zLith)/2.0; // Equation (1) of Katsura et al. (2010) with T=Tmantle (mid-mantle depth), although T should be taken as a function of depth
 		T_BDT_old = T_BDT;
 		P_BDT = rhoLith*gsurf*zLith;
 
 		/* = strength at brittle-ductile transition (BDT)
 		 * Geotherm through lithosphere is T prop to depth, with T=Tsurf at depth = 0 and T=Tmantle at depth = zLith = P(BDT)/(rhoLith*gsurf). [1]
 		 * So T = (Tmantle-Tsurf)*depth/zLith + Tsurf. [2]
-		 * P ≈ rhoLith*gsurf*depth = rhoLith*gsurf*zLith*(T-Tsurf)/(Tmantle-Tsurf) [3]
+		 * P ≈ rhoLith*g*depth = rhoLith*g*zLith*(T-Tsurf)/(Tmantle-Tsurf) [3]
 		 * Initiate zLith. Solve for temperature of BDT: brittleStrength-ductileStrength = f(P,T) = f(T) = 0. Get updated zLith from [2] (= depth). */
 
 		// Initialize bounds for T_BDT
@@ -568,9 +576,15 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 			}
+
 			T_BDT = T_BDT + 700.0; // !!!!!! TODO REMOVE. This arbitrary bump up is to make the BDT like the Earth's.
 			zLith = (T_BDT-Tsurf)/(T_BDT_old-Tsurf)*zLith; // Participates in the calculation of T_BDT, but we just have to use the previous guess for that
-			P_BDT = rhoLith*gsurf*zLith; // Pressure at BDT (Pa)
+
+			for (i=NR;i>=0;i--) {
+				if (r_p-r[i-1] > zLith && r_p-r[i] <= zLith) break;
+			}
+			ilith = i;
+			P_BDT = P[i]; // Pressure at BDT (Pa) ≈ rhoLith*g*zLith
 		}
 
 		// 1b. Determine yield stress, equated to brittle strength at BDT (equivalently, ductile strength)
@@ -586,7 +600,7 @@ int main(int argc, char *argv[]) {
 		 * So δ^0.5 = 2.32*(kappa/vConv)^0.5 and δ ≈ 5.38*kappa/vConv */
 
 		// Upper mantle:
-		nu = combVisc(Tmantle, P[(NR+cmbindex)/2], flowLawDryDiff, flowLawDryDisl, grainSize, dtime)/rhoMantle;
+		nu = combVisc(Tmantle, P[(NR+icmb)/2], flowLawDryDiff, flowLawDryDisl, grainSize, dtime)/rhoMantle;
 		printf("nu KK08 = %g\n", nu);
 		// Lower mantle:
 //		nu = 1.0e16*exp((2.0e5 + rhoMantle*gsurf*d/2.0*1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
@@ -596,7 +610,7 @@ int main(int argc, char *argv[]) {
 		if (staglid) Tref = T_BDT; // Instead of scaling used by Kite et al. (2009, equation 8)
 		else Tref = Tsurf;
 
-		Ra = alpha*gsurf*(Tmantle-Tref)*pow(r[NR]-r[cmbindex],3)/(kappa*nu);
+		Ra = alpha*gsurf*(Tmantle-Tref)*pow(r[NR]-r[icmb],3)/(kappa*nu);
 		Nu = pow(Ra/Ra_c, beta);
 
 		// Convective velocity (Kite et al. 2009 equation 24)
@@ -733,7 +747,7 @@ int main(int argc, char *argv[]) {
 		// Max pressure of MELTS < pressure at which melt is suppressed. Extrapolate linearly to highest pressure of melt (deeper solidus)
         // Reset Meltfrac_geoth
 		for (i=0;i<nPmelt;i++) {
-			for (j=0;j<3;j++) Meltfrac_geoth[i][j] = 0.0;
+			for (j=0;j<5;j++) Meltfrac_geoth[i][j] = 0.0;
 		}
 
 		// Find min and max nonzero rows in sys_tbl
@@ -756,218 +770,240 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
-		for (i=imin;i<imax;i++) {
-			Meltfrac_geoth[i-imin][0] = sys_tbl[i][0];
-			Meltfrac_geoth[i-imin][1] = sys_tbl[i][4];
-			Meltfrac_geoth[i-imin][2] = sys_tbl[i][1];
-		}
+		meltmass = 0.0;
+		if (imax > imin) {
+			for (i=imin;i<imax;i++) {
+				Meltfrac_geoth[i-imin][0] = sys_tbl[i][0]*bar2Pa; // Pressure, Pa from bar in sys_tbl
+				Meltfrac_geoth[i-imin][1] = sys_tbl[i][4];        // Melt fraction, no dim
+				Meltfrac_geoth[i-imin][2] = sys_tbl[i][1];        // Temperature, K
+			}
 
-		if (Meltfrac_geoth[imax-imin-1][1] > 0.1) {
-			printf("ExoCcycleGeo: alphaMELTS could not calculate melting all the way down, extrapolating melting curve to 0 linearly with depth\n");
-			// Extrapolate starting from last 5 indices, provided melt fraction of all is < 1 (otherwise, use less indices)
-			if (imax-imin < nslopeAvg) nslopeAvg = imax-imin; // Case with < 5 grid zones of melt
-			for (i=imax-imin-nslopeAvg;i<imax-imin;i++) {
-				if (Meltfrac_geoth[i][0]-Meltfrac_geoth[i-1][0] == 0) printf("ExoCcycleGeo: Can't extrapolate rock melting curve with pressure because denominator is zero\n");
-				else {
-					if (Meltfrac_geoth[i-1][1] < 1.0) {
-						slope = slope + (Meltfrac_geoth[i][1]-Meltfrac_geoth[i-1][1])/(Meltfrac_geoth[i][0]-Meltfrac_geoth[i-1][0]);
-						islope++;
+			if (Meltfrac_geoth[imax-imin-1][1] > 0.1) {
+				printf("ExoCcycleGeo: alphaMELTS could not calculate melting all the way down, extrapolating melting curve to 0 linearly with depth\n");
+				// Extrapolate starting from last 5 indices, provided melt fraction of all is < 1 (otherwise, use less indices)
+				if (imax-imin < nslopeAvg) nslopeAvg = imax-imin; // Case with < 5 grid zones of melt
+				for (i=imax-imin-nslopeAvg;i<imax-imin;i++) {
+					if (Meltfrac_geoth[i][0]-Meltfrac_geoth[i-1][0] == 0) printf("ExoCcycleGeo: Can't extrapolate rock melting curve with pressure because denominator is zero\n");
+					else {
+						if (Meltfrac_geoth[i-1][1] < 1.0) {
+							slope = slope + (Meltfrac_geoth[i][1]-Meltfrac_geoth[i-1][1])/(Meltfrac_geoth[i][0]-Meltfrac_geoth[i-1][0]);
+							islope++;
+						}
+					}
+				}
+				slope = slope/(double) islope;
+
+				if (islope) {
+					for (i=imax-imin;nPmelt;i++) {
+						meltfrac = Meltfrac_geoth[i-1][1] + slope*(double) deltaPmantle;
+						if (meltfrac > 0.0) {
+							Meltfrac_geoth[i][0] = Meltfrac_geoth[i-1][0] + (double) deltaPmantle;
+							Meltfrac_geoth[i][1] = meltfrac;
+						}
+						else break;
 					}
 				}
 			}
-			slope = slope/(double) islope;
 
-			if (islope) {
-				for (i=imax-imin;nPmelt;i++) {
-					meltfrac = Meltfrac_geoth[i-1][1] + slope*(double) deltaPmantle;
-					if (meltfrac > 0.0) {
-						Meltfrac_geoth[i][0] = Meltfrac_geoth[i-1][0] + (double) deltaPmantle;
-						Meltfrac_geoth[i][1] = meltfrac;
-					}
-					else break;
+	//		// 2c. Alternatively, use analytical formulation of McKenzie & Bickle (1988) at the expense of compositional versatility?
+	//		// McKenzie & Bickle (1988): determine Tsolidus at P, then Tliquidus at P, then T'(T, Tsol, Tliq), then X(T')
+	//		//2c-1 Geotherm
+	//		double Tsolidus = 0.0;  // Solidus temperature (Kelvin)
+	//		double Tliquidus = 0.0; // Liquidus temperature (Kelvin)
+	//		double Tprime = 0.0;    // Temperature used in calculation of Xmelt (dimensionless)
+	//		double Xmelt[100];      // Melt fraction (dimensionless)
+	//		for (i=0;i<100;i++) Xmelt[i] = 0.0;
+	//
+	//		for (i=0;i<100;i++) {
+	//			// Determine Tsolidus
+	//
+	//			// Initialize bounds for Tsolidus
+	//			T_INF = Tsurf;
+	//			T_SUP = Tmantle;
+	//
+	//			// Ensure that f(T_INF)<0 and f(T_SUP)>0 TODO Ductile strength depends on time step (deps/dt). Make time step-independent?
+	//			f_inf = Psolidus(T_INF) - Pgeotherm[i];
+	//			f_sup = Psolidus(T_SUP) - Pgeotherm[i];
+	//
+	//			if (f_inf*f_sup > 0.0) {
+	//				printf("ExoCcycleGeo: Solidus not between Tsurf = %g K and Tmantle = %g K, cannot determine Tsolidus and melt fraction!\n", Tsurf, Tmantle);
+	//			}
+	//			else {
+	//				if (f_inf > 0.0) { // Swap INF and SUP if f_inf > 0 and f_sup < 0
+	//					T_TEMP = T_INF;
+	//					T_INF = T_SUP;
+	//					T_SUP = T_TEMP;
+	//				}
+	//				Tsolidus = 0.5*(T_INF+T_SUP); // Initialize the guess for the root T_BDT,
+	//				dTold = fabs(T_INF-T_SUP); // Initialize the "stepsize before last"
+	//				dT = dTold;                // Initialize the last stepsize
+	//
+	//				f_x = Psolidus(Tgeotherm[i]) - Pgeotherm[i];
+	//				f_prime_x = dPsolidusdT(Tgeotherm[i]);
+	//
+	//				// Loop over allowed iterations to find T_BDT that is a root of f
+	//				n_iter = 0;
+	//				while (fabs(f_x) > NewtRaphThresh) {
+	//
+	//					// Bisect if Newton is out of range, or if not decreasing fast enough
+	//					if ((((Tsolidus-T_SUP)*f_prime_x-f_x)*((Tsolidus-T_INF)*f_prime_x-f_x) > 0.0) || (fabs(2.0*f_x) > fabs(dTold*f_prime_x))) {
+	//						dTold = dT;
+	//						dT = 0.5*(T_SUP-T_INF);
+	//						Tsolidus = T_INF + dT;
+	//					}
+	//					else { // Do Newton-Raphson
+	//						dTold = dT;
+	//						dT = f_x/f_prime_x;
+	//						Tsolidus = Tsolidus - dT;
+	//					}
+	//					// Calculate updated f and f'
+	//					f_x = Psolidus(Tsolidus) - Pgeotherm[i];
+	//					f_prime_x = dPsolidusdT(Tsolidus);
+	//
+	//					if (f_x < 0.0) T_INF = Tsolidus; // Maintain the bracket on the root
+	//					else T_SUP = Tsolidus;
+	//
+	//					n_iter++;
+	//					if (n_iter>=n_iter_max) {
+	//						printf("ExoCcycleGeo: could not find the brittle-ductile transition after %d iterations\n",n_iter_max);
+	//						break;
+	//					}
+	//				}
+	//			}
+	//
+	//			if (Tgeotherm[i] < Tsolidus) Xmelt[i] = 0.0;
+	//			else {
+	//				// Determine Tliquidus
+	//				Tliquidus = Kelvin + 1736.2 + 4.343*Pgeotherm[i]/1.0e9 + 180.0 * atan(Pgeotherm[i]/1.0e9/2.2169);
+	//				if (Tgeotherm[i] > Tliquidus) {
+	//					Xmelt[i] = 1.0;
+	//				}
+	//				else {
+	//					Tprime = (Tgeotherm[i] - (Tsolidus+Tliquidus)/2.0) / (Tliquidus-Tsolidus); // K or C doesn't matter as the numerator and the denominator are both temp differences
+	//					Xmelt[i] = 0.5 + Tprime + (Tprime*Tprime - 0.25)*(0.4256+2.988*Tprime); // Again, K or C doesn't matter, Tprime is dimensionless
+	//				}
+	//			}
+	//			printf("%g \t %g \t %g\n", Pgeotherm[i]/bar2Pa, Xmelt[i], Tgeotherm[i]);
+	//		}
+	//
+	//		//2c-2 Mantle adiabat
+	//		double T[NR]; // Temperature (K)
+	//		for (ir=0;ir<NR;ir++) T[ir] = 0.0;
+	//
+	//		for (ir=NR-1;ir>=0;ir--) {
+	//			if (P[ir] > P_BDT && P[ir] < 100000.0*bar2Pa) {
+	//				// Adiabat
+	//				T[ir] = T_BDT + gsurf*alpha*Tmantle/Cp*(r_p-zLith-r[ir]);
+	//
+	//				// Determine Tsolidus
+	//
+	//				// Initialize bounds for Tsolidus
+	//				T_INF = Tsurf;
+	//				T_SUP = 10000.0;
+	//
+	//				// Ensure that f(T_INF)<0 and f(T_SUP)>0 TODO Ductile strength depends on time step (deps/dt). Make time step-independent?
+	//				f_inf = Psolidus(T_INF) - P[ir];
+	//				f_sup = Psolidus(T_SUP) - P[ir];
+	//
+	//				if (f_inf*f_sup > 0.0) {
+	//					printf("ExoCcycleGeo: Solidus not between Tsurf = %g K and Tmantle = %g K, cannot determine Tsolidus and melt fraction!\n", Tsurf, Tmantle);
+	//				}
+	//				else {
+	//					if (f_inf > 0.0) { // Swap INF and SUP if f_inf > 0 and f_sup < 0
+	//						T_TEMP = T_INF;
+	//						T_INF = T_SUP;
+	//						T_SUP = T_TEMP;
+	//					}
+	//					Tsolidus = 0.5*(T_INF+T_SUP); // Initialize the guess for the root T_BDT,
+	//					dTold = fabs(T_INF-T_SUP); // Initialize the "stepsize before last"
+	//					dT = dTold;                // Initialize the last stepsize
+	//
+	//					f_x = Psolidus(T[ir]) - P[ir];
+	//					f_prime_x = dPsolidusdT(T[ir]);
+	//
+	//					// Loop over allowed iterations to find T_BDT that is a root of f
+	//					n_iter = 0;
+	//					while (fabs(f_x) > NewtRaphThresh) {
+	//
+	//						// Bisect if Newton is out of range, or if not decreasing fast enough
+	//						if ((((Tsolidus-T_SUP)*f_prime_x-f_x)*((Tsolidus-T_INF)*f_prime_x-f_x) > 0.0) || (fabs(2.0*f_x) > fabs(dTold*f_prime_x))) {
+	//							dTold = dT;
+	//							dT = 0.5*(T_SUP-T_INF);
+	//							Tsolidus = T_INF + dT;
+	//						}
+	//						else { // Do Newton-Raphson
+	//							dTold = dT;
+	//							dT = f_x/f_prime_x;
+	//							Tsolidus = Tsolidus - dT;
+	//						}
+	//						// Calculate updated f and f'
+	//						f_x = Psolidus(Tsolidus) - P[ir];
+	//						f_prime_x = dPsolidusdT(Tsolidus);
+	//
+	//						if (f_x < 0.0) T_INF = Tsolidus; // Maintain the bracket on the root
+	//						else T_SUP = Tsolidus;
+	//
+	//						n_iter++;
+	//						if (n_iter>=n_iter_max) {
+	//							printf("ExoCcycleGeo: could not find the brittle-ductile transition after %d iterations\n",n_iter_max);
+	//							break;
+	//						}
+	//					}
+	//				}
+	//
+	//				if (T[ir] < Tsolidus) Xmelt[i] = 0.0;
+	//				else {
+	//					// Determine Tliquidus
+	//					Tliquidus = Kelvin + 1736.2 + 4.343*P[ir]/1.0e9 + 180.0 * atan(P[ir]/1.0e9/2.2169);
+	//					if (T[ir] > Tliquidus) {
+	//						Xmelt[i] = 1.0;
+	//					}
+	//					else {
+	//						Tprime = (T[ir] - (Tsolidus+Tliquidus)/2.0) / (Tliquidus-Tsolidus); // K or C doesn't matter as the numerator and the denominator are both temp differences
+	//						Xmelt[i] = 0.5 + Tprime + (Tprime*Tprime - 0.25)*(0.4256+2.988*Tprime); // Again, K or C doesn't matter, Tprime is dimensionless
+	//					}
+	//				}
+	//				printf("%g \t %g \t %g\n", P[ir]/bar2Pa, Xmelt[i], T[ir]);
+	//			}
+	//		}
+
+			// 2d. Convert to melt fraction vs. depth and determine amount of crust generated.
+			// Assumes all melt generated reaches the surface and all ascending mantle parcels reach pressures < Psolidus (Kite et al. 2009)
+
+			for (i=0;i<imax-imin;i++) {
+				for (j=NR;j>=0;j--) {
+					if (P[j-1] > Meltfrac_geoth[i][0] && P[j] <= Meltfrac_geoth[i][0]) break;
 				}
+				Meltfrac_geoth[i][3] = r[j]; // Depth (m)
+				Meltfrac_geoth[i][4] = rho[j]; // Depth (m)
+			}
+			// Add volume and density down to first layer with no melt
+			Meltfrac_geoth[i][3] = r[j-1]; // Depth (m)
+			Meltfrac_geoth[i][4] = rho[j-1]; // Depth (m)
+
+			for(i=0;i<imax-imin+1;i++) printf("%g \t %g \t %g \t %g \t %g\n", Meltfrac_geoth[i][0]/bar2Pa, Meltfrac_geoth[i][1], Meltfrac_geoth[i][2], Meltfrac_geoth[i][3]/1000.0, Meltfrac_geoth[i][4]);
+
+			for (i=0;i<imax-imin;i++) {
+				meltmass = meltmass + Meltfrac_geoth[i][1]*4.0/3.0*PI_greek*(pow(Meltfrac_geoth[i][3],3)-pow(Meltfrac_geoth[i+1][3],3))*Meltfrac_geoth[i][4];
 			}
 		}
 
-//		// 2c. Alternatively, use analytical formulation of McKenzie & Bickle (1988) at the expense of compositional versatility?
-//		// McKenzie & Bickle (1988): determine Tsolidus at P, then Tliquidus at P, then T'(T, Tsol, Tliq), then X(T')
-//		//2c-1 Geotherm
-//		double Tsolidus = 0.0;  // Solidus temperature (Kelvin)
-//		double Tliquidus = 0.0; // Liquidus temperature (Kelvin)
-//		double Tprime = 0.0;    // Temperature used in calculation of Xmelt (dimensionless)
-//		double Xmelt[100];      // Melt fraction (dimensionless)
-//		for (i=0;i<100;i++) Xmelt[i] = 0.0;
-//
-//		for (i=0;i<100;i++) {
-//			// Determine Tsolidus
-//
-//			// Initialize bounds for Tsolidus
-//			T_INF = Tsurf;
-//			T_SUP = Tmantle;
-//
-//			// Ensure that f(T_INF)<0 and f(T_SUP)>0 TODO Ductile strength depends on time step (deps/dt). Make time step-independent?
-//			f_inf = Psolidus(T_INF) - Pgeotherm[i];
-//			f_sup = Psolidus(T_SUP) - Pgeotherm[i];
-//
-//			if (f_inf*f_sup > 0.0) {
-//				printf("ExoCcycleGeo: Solidus not between Tsurf = %g K and Tmantle = %g K, cannot determine Tsolidus and melt fraction!\n", Tsurf, Tmantle);
-//			}
-//			else {
-//				if (f_inf > 0.0) { // Swap INF and SUP if f_inf > 0 and f_sup < 0
-//					T_TEMP = T_INF;
-//					T_INF = T_SUP;
-//					T_SUP = T_TEMP;
-//				}
-//				Tsolidus = 0.5*(T_INF+T_SUP); // Initialize the guess for the root T_BDT,
-//				dTold = fabs(T_INF-T_SUP); // Initialize the "stepsize before last"
-//				dT = dTold;                // Initialize the last stepsize
-//
-//				f_x = Psolidus(Tgeotherm[i]) - Pgeotherm[i];
-//				f_prime_x = dPsolidusdT(Tgeotherm[i]);
-//
-//				// Loop over allowed iterations to find T_BDT that is a root of f
-//				n_iter = 0;
-//				while (fabs(f_x) > NewtRaphThresh) {
-//
-//					// Bisect if Newton is out of range, or if not decreasing fast enough
-//					if ((((Tsolidus-T_SUP)*f_prime_x-f_x)*((Tsolidus-T_INF)*f_prime_x-f_x) > 0.0) || (fabs(2.0*f_x) > fabs(dTold*f_prime_x))) {
-//						dTold = dT;
-//						dT = 0.5*(T_SUP-T_INF);
-//						Tsolidus = T_INF + dT;
-//					}
-//					else { // Do Newton-Raphson
-//						dTold = dT;
-//						dT = f_x/f_prime_x;
-//						Tsolidus = Tsolidus - dT;
-//					}
-//					// Calculate updated f and f'
-//					f_x = Psolidus(Tsolidus) - Pgeotherm[i];
-//					f_prime_x = dPsolidusdT(Tsolidus);
-//
-//					if (f_x < 0.0) T_INF = Tsolidus; // Maintain the bracket on the root
-//					else T_SUP = Tsolidus;
-//
-//					n_iter++;
-//					if (n_iter>=n_iter_max) {
-//						printf("ExoCcycleGeo: could not find the brittle-ductile transition after %d iterations\n",n_iter_max);
-//						break;
-//					}
-//				}
-//			}
-//
-//			if (Tgeotherm[i] < Tsolidus) Xmelt[i] = 0.0;
-//			else {
-//				// Determine Tliquidus
-//				Tliquidus = Kelvin + 1736.2 + 4.343*Pgeotherm[i]/1.0e9 + 180.0 * atan(Pgeotherm[i]/1.0e9/2.2169);
-//				if (Tgeotherm[i] > Tliquidus) {
-//					Xmelt[i] = 1.0;
-//				}
-//				else {
-//					Tprime = (Tgeotherm[i] - (Tsolidus+Tliquidus)/2.0) / (Tliquidus-Tsolidus); // K or C doesn't matter as the numerator and the denominator are both temp differences
-//					Xmelt[i] = 0.5 + Tprime + (Tprime*Tprime - 0.25)*(0.4256+2.988*Tprime); // Again, K or C doesn't matter, Tprime is dimensionless
-//				}
-//			}
-//			printf("%g \t %g \t %g\n", Pgeotherm[i]/bar2Pa, Xmelt[i], Tgeotherm[i]);
-//		}
-//
-//		//2c-2 Mantle adiabat
-//		double T[NR]; // Temperature (K)
-//		for (ir=0;ir<NR;ir++) T[ir] = 0.0;
-//
-//		for (ir=NR-1;ir>=0;ir--) {
-//			if (P[ir] > P_BDT && P[ir] < 100000.0*bar2Pa) {
-//				// Adiabat
-//				T[ir] = T_BDT + gsurf*alpha*Tmantle/Cp*(r_p-zLith-r[ir]);
-//
-//				// Determine Tsolidus
-//
-//				// Initialize bounds for Tsolidus
-//				T_INF = Tsurf;
-//				T_SUP = 10000.0;
-//
-//				// Ensure that f(T_INF)<0 and f(T_SUP)>0 TODO Ductile strength depends on time step (deps/dt). Make time step-independent?
-//				f_inf = Psolidus(T_INF) - P[ir];
-//				f_sup = Psolidus(T_SUP) - P[ir];
-//
-//				if (f_inf*f_sup > 0.0) {
-//					printf("ExoCcycleGeo: Solidus not between Tsurf = %g K and Tmantle = %g K, cannot determine Tsolidus and melt fraction!\n", Tsurf, Tmantle);
-//				}
-//				else {
-//					if (f_inf > 0.0) { // Swap INF and SUP if f_inf > 0 and f_sup < 0
-//						T_TEMP = T_INF;
-//						T_INF = T_SUP;
-//						T_SUP = T_TEMP;
-//					}
-//					Tsolidus = 0.5*(T_INF+T_SUP); // Initialize the guess for the root T_BDT,
-//					dTold = fabs(T_INF-T_SUP); // Initialize the "stepsize before last"
-//					dT = dTold;                // Initialize the last stepsize
-//
-//					f_x = Psolidus(T[ir]) - P[ir];
-//					f_prime_x = dPsolidusdT(T[ir]);
-//
-//					// Loop over allowed iterations to find T_BDT that is a root of f
-//					n_iter = 0;
-//					while (fabs(f_x) > NewtRaphThresh) {
-//
-//						// Bisect if Newton is out of range, or if not decreasing fast enough
-//						if ((((Tsolidus-T_SUP)*f_prime_x-f_x)*((Tsolidus-T_INF)*f_prime_x-f_x) > 0.0) || (fabs(2.0*f_x) > fabs(dTold*f_prime_x))) {
-//							dTold = dT;
-//							dT = 0.5*(T_SUP-T_INF);
-//							Tsolidus = T_INF + dT;
-//						}
-//						else { // Do Newton-Raphson
-//							dTold = dT;
-//							dT = f_x/f_prime_x;
-//							Tsolidus = Tsolidus - dT;
-//						}
-//						// Calculate updated f and f'
-//						f_x = Psolidus(Tsolidus) - P[ir];
-//						f_prime_x = dPsolidusdT(Tsolidus);
-//
-//						if (f_x < 0.0) T_INF = Tsolidus; // Maintain the bracket on the root
-//						else T_SUP = Tsolidus;
-//
-//						n_iter++;
-//						if (n_iter>=n_iter_max) {
-//							printf("ExoCcycleGeo: could not find the brittle-ductile transition after %d iterations\n",n_iter_max);
-//							break;
-//						}
-//					}
-//				}
-//
-//				if (T[ir] < Tsolidus) Xmelt[i] = 0.0;
-//				else {
-//					// Determine Tliquidus
-//					Tliquidus = Kelvin + 1736.2 + 4.343*P[ir]/1.0e9 + 180.0 * atan(P[ir]/1.0e9/2.2169);
-//					if (T[ir] > Tliquidus) {
-//						Xmelt[i] = 1.0;
-//					}
-//					else {
-//						Tprime = (T[ir] - (Tsolidus+Tliquidus)/2.0) / (Tliquidus-Tsolidus); // K or C doesn't matter as the numerator and the denominator are both temp differences
-//						Xmelt[i] = 0.5 + Tprime + (Tprime*Tprime - 0.25)*(0.4256+2.988*Tprime); // Again, K or C doesn't matter, Tprime is dimensionless
-//					}
-//				}
-//				printf("%g \t %g \t %g\n", P[ir]/bar2Pa, Xmelt[i], T[ir]);
-//			}
-//		}
+		zNewcrust = r_p - pow(pow(r_p,3) - meltmass/rho[ir-1]/(4.0/3.0*PI_greek),1.0/3.0);
+		printf("New crust generated globally = %g km\n", zNewcrust/1000.0);
 
-		// 2d. Determine amount of crust generated. Assume all melt generated reaches the surface and all ascending mantle parcels reach pressures < Psolidus
-		// Convert to melt fraction vs. depth.
+		// TODO use of dtime makes this time scale-dependent. Need instead to get melt rates either from vigor of convection (material advected) or (as a backup) from Earth scaling.
+		FCoutgas = meltmass*0.005/0.044*vConv/(r[ilith]-r[icmb]); // mol C s-1. 0.5% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
 
+		// Alternative: Kite et al. (2009). They didn't scale with mass: [sum melt fraction (depth)] * [mass (depth)] / [total mass between surf and Psolidus]
+//		if (staglid) Rmelt = Asurf*vConv*rhoMagma; // *  (rhoCrust*gsurf*zCrust/(Psolidus-Psurf)); // kg s-1
+//		// Enhancement of rate of melting due to plate tectonics. Focuses solely on mid-ocean ridges (their Sec. 2.3). Also a function of age. See Sasaki & Tajika 1995.
+//		else Rmelt = vConv*MORlength*zCrust*rhoCrust; // TODO change MORlength over time? Sasaki & Tajika 1995
+//
+//		// Includes extrusive and intrusive melting because both degas (K09).
+//		FCoutgas = deltaCvolcEarth * Rmelt/(RmeltEarth*mEarth); // mol C s-1. Accurate for Earth magma C concentrations, but for other mantle concentrations, should be calculated explicitly (MELTS?)
 
-		// Scale with mass (which Kite et al. 2009 didn't do): [sum melt fraction (depth)] * [mass (depth)] / [total mass between surf and Psolidus]
-		// Multiply Rmelt below by the result.
-
-		for(i=0;i<imax-imin;i++) printf("%g \t %g \t %g \n", Meltfrac_geoth[i][0], Meltfrac_geoth[i][1], Meltfrac_geoth[i][2]);
-
+		printf("C and H2O outgassing rate: %g mol s-1\n", FCoutgas);
 		exit(0);
-
-		if (staglid) Rmelt = Asurf*vConv*rhoMagma; // *  (rhoCrust*gsurf*zCrust/(Psolidus-Psurf)); // kg s-1
-		// Enhancement of rate of melting due to plate tectonics. Focuses solely on mid-ocean ridges (their Sec. 2.3). Also a function of age. See Sasaki & Tajika 1995.
-		else Rmelt = vConv*MORlength*zCrust*rhoCrust; // TODO change MORlength over time? Sasaki & Tajika 1995
-
-		// Includes extrusive and intrusive melting because both degas (K09).
-		FCoutgas = deltaCvolcEarth * Rmelt/(RmeltEarth*mEarth); // mol C s-1. Accurate for Earth magma C concentrations, but for other mantle concentrations, should be calculated explicitly (MELTS?)
 
 		// ------------------------------------
 		// 3. Mantle thermal evolution
@@ -977,7 +1013,7 @@ int main(int argc, char *argv[]) {
 		  +   0.22e-9 * 56.9e-5 * exp(log(0.5)/( 0.704*Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 235-U
 		  +  30.8e-9  * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * (realtime - 4.5*Gyr2sec)); // 238-U
 		// Effective thermal conductivity scaled with Nu
-		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/pow(r[NR]-r[cmbindex],2));
+		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/pow(r[NR]-r[icmb],2));
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from continental weathering
@@ -1123,6 +1159,7 @@ int main(int argc, char *argv[]) {
 	free (r);
 	free (rho);
 	free (P);
+	free (g);
 
 	Rf_endEmbeddedR(0);                                     // Close R and CHNOSZ
 
