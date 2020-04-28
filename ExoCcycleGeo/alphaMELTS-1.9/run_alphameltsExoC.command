@@ -7,7 +7,7 @@ my (@argv2, $in_file, $melts_file, $out_file, $log_file, $batch_file, $column_fi
 my ($path, $run_path, $batch, $subsol, %com, $oxide_list, @phases, @used_oxides, %all_oxides, @all_pt, @all_masses);
 my ($windows, $program, $rs, $run, $delim, $line, @lines, @oldlines, $title);
 
-$in_file = '/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/Geotherm_env.txt';
+$in_file = '/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/Lith_bndry_env.txt';
 
 @argv2 = ();
 until (@argv2) {
@@ -61,7 +61,8 @@ until (@argv2) {
 
     $path = $batch = '';
     $run_path = $0; # $0 is the name (and path) of the run_alphamelts script
-    $run_path =~ s/run_alphamelts.command//;
+#    $run_path =~ s/run_alphamelts.command//;
+    $run_path =~ s/run_alphameltsExoC.command//;
     $run = (-f "$run_path/with-readline") ? 'with-readline ' : '';
     $program = 'alphamelts';
     
@@ -424,12 +425,12 @@ until (@argv2) {
 	}
 
 	# $program does not have spaces etc. but $run_path might
-	((-f "$run_path$program") && !(system "$run\"$run_path$program\" < $batch_file")) || 
-	    (!(-f "$run_path$program") && !(system "$run$program < $batch_file")) ||
-	    warn "RUN_ALPHAMELTS.COMMAND WARNING: alphamelts may have crashed!\n";
+	#((-f "$run_path$program") && !(system "$run\"$run_path$program\" < $batch_file")) || 
+	#    (!(-f "$run_path$program") && !(system "$run$program < $batch_file")) ||
+	#    warn "RUN_ALPHAMELTS.COMMAND WARNING: alphamelts may have crashed!\n";
 
 	# $program does not have spaces etc. but $run_path might
-	((-f "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macosx64") && !(system "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macosx64 < /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCbatch.txt")) || 
+	((-f "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macosx64") && !(system "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macosx64 < /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCbatchLith.txt")) || 
 	    (!(-f "$run_path$program") && !(system "$run$program < $batch_file")) ||
 	    warn "RUN_ALPHAMELTS.COMMAND WARNING: alphamelts may have crashed!\n";
 

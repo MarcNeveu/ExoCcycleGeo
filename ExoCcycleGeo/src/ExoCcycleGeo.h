@@ -49,7 +49,7 @@
 #define Cp 1295.0                       // Mantle specific heat capacity (J kg-1 K-1) (Akaogi & Ito 1993)
 
 // Thermal model parameters
-#define beta 0.3                        // Exponent for scaling Nusselt number to Rayleigh number, 1/4 to 1/3 (Schubert et al. 2001)
+#define beta 1.0/3.0                    // Exponent for scaling Nusselt number to Rayleigh number, 1/4 to 1/3 (Schubert et al. 2001)
 #define Ra_c 1707.762                   // Critical Rayleigh number for convection, http://home.iitk.ac.in/~sghorai/NOTES/benard/node15.html, see also Koschmieder EL (1993) Benard cells and Taylor vortices, Cambridge U Press, p. 20.
 #define A0 70000.0                      // Activation temperature for thermal model (K)
 
