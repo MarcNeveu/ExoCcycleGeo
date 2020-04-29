@@ -516,8 +516,7 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
 	aMELTStmp[0] = '\0';
 	if (cmdline == 1) strncat(aMELTStmp,path,strlen(path)-20);
 	else strncat(aMELTStmp,path,strlen(path)-18);
-	if (nPTstart == 0) strcat(aMELTStmp,"alphaMELTS-1.9/ExoC/ExoCbatchLith.txt -p ");
-	else strcat(aMELTStmp,"alphaMELTS-1.9/ExoC/ExoCbatch.txt -p "); // Uses ExoCcycleGeo.melts
+	strcat(aMELTStmp,"alphaMELTS-1.9/ExoC/ExoCbatch.txt -p "); // Uses ExoCcycleGeo.melts
 	strcat(aMELTSsys, aMELTStmp);
 
 	// Output path
@@ -527,27 +526,14 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
 	strcat(aMELTStmp,"alphaMELTS-1.9/");
 	strcat(aMELTSsys, aMELTStmp);
 
-	// Remove sys_tbl.txt output by alphaMELTS to make sure that if alphaMELTS deosn't overwrite it (e.g. because of a crash) a previous version doesn't get mistakenly read later
-	char *f_sys_tbl = (char*)malloc(1024);
-	f_sys_tbl[0] = '\0';
-	strcat(f_sys_tbl,"rm ");
-
-	if (cmdline == 1) strncat(f_sys_tbl,path,strlen(path)-20);
-	else strncat(f_sys_tbl,path,strlen(path)-18);
-	strcat(f_sys_tbl,"alphaMELTS-1.9/System_main_tbl.txt");
-
-//	f = fopen (f_sys_tbl,"w");
-//	fclose (f);
-
 	// --- Run alphaMELTS ---
-	system(f_sys_tbl);
-	printf("%s\n", aMELTSsys);
-//	exit(0);
 	system(aMELTSsys);
 	// Alternative if ever needed: echo [interactive inputs] |.
-//	system("echo \"1 /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCcycleGeoLith.melts 4 1 0\" | /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/run_alphameltsExoC.command -f /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/Lith_bndry_env.txt");
+	// system("echo \"1 /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCcycleGeo.melts 4 1 0\" | /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/run_alphameltsExoC.command -f /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/Mantle_env.txt");
 
 	// --- Extract melt fraction vs. P from System_main_tbl_geotherm.txt ---
+
+	char *f_sys_tbl = (char*)malloc(1024); // Path to PT file input into alphaMELTS
 	f_sys_tbl[0] = '\0';
 
 	if (cmdline == 1) strncat(f_sys_tbl,path,strlen(path)-20);

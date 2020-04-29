@@ -61,8 +61,7 @@ until (@argv2) {
 
     $path = $batch = '';
     $run_path = $0; # $0 is the name (and path) of the run_alphamelts script
-#    $run_path =~ s/run_alphamelts.command//;
-    $run_path =~ s/run_alphameltsExoC.command//;
+    $run_path =~ s/run_alphamelts.command//;
     $run = (-f "$run_path/with-readline") ? 'with-readline ' : '';
     $program = 'alphamelts';
     
@@ -425,12 +424,12 @@ until (@argv2) {
 	}
 
 	# $program does not have spaces etc. but $run_path might
-	#((-f "$run_path$program") && !(system "$run\"$run_path$program\" < $batch_file")) || 
-	#    (!(-f "$run_path$program") && !(system "$run$program < $batch_file")) ||
-	#    warn "RUN_ALPHAMELTS.COMMAND WARNING: alphamelts may have crashed!\n";
+	((-f "$run_path$program") && !(system "$run\"$run_path$program\" < $batch_file")) || 
+	    (!(-f "$run_path$program") && !(system "$run$program < $batch_file")) ||
+	    warn "RUN_ALPHAMELTS.COMMAND WARNING: alphamelts may have crashed!\n";
 
 	# $program does not have spaces etc. but $run_path might
-	((-f "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macosx64") && !(system "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macosx64 < /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCbatchLith.txt")) || 
+	((-f "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macosx64") && !(system "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macosx64 < /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCbatch.txt")) || 
 	    (!(-f "$run_path$program") && !(system "$run$program < $batch_file")) ||
 	    warn "RUN_ALPHAMELTS.COMMAND WARNING: alphamelts may have crashed!\n";
 

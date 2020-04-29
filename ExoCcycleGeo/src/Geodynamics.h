@@ -74,13 +74,7 @@ double brittleDuctile_prime (double T, double P, double Tsurf, double Psurf, dou
 
 	double f_prime = 0.0;
 
-	double dPdT = (P-Psurf)/(T-Tsurf);   // Geotherm (Pa K-1)
-
-	// dPdT is discontinuous at BDT. Considered mantle adiabat rather than lithosphere geotherm for ductile strength,
-	// yielded the same result. But this may not always be the case.
-	// dPdT = 1/dTdz dPdz = 1/(alpha*gsurf*Tmantle/Cp) rho gsurf
-//	double rhoMantle = 5000.0; double Tmantle = 2500.0;
-//	dPdT = Cp/(alpha*Tmantle) * rhoMantle;
+	double dPdT = (P-Psurf)/(T-Tsurf);   // Geotherm (Pa K-1), essentially linear through BDT
 
 	double brittle_prime = 0.0;          // Brittle strength (Pa)
 	double ductile_prime = 0.0;          // Ductile strength (Pa)
