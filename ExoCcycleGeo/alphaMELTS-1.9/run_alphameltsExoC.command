@@ -424,9 +424,9 @@ until (@argv2) {
 	}
 
 	# $program does not have spaces etc. but $run_path might
-	((-f "$run_path$program") && !(system "$run\"$run_path$program\" < $batch_file")) || 
-	    (!(-f "$run_path$program") && !(system "$run$program < $batch_file")) ||
-	    warn "RUN_ALPHAMELTS.COMMAND WARNING: alphamelts may have crashed!\n";
+	#((-f "$run_path$program") && !(system "$run\"$run_path$program\" < $batch_file")) || 
+	#    (!(-f "$run_path$program") && !(system "$run$program < $batch_file")) ||
+	#    warn "RUN_ALPHAMELTS.COMMAND WARNING: alphamelts may have crashed!\n";
 
 	# $program does not have spaces etc. but $run_path might
 	((-f "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macosx64") && !(system "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macosx64 < /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCbatch.txt")) || 

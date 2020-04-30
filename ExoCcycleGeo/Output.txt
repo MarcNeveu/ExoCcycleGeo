@@ -1,3 +1,3 @@
 'Reservoirs in mol, fluxes in mol s-1'
 'Time (Myr)' 	 'Tmantle (K)' 	 RCmantle 	 RCatmoc 	 RCocean 	 FCoutgas 	 FCcontw 	 FCseafsubd 	 'Net C flux'
-Init 	 2650 	 8.15517e+21 	 8.15517e+20 	 7.39643e+20 	 0 	 0 	 0 	 0 
+Init 	 2625 	 8.15517e+21 	 8.15517e+20 	 7.39643e+20 	 0 	 0 	 0 	 0 
