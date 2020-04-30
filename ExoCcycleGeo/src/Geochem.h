@@ -491,7 +491,7 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
 	FILE *f;
 
 	// --- Build system command ---
-	// /.../ExoCcycleGeo/alphaMELTS-1.9/run_alphameltsExoC.command -f /.../ExoCcycleGeo/alphaMELTS-1.9/ExoC/Geotherm_env.txt -b /.../ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCbatch.txt -p /.../ExoCcycleGeo/alphaMELTS-1.9/
+	// /.../ExoCcycleGeo/alphaMELTS-1.9/run_alphameltsExoC.command -f /.../ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoC_env.txt -b /.../ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCbatch.txt -p /.../ExoCcycleGeo/alphaMELTS-1.9/
 	char *aMELTSsys = (char*)malloc(65536); // System command
 	aMELTSsys[0] = '\0';
 	char *aMELTStmp = (char*)malloc(1024);  // Temporary path
@@ -552,8 +552,7 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
 	// Store the rest, won't fill full table if alphaMELTS run crashed but that's OK
 	for(i=nPTstart;i<nPTend;i++) {
 		for(j=0;j<18;j++) {
-			if (nPTstart == 0) scan = fscanf(f, "%lg", &(*sys_tbl)[nPTend-i-1][j]); // Lithosphere: fill from bottom to top to order by increasing T,P
-			else scan = fscanf(f, "%lg", &(*sys_tbl)[i][j]); // Mantle: fill normally
+			scan = fscanf(f, "%lg", &(*sys_tbl)[i][j]);
 			if (!scan) printf("Error scanning alphaMELTS System_main_tbl.txt at line number %d, column number %d\n", lineno+i+1,j+1);
 		}
 	}
