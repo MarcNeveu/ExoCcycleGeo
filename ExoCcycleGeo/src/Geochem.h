@@ -102,7 +102,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 		(*xaq)[0] = simdata[45][0];             // C(4), i.e. dissolved CO2 and carbonate
 		(*xaq)[1] = simdata[43][0];             // C(-4), i.e. dissolved methane
-		(*xaq)[2] = simdata[72][0];             // O(0), i.e. dissolved O2
+//		(*xaq)[2] = simdata[72][0];             // O(0), i.e. dissolved O2
 		(*xaq)[3] = simdata[28][0];             // Total dissolved N
 		(*xaq)[4] = simdata[69][0];             // N(0), i.e. dissolved N2
 		(*xaq)[5] = simdata[68][0];             // N(-3), i.e. dissolved NH3 and NH4+
@@ -119,7 +119,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 		(*xaq)[0] = simdata[45][0];             // C(4), i.e. dissolved CO2 and carbonate
 		(*xaq)[1] = simdata[43][0];             // C(-4), i.e. dissolved methane
-		(*xaq)[2] = simdata[72][0];             // O(0), i.e. dissolved O2
+//		(*xaq)[2] = simdata[72][0];             // O(0), i.e. dissolved O2
 		(*xaq)[3] = simdata[28][0];             // Total dissolved N
 		(*xaq)[4] = simdata[69][0];             // N(0), i.e. dissolved N2
 		(*xaq)[5] = simdata[68][0];             // N(-3), i.e. dissolved NH3 and NH4+

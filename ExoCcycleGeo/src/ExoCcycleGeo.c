@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 	int iLith = 0;                     // Index of grid zone that corresponds to base of lithosphere (geotherm inflexion to mantle adiabat)
 	int imin = 0;                      // Index of innermost grid zone of melting in MELTS output
 	int imax = 0;                      // Index of outermost grid zone of melting in MELTS output
-	int iCMB = 0;    				   // Index of grid zone that corresponds to core-mantle boundary
+	int iCMB = 0;                      // Index of grid zone that corresponds to core-mantle boundary
 	int iBDT = 0;                      // Index of grid zone of the brittleo-ductile transition
 	int itime = 0;                     // Time step counter
 	int ntime = 0;                     // Total number of steps
@@ -148,33 +148,39 @@ int main(int argc, char *argv[]) {
 	double bndcoef = 0.0;              // Coefficient linking boundary layer thickness and (height of convection cell / Nusselt number)
 
 	// Viscosity law constants (can't be #define'd because they are used as exponents)
-	double flowLawDryDiff[5];          // Dry diffusion creep flow law (Korenaga & Karato 2008)
-	flowLawDryDiff[0] = 261.0e3;       // Activation energy (J mol-1), default 261.0±28e3
-	flowLawDryDiff[1] = 6.0e-6;        // Activation volume (m3 mol-1), default 6±5e-6
-	flowLawDryDiff[2] = 5.25;          // Exponent of pre-exponential factor, default 5.25±0.03
-	flowLawDryDiff[3] = 1.0;           // Stress exponent
-	flowLawDryDiff[4] = 2.98;          // Grain size exponent, default 2.98±0.02
+	double KK08DryOlDiff[5];          // Dry diffusion creep flow law (Korenaga & Karato 2008)
+	KK08DryOlDiff[0] = 261.0e3;       // Activation energy (J mol-1), default 261.0±28e3
+	KK08DryOlDiff[1] = 6.0e-6;        // Activation volume (m3 mol-1), default 6±5e-6
+	KK08DryOlDiff[2] = 5.25;          // Exponent of pre-exponential factor, default 5.25±0.03
+	KK08DryOlDiff[3] = 1.0;           // Stress exponent
+	KK08DryOlDiff[4] = 2.98;          // Grain size exponent, default 2.98±0.02
 
-									   // Wet diffusion creep flow law
-//	flowLawDryDiff[0] = 387.0e3;       // Activation energy (J mol-1), default 387±53e3
-//	flowLawDryDiff[1] = 25.0e-6;       // Activation volume (m3 mol-1), default 25±4e-6
-//	flowLawDryDiff[2] = 4.32;          // Exponent of pre-exponential factor, default 4.32±0.38
-//	flowLawDryDiff[3] = 1.0;           // Stress exponent
-//	flowLawDryDiff[4] = 2.56;          // Grain size exponent, default 2.56±0.24
+	double KK08WetOlDiff[5];		   // Wet diffusion creep flow law
+	KK08WetOlDiff[0] = 387.0e3;       // Activation energy (J mol-1), default 387±53e3
+	KK08WetOlDiff[1] = 25.0e-6;       // Activation volume (m3 mol-1), default 25±4e-6
+	KK08WetOlDiff[2] = 4.32;          // Exponent of pre-exponential factor, default 4.32±0.38
+	KK08WetOlDiff[3] = 1.0;           // Stress exponent
+	KK08WetOlDiff[4] = 2.56;          // Grain size exponent, default 2.56±0.24
 
-	double flowLawDryDisl[5];          // Dry dislocation creep flow law (Korenaga & Karato 2008)
-	flowLawDryDisl[0] = 610.0e3;       // Activation energy (J mol-1), default 610±30e3
-	flowLawDryDisl[1] = 13.0e-6;       // Activation volume (m3 mol-1), default 13±8e-6
-	flowLawDryDisl[2] = 6.09;          // Exponent of pre-exponential factor, default 6.09±0.11
-	flowLawDryDisl[3] = 4.94;          // Stress exponent, default 4.94±0.05
-	flowLawDryDisl[4] = 0.0;           // Grain size exponent
+	double KK08DryOlDisl[5];          // Dry dislocation creep flow law (Korenaga & Karato 2008)
+	KK08DryOlDisl[0] = 610.0e3;       // Activation energy (J mol-1), default 610±30e3
+	KK08DryOlDisl[1] = 13.0e-6;       // Activation volume (m3 mol-1), default 13±8e-6
+	KK08DryOlDisl[2] = 6.09;          // Exponent of pre-exponential factor, default 6.09±0.11
+	KK08DryOlDisl[3] = 4.94;          // Stress exponent, default 4.94±0.05
+	KK08DryOlDisl[4] = 0.0;           // Grain size exponent
 
-	                                   // Wet dislocation creep flow law
-//	flowLawDryDisl[0] = 523.0e3;       // Activation energy (J mol-1), default 523±100e3
-//	flowLawDryDisl[1] = 4.0e-6;        // Activation volume (m3 mol-1), default 4±3e-6
-//	flowLawDryDisl[2] = 0.6;           // Exponent of pre-exponential factor, default 0.6±0.5
-//	flowLawDryDisl[3] = 3.60;          // Stress exponent, default 3.60±0.24
-//	flowLawDryDisl[4] = 0.0;           // Grain size exponent
+	double KK08WetOlDisl[5];          // Wet dislocation creep flow law
+	KK08WetOlDisl[0] = 523.0e3;       // Activation energy (J mol-1), default 523±100e3
+	KK08WetOlDisl[1] = 4.0e-6;        // Activation volume (m3 mol-1), default 4±3e-6
+	KK08WetOlDisl[2] = 0.6;           // Exponent of pre-exponential factor, default 0.6±0.5
+	KK08WetOlDisl[3] = 3.60;          // Stress exponent, default 3.60±0.24
+	KK08WetOlDisl[4] = 0.0;           // Grain size exponent
+
+	double flowLawDiff[5];
+	for (i=0;i<5;i++) flowLawDiff[i] = 0.0;
+
+	double flowLawDisl[5];
+	for (i=0;i<5;i++) flowLawDisl[i] = 0.0;
 
 	const double grainSize = 1.0e3;	   // Grain size for computation of viscosity and creep laws (µm)
 
@@ -212,20 +218,21 @@ int main(int argc, char *argv[]) {
 	// Inputs
 	//-------------------------------------------------------------------
 
-	double dtime = 1.0e-3*Myr2sec;     // Time step (s)
+	double dtime = 100.0*Myr2sec;     // Time step (s)
 
 	ntime = (int) (5000.0*Myr2sec/dtime); // Number of time steps of simulation
 
 	// Planet parameters
-	double m_p = 1.0*mEarth;           // Planet mass (kg)
+	double m_p = 2.0*mEarth;           // Planet mass (kg)
 	double m_c = 0.325*m_p;            // Core mass (kg), default ≈0.3*m_p for Earth, Kite et al. (2009) use 0.325*m_p
 	double L = 0.29;                   // Fraction of planet surface covered by land
 	double Mocean = 1.4e21;            // Mass of ocean (kg, default: Earth=1.4e21)
     int redox = 2;                     // 1: current Earth surface, 2: hematite-magnetite, 3: fayalite-magnetite-quartz, 4: iron-wustite, code won't run with other values.
-    double Tmantle = 2500.0;           // Temperature at mid-mantle depth (K)
-    double magmaCmassfrac = 0.003;    // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; HArtley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
-	double zLith = 120.0*km2m;         // Depth of lithosphere (both thermal: geotherm inflexion to adiabat and mechanical: brittle-ductile transition) (m)
-	double tConv = 710.0*Myr2sec;      // Convection timescale (s), default 200 Myr for deep Earth mantle today
+    double Tmantle = 2000.0;           // Temperature at mid-mantle depth (K)
+    double magmaCmassfrac = 0.002;     // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; HArtley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
+	double zLith = 30.0*km2m;          // Depth of lithosphere (both thermal: geotherm inflexion to adiabat and mechanical: brittle-ductile transition) (m)
+	double tConv = 7600.0*Myr2sec;       // Convection timescale (s), default 200 Myr for deep Earth mantle today
+	int rheology = 0;                  // 0 = dry olivine (KK08), 1 = wet olivine (KK08)
 
 	// Atmospheric inputs
 	double Tsurf0 = 288.0;             // Initial surface temperature (K)
@@ -299,6 +306,25 @@ int main(int argc, char *argv[]) {
 	// Initial guess: BDT = base of upper boundary layer
 	T_BDT = T[iLith];
 	P_BDT = P[iLith];
+
+	// Rheology
+	switch (rheology) {
+	case 0: // Dry olivine rheology of Korenaga & Karato (2008)
+		for (i=0;i<5;i++) {
+			flowLawDiff[i] = KK08DryOlDiff[i];
+			flowLawDisl[i] = KK08DryOlDisl[i];
+		}
+		break;
+	case 1: // Wet olivine rheology of Korenaga & Karato (2008)
+		for (i=0;i<5;i++) {
+			flowLawDiff[i] = KK08WetOlDiff[i];
+			flowLawDisl[i] = KK08WetOlDisl[i];
+		}
+		break;
+	default:
+		printf("ExoCcycleGeo: Choice of rheology is not recognized. Exiting.\n");
+		exit(0);
+	}
 
 	printf("\n");
 	printf("-------------------------------------------------------------------\n");
@@ -428,8 +454,8 @@ int main(int argc, char *argv[]) {
 	printf("Starting time loop...\n");
 	for (itime = 0;itime<ntime;itime++) {
 
-//		realtime = (double)itime*dtime;                // Start at birth of planetary system
-		realtime = (double)itime*dtime + 4.55*Gyr2sec; // Start at present day
+		realtime = (double)itime*dtime;                // Start at birth of planetary system
+//		realtime = (double)itime*dtime + 4.55*Gyr2sec; // Start at present day
 
 //		netFC = 0.0; // !! Debug
 
@@ -530,8 +556,8 @@ int main(int argc, char *argv[]) {
 		T_SUP = Tmantle;
 
 		// Ensure that f(T_INF)<0 and f(T_SUP)>0
-		f_inf = brittleDuctile(T_INF, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, tConv);
-		f_sup = brittleDuctile(T_SUP, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, tConv);
+		f_inf = brittleDuctile(T_INF, P_BDT, flowLawDiff, flowLawDisl, grainSize, tConv);
+		f_sup = brittleDuctile(T_SUP, P_BDT, flowLawDiff, flowLawDisl, grainSize, tConv);
 
 		if (f_inf*f_sup > 0.0) {
 			if (f_sup < 0.0) printf("ExoCcycleGeo: Brittle strength < ductile strength, i.e. brittle regime even at Tmantle=%g K.\n"
@@ -548,8 +574,8 @@ int main(int argc, char *argv[]) {
 			dTold = fabs(T_INF-T_SUP); // Initialize the "stepsize before last"
 			dT = dTold;                // Initialize the last stepsize
 
-			f_x = brittleDuctile(T_BDT, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, tConv);
-			f_prime_x = brittleDuctile_prime(T_BDT, P_BDT, Tsurf, Psurf*bar2Pa, flowLawDryDiff, flowLawDryDisl, grainSize, tConv);
+			f_x = brittleDuctile(T_BDT, P_BDT, flowLawDiff, flowLawDisl, grainSize, tConv);
+			f_prime_x = brittleDuctile_prime(T_BDT, P_BDT, Tsurf, Psurf*bar2Pa, flowLawDiff, flowLawDisl, grainSize, tConv);
 
 			// Loop over allowed iterations to find T_BDT that is a root of f
 			n_iter = 0;
@@ -567,8 +593,8 @@ int main(int argc, char *argv[]) {
 					T_BDT = T_BDT - dT;
 				}
 				// Calculate updated f and f'
-				f_x = brittleDuctile(T_BDT, P_BDT, flowLawDryDiff, flowLawDryDisl, grainSize, tConv);
-				f_prime_x = brittleDuctile_prime(T_BDT, P_BDT, Tsurf, Psurf*bar2Pa, flowLawDryDiff, flowLawDryDisl, grainSize, tConv);
+				f_x = brittleDuctile(T_BDT, P_BDT, flowLawDiff, flowLawDisl, grainSize, tConv);
+				f_prime_x = brittleDuctile_prime(T_BDT, P_BDT, Tsurf, Psurf*bar2Pa, flowLawDiff, flowLawDisl, grainSize, tConv);
 
 				if (f_x < 0.0) T_INF = T_BDT; // Maintain the bracket on the root
 				else T_SUP = T_BDT;
@@ -598,10 +624,10 @@ int main(int argc, char *argv[]) {
 		// So δ^0.5 = 2.32*(kappa/vConv)^0.5 and δ ≈ 5.38*kappa/vConv
 
 		// Upper mantle:
-		nu = combVisc(Tmantle, P[(int)((iBDT+iCMB)/2)], flowLawDryDiff, flowLawDryDisl, grainSize, tConv)/rho[(int)((iBDT+iCMB)/2)];
+		nu = combVisc(Tmantle, P[(int)((iBDT+iCMB)/2.0)], flowLawDiff, flowLawDisl, grainSize, tConv)/rho[(int)((iBDT+iCMB)/2)];
 		printf("nu KK08 = %g\n", nu);
 		// Lower mantle:
-//		nu = 1.0e16*exp((2.0e5 + P[(int)((iBDT+iCMB)/2)]*1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
+//		nu = 1.0e16*exp((2.0e5 + P[(int)((iBDT+iCMB)/2.0)]*1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
 //		printf("nu C12 = %g\n", nu);
 
 		// Compute effective thermal conductivity, assuming whole-mantle convection (Kite et al. 2009)
@@ -680,7 +706,7 @@ int main(int argc, char *argv[]) {
 		for (i=iCMB+1;i<NR;i++) {
 			Meltfrac[i] = 0.0;
 			if (P[i] < 1.0e10) { // 10 GPa is above MELTS upper limit.
-				if (sys_tbl[j][4] > 0.0 && sys_tbl[j][13] < 1.5*sys_tbl[j][14]) { // Don't store if volume melt fraction negative or if density of melt > n*density of solid
+				if (sys_tbl[j][4] > 0.0 && (sys_tbl[j][13] < 1.5*sys_tbl[j][14] || sys_tbl[j][4] == 1.0)) { // Don't store if volume melt fraction negative or if density of melt > n*density of solid
 					if (T[i]-Kelvin > 750.0) {
 						if (fabs(1.0-P[i]/(sys_tbl[j][0]*bar2Pa)) > 1.0e-3) printf("ExoCcycleGeo: pressures from grid (%g bar) and MELTS (%g bar) misaligned at grid index %d\n", P[i]/bar2Pa, sys_tbl[j][0], i);
 						if (fabs(1.0-T[i]/ sys_tbl[j][1]        ) > 1.0e-3) printf("ExoCcycleGeo: temperatures from grid (%g K) and MELTS (%g K) misaligned at grid index %d\n", T[i], sys_tbl[j][1], i);
@@ -904,7 +930,7 @@ int main(int argc, char *argv[]) {
 		else zNewcrust = 0.0;
 		zCrust = zCrust + zNewcrust*dtime;
 
-		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iBDT]-r[iCMB]); // mol C s-1 TODO Does uConv = vConv? Check TS02.
+		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iBDT]-r[iCMB]); // mol C s-1
 
 //      // Alternative: Kite et al. (2009) eq. 25 They didn't scale with mass: [sum melt fraction (depth)] * [mass (depth)] / [total mass between surf and Psolidus]. Also their typo: P0>Pf=P_BDT.
 //		double Rmelt = 0.0;             // Rate of melt generation (m-2 s-1)
@@ -916,25 +942,27 @@ int main(int argc, char *argv[]) {
 //		FCoutgas = deltaCvolcEarth * Rmelt/(RmeltEarth*mEarth); // mol C s-1. Accurate for Earth magma C concentrations, but for other mantle concentrations, should be calculated explicitly (MELTS?)
 
 		printf("\n");
+		printf("Time: %g Gyr\n", realtime/Gyr2sec);
+		printf("-------------------------------------------------------------------------\n");
 		printf("Quantity                                | Earth benchmark | Model result \n");
 		printf("-------------------------------------------------------------------------\n");
 		printf("New crust generation rate (m Myr-1)     | 40              | %.3g \n", zNewcrust*Myr2sec);
-		printf("New crust density (kg m-3)              | 2800            | %.3g \n", rhomelt);
+		printf("New crust density (kg m-3)              | 2800            | %.4g \n", rhomelt);
 		printf("C and H2O outgassing rate (mol s-1)     | 80000           | %.5g \n", FCoutgas);
+		printf("Magma C mass fraction                   | 0.1-0.65%%       | %.3g%% \n", magmaCmassfrac*100.0);
 		printf("Convective boundary layer thickness coef| 0.15 to 0.5     | %.2g \n", bndcoef);
-		printf("Convective velocity (cm yr-1)           | ~1              | %.3g \n", vConv*100.0*1.0e-6*Myr2sec);
+		printf("Convective velocity (cm yr-1)           | ~1              | %.2g \n", vConv*100.0*1.0e-6*Myr2sec);
 		printf("Mantle convection timescale (Myr)       | ~50-200 Myr     | %.4g \n", tConv/Myr2sec);
 		printf("Rayleigh number                         | ~1e6-1e7        | %.2g \n", Ra);
 		printf("Mantle adiabatic gradient (K km-1)      | 0.5             | %.3g \n", alpha*g[(int)((iBDT+iCMB)/2)]*Tmantle/Cp * km2m);
-		printf("half-mantle depth (km)                  | 1450            | %.4g \n", (r_p-r_c-zLith)/2.0/km2m);
+		printf("Half-mantle depth (km)                  | 1450            | %.4g \n", (r_p-r_c-zLith)/2.0/km2m);
 		printf("-------------------------------------------------------------------------\n");
 		printf("Mid-mantle temperature: %g K \t Brittle-ductile transition temperature: %.3g K \t Temperature at base of lithosphere: %.4g K\n", Tmantle, T_BDT, T[iLith]);
-		printf("Depth of brittle-ductile transition: %.3g km \t Thickness of lithosphere: %.3g km \t Heat flux: %.2g mW m-2\n", (r_p-r[iBDT])/km2m, zLith/km2m, k*(Tmantle-T_BDT)/zLith*1000.0);
+		printf("Depth of brittle-ductile transition: %.3g km \t Thickness of lithosphere: %.3g km \t Heat flux: %.2g mW m-2\n", (r_p-r[iBDT])/km2m, zLith/km2m, k*(Tmantle-Tsurf)/zLith*1000.0);
 		printf("Convective driving stress: %.4g MPa \t Lithospheric yield stress: %.4g MPa \t", driveStress/MPa2Pa, yieldStress/MPa2Pa);
 		if (staglid) printf("Stagnant lid\n");
 		else printf ("Plate tectonics\n");
 		printf("\n");
-		exit(0);
 
 		// ------------------------------------
 		// 3. Mantle thermal evolution
@@ -944,7 +972,9 @@ int main(int argc, char *argv[]) {
 		  +   0.22e-9 * 56.9e-5 * exp(log(0.5)/( 0.704*Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 235-U
 		  +  30.8e-9  * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * (realtime - 4.5*Gyr2sec)); // 238-U
 		// Effective thermal conductivity scaled with Nu
-		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/pow(r[NR]-r[iCMB],2));
+		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/pow(r[iBDT]-r_c,2));
+
+		printf("Time: %g Gyr, mantle temperature: %g K\n", realtime/Gyr2sec, Tmantle);
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from continental weathering
@@ -1027,7 +1057,7 @@ int main(int argc, char *argv[]) {
 		// 1. Call PHREEQC to get deltaCreac, net mol C leached/precipitated per kg of rock
 		deltaCreac = 0.0;
 
-		AqueousChem(path, "io/OceanStart.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, NULL, 1, 0.0, 1, nvarEq);
+//		AqueousChem(path, "io/OceanStart.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, NULL, 1, 0.0, 1, nvarEq);
 
 		tcirc = 1.0;      // TODO compute tcirc based on Nu(Ra(basal heat flux))
 		FCseafsubd = -(1.0-L) * 4.0/3.0*PI_greek*(pow(r_p,3)-pow(r_p-zCrack,3))/tcirc*deltaCreac*rho[NR] / (4.0*PI_greek*r_p*r_p);
@@ -1056,8 +1086,33 @@ int main(int argc, char *argv[]) {
 		strcat(title,"Output.txt");
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-				(double)itime*dtime/Myr2sec, Tmantle, RCmantle, RCatmoc, RCocean, FCoutgas, FCcontW, FCseafsubd, netFC);
+		else {
+			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					(double)itime*dtime/Myr2sec, Tmantle, RCmantle, RCatmoc, RCocean, FCoutgas, FCcontW, FCseafsubd, netFC);
+
+			fprintf(fout, "\n");
+			fprintf(fout, "Time: %g Gyr\n", realtime/Gyr2sec);
+			fprintf(fout, "-------------------------------------------------------------------------\n");
+			fprintf(fout, "Quantity                                | Earth benchmark | Model result \n");
+			fprintf(fout, "-------------------------------------------------------------------------\n");
+			fprintf(fout, "New crust generation rate (m Myr-1)     | 40              | %.3g \n", zNewcrust*Myr2sec);
+			fprintf(fout, "New crust density (kg m-3)              | 2800            | %.4g \n", rhomelt);
+			fprintf(fout, "C and H2O outgassing rate (mol s-1)     | 80000           | %.5g \n", FCoutgas);
+			fprintf(fout, "Magma C mass fraction                   | 0.1-0.65%%       | %.3g%% \n", magmaCmassfrac*100.0);
+			fprintf(fout, "Convective boundary layer thickness coef| 0.15 to 0.5     | %.2g \n", bndcoef);
+			fprintf(fout, "Convective velocity (cm yr-1)           | ~1              | %.2g \n", vConv*100.0*1.0e-6*Myr2sec);
+			fprintf(fout, "Mantle convection timescale (Myr)       | ~50-200 Myr     | %.4g \n", tConv/Myr2sec);
+			fprintf(fout, "Rayleigh number                         | ~1e6-1e7        | %.2g \n", Ra);
+			fprintf(fout, "Mantle adiabatic gradient (K km-1)      | 0.5             | %.3g \n", alpha*g[(int)((iBDT+iCMB)/2)]*Tmantle/Cp * km2m);
+			fprintf(fout, "Half-mantle depth (km)                  | 1450            | %.4g \n", (r_p-r_c-zLith)/2.0/km2m);
+			fprintf(fout, "-------------------------------------------------------------------------\n");
+			fprintf(fout, "Mid-mantle temperature: %g K \t Brittle-ductile transition temperature: %.3g K \t Temperature at base of lithosphere: %.4g K\n", Tmantle, T_BDT, T[iLith]);
+			fprintf(fout, "Depth of brittle-ductile transition: %.3g km \t Thickness of lithosphere: %.3g km \t Heat flux: %.2g mW m-2\n", (r_p-r[iBDT])/km2m, zLith/km2m, k*(Tmantle-Tsurf)/zLith*1000.0);
+			fprintf(fout, "Convective driving stress: %.4g MPa \t Lithospheric yield stress: %.4g MPa \t", driveStress/MPa2Pa, yieldStress/MPa2Pa);
+			if (staglid) fprintf(fout, "Stagnant lid\n");
+			else fprintf (fout, "Plate tectonics\n");
+			printf("\n\n");
+		}
 		fclose (fout);
 
 		title[0] = '\0';
