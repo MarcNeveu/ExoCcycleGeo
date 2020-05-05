@@ -43,6 +43,10 @@
 #define deltaCcontwEarth 8.4543e-10     // Surface C flux from continental weathering on Earth (mol C m-2 s-1)
 #define MORlength 60000.0*km2m          // Length of mid-ocean ridges, unconstrained parameter, default 60000 km (Earth today), likely did not vary monotonically in the past
 
+// Accretion parameters
+#define chi 2.0                         // Ratio of planetesimal velocity to escape velocity
+#define h_frac 0.1                      // Fraction of impactor energy deposited at depth
+
 // Mantle parameters
 #define k 4.18                          // Mantle thermal conductivity (W m-1 K-1)
 #define alpha 3.0e-5                    // Mantle thermal expansivity (K-1)

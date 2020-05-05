@@ -54,6 +54,7 @@ int main(int argc, char *argv[]) {
 	// Planet parameters
 	double r_p = 0.0;                  // Planet radius (m)
 	double r_c = 0.0;				   // Planet core radius (m)
+	double rho_p = 0.0;                // Planet bulk density (kg m-3)
 	double Asurf = 0.0;                // Planet surface area (m2)
 	double Tsurf = 0.0;                // Surface temperature (K)
 
@@ -124,7 +125,12 @@ int main(int argc, char *argv[]) {
 	// Quantities to be computed by thermal/geodynamic model
 	int staglid = 1;                   // 1 if stagnant-lid, 0 if mobile-lid
 	int n_iter = 0, n_iter_max = 100;  // Iteration counter and max for the Bisection/Newton-Raphson loop to determine T_BDT
+    double Tmantle = 0.0;              // Temperature at mid-mantle depth (K), initially set by accretion
 	double H = 0.0;                    // Specific radiogenic heating rate (J s-1 kg-1)
+	double x40K = 0.0;                 // Abundance of the radionuclide 40 K by mass
+	double x232Th = 0.0;               // Abundance of the radionuclide 232 Th by mass
+	double x235U = 0.0;                // Abundance of the radionuclide 235 U by mass
+	double x238U = 0.0;                // Abundance of the radionuclide 238 U by mass
 	double kappa = 0.0;                // Mantle thermal diffusivity (m2 s-1)
 	double nu = 0.0;                   // Mantle kinematic viscosity (m2 s-1)
 	double zCrust = 0.0;               // Crustal thickness (m), i.e. depth of layer crystallized from a melt
@@ -155,7 +161,7 @@ int main(int argc, char *argv[]) {
 	KK08DryOlDiff[3] = 1.0;           // Stress exponent
 	KK08DryOlDiff[4] = 2.98;          // Grain size exponent, default 2.98±0.02
 
-	double KK08WetOlDiff[5];		   // Wet diffusion creep flow law
+	double KK08WetOlDiff[5];		  // Wet diffusion creep flow law
 	KK08WetOlDiff[0] = 387.0e3;       // Activation energy (J mol-1), default 387±53e3
 	KK08WetOlDiff[1] = 25.0e-6;       // Activation volume (m3 mol-1), default 25±4e-6
 	KK08WetOlDiff[2] = 4.32;          // Exponent of pre-exponential factor, default 4.32±0.38
@@ -212,27 +218,26 @@ int main(int argc, char *argv[]) {
 
 	FILE *fout;
 	char *title = (char*)malloc(1024*sizeof(char)); title[0] = '\0';
-	char *intitle = (char*)malloc(1024*sizeof(char)); intitle[0] = '\0';
 
 	//-------------------------------------------------------------------
 	// Inputs
 	//-------------------------------------------------------------------
 
-	double dtime = 100.0*Myr2sec;     // Time step (s)
+	double dtime = 10.0*Myr2sec;     // Time step (s)
 
 	ntime = (int) (5000.0*Myr2sec/dtime); // Number of time steps of simulation
 
 	// Planet parameters
-	double m_p = 2.0*mEarth;           // Planet mass (kg)
+	double m_p = 1.0*mEarth;           // Planet mass (kg)
 	double m_c = 0.325*m_p;            // Core mass (kg), default ≈0.3*m_p for Earth, Kite et al. (2009) use 0.325*m_p
 	double L = 0.29;                   // Fraction of planet surface covered by land
 	double Mocean = 1.4e21;            // Mass of ocean (kg, default: Earth=1.4e21)
     int redox = 2;                     // 1: current Earth surface, 2: hematite-magnetite, 3: fayalite-magnetite-quartz, 4: iron-wustite, code won't run with other values.
-    double Tmantle = 2000.0;           // Temperature at mid-mantle depth (K)
     double magmaCmassfrac = 0.002;     // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; HArtley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
-	double zLith = 30.0*km2m;          // Depth of lithosphere (both thermal: geotherm inflexion to adiabat and mechanical: brittle-ductile transition) (m)
-	double tConv = 7600.0*Myr2sec;       // Convection timescale (s), default 200 Myr for deep Earth mantle today
+	double zLith = 100.0*km2m;         // Depth of lithosphere (both thermal: geotherm inflexion to adiabat and mechanical: brittle-ductile transition) (m)
+	double tConv = 10.0*Myr2sec;       // Convection timescale (s), default 200 Myr for deep Earth mantle today
 	int rheology = 0;                  // 0 = dry olivine (KK08), 1 = wet olivine (KK08)
+	int radionuclides = 1;             // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
 
 	// Atmospheric inputs
 	double Tsurf0 = 288.0;             // Initial surface temperature (K)
@@ -283,6 +288,7 @@ int main(int argc, char *argv[]) {
 	r_p = r[NR];
 	r_c = r[iCMB];
 	kappa = k/(rho[(int)(NR+iCMB)/2]*Cp);
+	rho_p = m_p / (4.0/3.0*PI_greek*pow(r_p,3));
 
 	printf("\nPlanet radius = %g km, Core radius = %g km, Mid-mantle density = %g kg m-3, avg density = %g kg m-3\n", r_p/km2m, r_c/km2m, rho[(NR+iCMB)/2], m_p/(4.0/3.0*PI_greek*pow(r_p,3.0)));
 	Tsurf = Tsurf0;
@@ -290,6 +296,9 @@ int main(int argc, char *argv[]) {
 	nAir = Psurf*bar2Pa*Asurf/g[NR]/molmass_atm(xgas);
 
 	vConv = (r_p-zLith-r[iCMB])/tConv;
+
+	// Calculate Tmantle from accretion (Canup et al. 2020 Pluto chapter; volume averaging from leads to 3/5 term)
+	Tmantle = Tsurf0 + 0.6*4.0*h_frac*chi*G*PI_greek*rho_p*r_p*r_p/(3.0*Cp);
 
 	// Calculate temperatures (not computed in the core)
 	for (i=iCMB;i<NR;i++) {
@@ -326,9 +335,43 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 
+	// Radionuclides
+	switch (radionuclides) {
+	case 0: // Custom: LK07 (case 3), low endmember
+		x40K   =  18.0e-9;
+		x232Th =  51.9e-9;
+		x235U  =  0.10e-9;
+		x238U  =  14.2e-9;
+		break;
+	case 1: // Abundances from Turcotte & Schubert (2002) as reported in Table 1 of Kite et al. (2009). Highest heating.
+		x40K   =  36.9e-9;
+		x232Th = 124.0e-9;
+		x235U  =  0.22e-9;
+		x238U  =  30.8e-9;
+		break;
+	case 2: // Abundances derived from Ringwood (1991) as reported in Table 1 of Kite et al. (2009). Intermediate heating.
+		x40K   =  30.7e-9;
+		x232Th =  84.1e-9;
+		x235U  =  0.15e-9;
+		x238U  =  21.0e-9;
+		break;
+	case 3: // Abundances from Table 2 of Lyubetskaya & Korenaga 2007. Lowest heating.
+		x40K   =  22.8e-9; // = 0.012/100.0 (isotopic abundance) *190.0±40e3*1.0e-9
+		x232Th =  62.6e-9; // = 0.9998 (isotopic abundance) *62.6±10.7e-9
+		x235U  =  0.12e-9; // = 0.720/100.0 (isotopic abundance) *17.3±3.0e-9
+		x238U  =  17.2e-9; // = 0.99274 (isotopic abundance) *17.3±3.0*1.0e-9
+		break;
+	default: // Abundances of McDonough & Sun (1995) as reported in Table 2 of Lyubetskaya & Korenaga 2007. Intermediate heating similar to R91.
+		x40K   =  28.8e-9; // = 0.012/100.0 (isotopic abundance) *240.0±48e3*1.0e-9
+		x232Th =  79.5e-9; // = 0.9998 (isotopic abundance) *79.5±11.9e-9
+		x235U  =  0.15e-9; // = 0.720/100.0 (isotopic abundance) *20.3±4.1e-9
+		x238U  = 20.15e-9; // = 0.99274 (isotopic abundance) *20.3±4.1*1.0e-9
+		break;
+	}
+
 	printf("\n");
 	printf("-------------------------------------------------------------------\n");
-	printf("ExoCcycleGeo v20.4\n");
+	printf("ExoCcycleGeo v20.5\n");
 	printf("This code is in development and cannot be used for science yet.\n");
 	if (cmdline == 1) printf("Command line mode\n");
 	printf("-------------------------------------------------------------------\n");
@@ -460,9 +503,9 @@ int main(int argc, char *argv[]) {
 //		netFC = 0.0; // !! Debug
 
 		// Print relative change in Ntot to ensure N is conserved. Also print net C flux relative to outgassing flux; if small the C cycle should be balanced
-		printf("Iteration %d/%d, Time: %g Myr, Tsurf: %g K, pCO2: %g bar, Delta_Ntot/Ntot: %.2f pct, NetFC/outgas: %.2f pct\n",
-				 itime, ntime, (double)itime*dtime/Myr2sec, Tsurf, xgas[0]*Psurf,
-				 (1.0-(xgas[3]*2.0*nAir + xaq[3]*Mocean)/TotalN0)*100.0, netFC/FCoutgas*100.0);
+//		printf("Iteration %d/%d, Time: %g Myr, Tsurf: %g K, pCO2: %g bar, Delta_Ntot/Ntot: %.2f pct, NetFC/outgas: %.2f pct\n",
+//				 itime, ntime, (double)itime*dtime/Myr2sec, Tsurf, xgas[0]*Psurf,
+//				 (1.0-(xgas[3]*2.0*nAir + xaq[3]*Mocean)/TotalN0)*100.0, netFC/FCoutgas*100.0);
 
 		//-------------------------------------------------------------------
 		// Update surface temperature (unnecessary once coupled to Atmos)
@@ -487,9 +530,7 @@ int main(int argc, char *argv[]) {
 //		}
 //		else DeltaTghe = 0.0; // Pale orange dot, anti-GHE haze
 
-		Tsurf = Teff + DeltaTghe;
-//		Tsurf = Tsurf0;
-		T[NR] = Tsurf;
+//		Tsurf = Teff + DeltaTghe;
 
 		if (Tsurf < Tfreeze+0.01) printf("ExoCcycleGeo: Surface temperature = %g K < 0.01 C. DeltaTghe=%g K.\n", Tsurf, DeltaTghe);
 
@@ -623,14 +664,16 @@ int main(int argc, char *argv[]) {
 		// δ = thickness of thermal gradient = 2.32*(kappa*δ/vConv)^0.5 (Turcotte & Schubert 2002, eq. 6.327 with δ/vConv = conduction timescale)
 		// So δ^0.5 = 2.32*(kappa/vConv)^0.5 and δ ≈ 5.38*kappa/vConv
 
-		// Upper mantle:
+		// Mid-mantle:
 		nu = combVisc(Tmantle, P[(int)((iBDT+iCMB)/2.0)], flowLawDiff, flowLawDisl, grainSize, tConv)/rho[(int)((iBDT+iCMB)/2)];
-		printf("nu KK08 = %g\n", nu);
+		// BDT:
+//		nu = combVisc(Tmantle - alpha*g[iBDT]*Tmantle/Cp * (r[iBDT] - 0.5*(r_p+r_c)), P[iBDT], flowLawDiff, flowLawDisl, grainSize, tConv)/rho[iBDT];
 		// Lower mantle:
-//		nu = 1.0e16*exp((2.0e5 + P[(int)((iBDT+iCMB)/2.0)]*1.1e-6)/(R_G*Tmantle))/rhoMantle; // Cízková et al. (2012)
-//		printf("nu C12 = %g\n", nu);
+//		nu = 1.0e16*exp((2.0e5 + P[(int)((iBDT+iCMB)/2.0)]*1.1e-6)/(R_G*Tmantle))/rho[(int)((iBDT+iCMB)/2)]; // Cízková et al. (2012)
+		// CMB:
+//		nu = 1.0e16*exp((2.0e5 + P[iCMB]*1.1e-6)/(R_G*(Tmantle - alpha*g[iCMB]*Tmantle/Cp * (r[iCMB] - 0.5*(r_p+r_c)))))/rho[iCMB]; // Cízková et al. (2012)
 
-		// Compute effective thermal conductivity, assuming whole-mantle convection (Kite et al. 2009)
+		// Compute vigor of convection, assuming whole-mantle convection (Kite et al. 2009)
 		if (staglid) Tref = T_BDT; // Instead of scaling used by Kite et al. (2009, equation 8)
 		else Tref = Tsurf;
 
@@ -638,7 +681,7 @@ int main(int argc, char *argv[]) {
 		Nu = pow(Ra/Ra_c, beta);
 
 		// Convective velocity
-//		vConv = 2.0*(Nu-1.0) * k / (rho[(int)((ilith+icmb)/2)]*Cp*(r[ilith]-r_c)) * (Tmantle-Tsurf) / (Tmantle-Tref); // Kite et al. 2009 equation 24
+//		vConv = 2.0*(Nu-1.0) * k / (rho[(int)((iBDT+iCMB)/2)]*Cp*(r[iBDT]-r_c)) * (Tmantle-Tsurf) / (Tmantle-Tref); // Kite et al. 2009 equation 24
 		vConv = 0.354*kappa/(r[iBDT]-r[iCMB])*sqrt(Ra); // Eq. (6.379) of Turcotte & Schubert (2002), p. 514
 		driveStress = nu * rho[(int)((iBDT+iCMB)/2)] * vConv*vConv / (5.38*kappa);
 		tConv = (r[iBDT]-r[iCMB])/vConv; // Update convection timescale
@@ -665,7 +708,7 @@ int main(int argc, char *argv[]) {
 //		for (i=iBDT;i<NR;i++) T[i] = Tsurf + (T_BDT-Tsurf)*(P[i]-Psurf)/(P_BDT-Psurf); // Assumes linear relationship between P and T
 
 		bndcoef = (zLith-r[iBDT]) / (pow(Ra/Ra_c,-beta)*(r_p-r[iBDT]-r_c)); // Turcotte & Schubert 2002 eq. 6.387 and Fig. 6.39; Shi et al. (2012) eq. 1
-		if (bndcoef < 0.15 || bndcoef > 0.5) printf("ExoCcycleGeo: convective boundary layer thickness coefficient %g outside common thickness bounds 0.15 to 0.5\n", bndcoef);
+//		if (bndcoef < 0.15 || bndcoef > 0.5) printf("ExoCcycleGeo: convective boundary layer thickness coefficient %g outside common thickness bounds 0.15 to 0.5\n", bndcoef); TODO put back
 
 		// 2b. Update alphaMELTS input files
 		// Output P-T profile in lithosphere+boundary layer to be fed into alphaMELTS through PTexoC.txt
@@ -698,7 +741,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		// Call alphaMELTS
-		alphaMELTS(path, 0, ir, "ExoC/ExoC_env.txt", &sys_tbl);
+		if (realtime > 4.0*Gyr2sec && realtime <= 4.57*Gyr2sec) alphaMELTS(path, 0, ir, "ExoC/ExoC_env.txt", &sys_tbl);
 
 		imin = 0;
 		imax = 0;
@@ -941,40 +984,41 @@ int main(int argc, char *argv[]) {
 //		// Includes extrusive and intrusive melting because both degas (K09).
 //		FCoutgas = deltaCvolcEarth * Rmelt/(RmeltEarth*mEarth); // mol C s-1. Accurate for Earth magma C concentrations, but for other mantle concentrations, should be calculated explicitly (MELTS?)
 
-		printf("\n");
-		printf("Time: %g Gyr\n", realtime/Gyr2sec);
-		printf("-------------------------------------------------------------------------\n");
-		printf("Quantity                                | Earth benchmark | Model result \n");
-		printf("-------------------------------------------------------------------------\n");
-		printf("New crust generation rate (m Myr-1)     | 40              | %.3g \n", zNewcrust*Myr2sec);
-		printf("New crust density (kg m-3)              | 2800            | %.4g \n", rhomelt);
-		printf("C and H2O outgassing rate (mol s-1)     | 80000           | %.5g \n", FCoutgas);
-		printf("Magma C mass fraction                   | 0.1-0.65%%       | %.3g%% \n", magmaCmassfrac*100.0);
-		printf("Convective boundary layer thickness coef| 0.15 to 0.5     | %.2g \n", bndcoef);
-		printf("Convective velocity (cm yr-1)           | ~1              | %.2g \n", vConv*100.0*1.0e-6*Myr2sec);
-		printf("Mantle convection timescale (Myr)       | ~50-200 Myr     | %.4g \n", tConv/Myr2sec);
-		printf("Rayleigh number                         | ~1e6-1e7        | %.2g \n", Ra);
-		printf("Mantle adiabatic gradient (K km-1)      | 0.5             | %.3g \n", alpha*g[(int)((iBDT+iCMB)/2)]*Tmantle/Cp * km2m);
-		printf("Half-mantle depth (km)                  | 1450            | %.4g \n", (r_p-r_c-zLith)/2.0/km2m);
-		printf("-------------------------------------------------------------------------\n");
-		printf("Mid-mantle temperature: %g K \t Brittle-ductile transition temperature: %.3g K \t Temperature at base of lithosphere: %.4g K\n", Tmantle, T_BDT, T[iLith]);
-		printf("Depth of brittle-ductile transition: %.3g km \t Thickness of lithosphere: %.3g km \t Heat flux: %.2g mW m-2\n", (r_p-r[iBDT])/km2m, zLith/km2m, k*(Tmantle-Tsurf)/zLith*1000.0);
-		printf("Convective driving stress: %.4g MPa \t Lithospheric yield stress: %.4g MPa \t", driveStress/MPa2Pa, yieldStress/MPa2Pa);
-		if (staglid) printf("Stagnant lid\n");
-		else printf ("Plate tectonics\n");
-		printf("\n");
+//		printf("\n");
+//		printf("Time: %g Gyr\n", realtime/Gyr2sec);
+//		printf("---------------------------------------------------------------------------\n");
+//		printf("Quantity                                | Earth benchmark   | Model result \n");
+//		printf("---------------------------------------------------------------------------\n");
+//		printf("New crust generation rate (m Myr-1)     | 40                | %.3g \n", zNewcrust*Myr2sec);
+//		printf("New crust density (kg m-3)              | 2800              | %.4g \n", rhomelt);
+//		printf("C and H2O outgassing rate (mol s-1)     | 115000            | %.5g \n", FCoutgas);
+//		printf("Magma C mass fraction                   | 0.1-0.65%%         | %.3g%% \n", magmaCmassfrac*100.0);
+//		printf("Convective boundary layer thickness coef| 0.15 to 0.5       | %.2g \n", bndcoef);
+//		printf("Convective velocity (cm yr-1)           | ~1                | %.2g \n", vConv*100.0*1.0e-6*Myr2sec);
+//		printf("Mantle convection timescale (Myr)       | ~50-200           | %.4g \n", tConv/Myr2sec);
+//		printf("Rayleigh number                         | ~1e6-1e7          | %.2g \n", Ra);
+//		printf("Mantle adiabatic gradient (K km-1)      | 0.5               | %.3g \n", alpha*g[(int)((iBDT+iCMB)/2)]*Tmantle/Cp * km2m);
+//		printf("Half-mantle depth (km)                  | 1450              | %.4g \n", (r_p-r_c-zLith)/2.0/km2m);
+//		printf("Heat flux (mW m-2)                      | 86 (radiodecay 40)| %.2g \n", k*(Tmantle-Tsurf)/zLith*1000.0);
+//		printf("---------------------------------------------------------------------------\n");
+//		printf("Mid-mantle temperature: %g K \t Brittle-ductile transition temperature: %.3g K \t Temperature at base of lithosphere: %.4g K\n", Tmantle, T_BDT, T[iLith]);
+//		printf("Depth of brittle-ductile transition: %.3g km \t Thickness of lithosphere: %.3g km \n", (r_p-r[iBDT])/km2m, zLith/km2m);
+//		printf("Convective driving stress: %.4g MPa \t Lithospheric yield stress: %.4g MPa \t", driveStress/MPa2Pa, yieldStress/MPa2Pa);
+//		if (staglid) printf("Stagnant lid\n");
+//		else printf ("Plate tectonics\n");
+//		printf("\n");
 
 		// ------------------------------------
 		// 3. Mantle thermal evolution
 		// Instantaneous heating rate (Kite et al. 2009 Table 1): H = X_4.5 * W * exp(ln(1/2) / t1/2 * (t-4.5))
-		H =  36.9e-9  * 2.92e-5 * exp(log(0.5)/( 1.26 *Gyr2sec) * (realtime - 4.5*Gyr2sec))  //  40-K
-		  + 124.0e-9  * 2.64e-5 * exp(log(0.5)/(14.0  *Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 232-Th
-		  +   0.22e-9 * 56.9e-5 * exp(log(0.5)/( 0.704*Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 235-U
-		  +  30.8e-9  * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * (realtime - 4.5*Gyr2sec)); // 238-U
+		H =   x40K * 2.92e-5 * exp(log(0.5)/( 1.26 *Gyr2sec) * (realtime - 4.5*Gyr2sec))  //  40-K
+		  + x232Th * 2.64e-5 * exp(log(0.5)/(14.0  *Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 232-Th
+		  +  x235U * 56.9e-5 * exp(log(0.5)/( 0.704*Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 235-U
+		  +  x238U * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * (realtime - 4.5*Gyr2sec)); // 238-U
 		// Effective thermal conductivity scaled with Nu
-		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/pow(r[iBDT]-r_c,2));
+		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/pow((r[iBDT]-r_c)/2.0,2));
 
-		printf("Time: %g Gyr, mantle temperature: %g K\n", realtime/Gyr2sec, Tmantle);
+		printf("%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", realtime/Gyr2sec, Tmantle, Ra, nu*rho[(int)((iBDT+iCMB)/2)], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, bndcoef, FCoutgas, vConv*1.0e-6*Myr2sec);
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from continental weathering
@@ -1087,31 +1131,34 @@ int main(int argc, char *argv[]) {
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 		else {
-			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-					(double)itime*dtime/Myr2sec, Tmantle, RCmantle, RCatmoc, RCocean, FCoutgas, FCcontW, FCseafsubd, netFC);
+			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", realtime/Gyr2sec, Tmantle, Ra, nu*rho[(int)((iBDT+iCMB)/2)], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, bndcoef, FCoutgas, vConv*1.0e-6*Myr2sec);
 
-			fprintf(fout, "\n");
-			fprintf(fout, "Time: %g Gyr\n", realtime/Gyr2sec);
-			fprintf(fout, "-------------------------------------------------------------------------\n");
-			fprintf(fout, "Quantity                                | Earth benchmark | Model result \n");
-			fprintf(fout, "-------------------------------------------------------------------------\n");
-			fprintf(fout, "New crust generation rate (m Myr-1)     | 40              | %.3g \n", zNewcrust*Myr2sec);
-			fprintf(fout, "New crust density (kg m-3)              | 2800            | %.4g \n", rhomelt);
-			fprintf(fout, "C and H2O outgassing rate (mol s-1)     | 80000           | %.5g \n", FCoutgas);
-			fprintf(fout, "Magma C mass fraction                   | 0.1-0.65%%       | %.3g%% \n", magmaCmassfrac*100.0);
-			fprintf(fout, "Convective boundary layer thickness coef| 0.15 to 0.5     | %.2g \n", bndcoef);
-			fprintf(fout, "Convective velocity (cm yr-1)           | ~1              | %.2g \n", vConv*100.0*1.0e-6*Myr2sec);
-			fprintf(fout, "Mantle convection timescale (Myr)       | ~50-200 Myr     | %.4g \n", tConv/Myr2sec);
-			fprintf(fout, "Rayleigh number                         | ~1e6-1e7        | %.2g \n", Ra);
-			fprintf(fout, "Mantle adiabatic gradient (K km-1)      | 0.5             | %.3g \n", alpha*g[(int)((iBDT+iCMB)/2)]*Tmantle/Cp * km2m);
-			fprintf(fout, "Half-mantle depth (km)                  | 1450            | %.4g \n", (r_p-r_c-zLith)/2.0/km2m);
-			fprintf(fout, "-------------------------------------------------------------------------\n");
-			fprintf(fout, "Mid-mantle temperature: %g K \t Brittle-ductile transition temperature: %.3g K \t Temperature at base of lithosphere: %.4g K\n", Tmantle, T_BDT, T[iLith]);
-			fprintf(fout, "Depth of brittle-ductile transition: %.3g km \t Thickness of lithosphere: %.3g km \t Heat flux: %.2g mW m-2\n", (r_p-r[iBDT])/km2m, zLith/km2m, k*(Tmantle-Tsurf)/zLith*1000.0);
-			fprintf(fout, "Convective driving stress: %.4g MPa \t Lithospheric yield stress: %.4g MPa \t", driveStress/MPa2Pa, yieldStress/MPa2Pa);
-			if (staglid) fprintf(fout, "Stagnant lid\n");
-			else fprintf (fout, "Plate tectonics\n");
-			printf("\n\n");
+//			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+//					(double)itime*dtime/Myr2sec, Tmantle, RCmantle, RCatmoc, RCocean, FCoutgas, FCcontW, FCseafsubd, netFC);
+//
+//			fprintf(fout, "\n");
+//			fprintf(fout, "Time: %g Gyr\n", realtime/Gyr2sec);
+//			fprintf(fout, "---------------------------------------------------------------------------\n");
+//			fprintf(fout, "Quantity                                | Earth benchmark   | Model result \n");
+//			fprintf(fout, "---------------------------------------------------------------------------\n");
+//			fprintf(fout, "New crust generation rate (m Myr-1)     | 40                | %.3g \n", zNewcrust*Myr2sec);
+//			fprintf(fout, "New crust density (kg m-3)              | 2800              | %.4g \n", rhomelt);
+//			fprintf(fout, "C and H2O outgassing rate (mol s-1)     | 115000            | %.5g \n", FCoutgas);
+//			fprintf(fout, "Magma C mass fraction                   | 0.1-0.65%%         | %.3g%% \n", magmaCmassfrac*100.0);
+//			fprintf(fout, "Convective boundary layer thickness coef| 0.15 to 0.5       | %.2g \n", bndcoef);
+//			fprintf(fout, "Convective velocity (cm yr-1)           | ~1                | %.2g \n", vConv*100.0*1.0e-6*Myr2sec);
+//			fprintf(fout, "Mantle convection timescale (Myr)       | ~50-200 Myr       | %.4g \n", tConv/Myr2sec);
+//			fprintf(fout, "Rayleigh number                         | ~1e6-1e7          | %.2g \n", Ra);
+//			fprintf(fout, "Mantle adiabatic gradient (K km-1)      | 0.5               | %.3g \n", alpha*g[(int)((iBDT+iCMB)/2)]*Tmantle/Cp * km2m);
+//			fprintf(fout, "Half-mantle depth (km)                  | 1450              | %.4g \n", (r_p-r_c-zLith)/2.0/km2m);
+//			fprintf(fout, "Heat flux (mW m-2)                      | 86 (radiodecay 40)| %.2g \n", k*(Tmantle-Tsurf)/zLith*1000.0);
+//			fprintf(fout, "---------------------------------------------------------------------------\n");
+//			fprintf(fout, "Mid-mantle temperature: %g K \t Brittle-ductile transition temperature: %.3g K \t Temperature at base of lithosphere: %.4g K\n", Tmantle, T_BDT, T[iLith]);
+//			fprintf(fout, "Depth of brittle-ductile transition: %.3g km \t Thickness of lithosphere: %.3g km \n", (r_p-r[iBDT])/km2m, zLith/km2m);
+//			fprintf(fout, "Convective driving stress: %.4g MPa \t Lithospheric yield stress: %.4g MPa \t", driveStress/MPa2Pa, yieldStress/MPa2Pa);
+//			if (staglid) fprintf(fout, "Stagnant lid\n");
+//			else fprintf (fout, "Plate tectonics\n");
+//			fprintf(fout, "\n\n");
 		}
 		fclose (fout);
 
@@ -1132,7 +1179,6 @@ int main(int argc, char *argv[]) {
 	for (i=0;i<NR;i++) free (sys_tbl[i]);
 	free (sys_tbl);
 
-	free (intitle);
 	free (title);
 	free (xgas);
 	free (xaq);
