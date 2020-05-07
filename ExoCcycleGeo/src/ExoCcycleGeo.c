@@ -223,7 +223,7 @@ int main(int argc, char *argv[]) {
 	// Inputs
 	//-------------------------------------------------------------------
 
-	double dtime = 10.0*Myr2sec;     // Time step (s)
+	double dtime = 10.0*Myr2sec;       // Time step (s)
 
 	ntime = (int) (5000.0*Myr2sec/dtime); // Number of time steps of simulation
 
@@ -238,6 +238,8 @@ int main(int argc, char *argv[]) {
 	double tConv = 10.0*Myr2sec;       // Convection timescale (s), default 200 Myr for deep Earth mantle today
 	int rheology = 0;                  // 0 = dry olivine (KK08), 1 = wet olivine (KK08)
 	int radionuclides = 1;             // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
+	double tstart = 1.0*Gyr2sec;      // Time at which to start alphaMELTS calculations (s)
+	double tend = 5.0*Gyr2sec;        // Time at which to end alphaMELTS calculations (s)
 
 	// Atmospheric inputs
 	double Tsurf0 = 288.0;             // Initial surface temperature (K)
@@ -297,7 +299,7 @@ int main(int argc, char *argv[]) {
 
 	vConv = (r_p-zLith-r[iCMB])/tConv;
 
-	// Calculate Tmantle from accretion (Canup et al. 2020 Pluto chapter; volume averaging from leads to 3/5 term)
+	// Calculate Tmantle from accretion (Canup et al. 2020 Pluto chapter; volume averaging leads to 3/5 term)
 	Tmantle = Tsurf0 + 0.6*4.0*h_frac*chi*G*PI_greek*rho_p*r_p*r_p/(3.0*Cp);
 
 	// Calculate temperatures (not computed in the core)
@@ -462,7 +464,7 @@ int main(int argc, char *argv[]) {
 	title[0] = '\0';
 	if (cmdline == 1) strncat(title,path,strlen(path)-20);
 	else strncat(title,path,strlen(path)-18);
-	strcat(title,"Output.txt");
+	strcat(title,"Outputs/Output.txt");
 	fout = fopen(title,"w");
 	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 	else {
@@ -475,7 +477,7 @@ int main(int argc, char *argv[]) {
 	title[0] = '\0';
 	if (cmdline == 1) strncat(title,path,strlen(path)-20);
 	else strncat(title,path,strlen(path)-18);
-	strcat(title,"CompoOceanAtm.txt");
+	strcat(title,"Outputs/CompoOceanAtm.txt");
 	fout = fopen(title,"w");
 	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 	else {
@@ -486,6 +488,23 @@ int main(int argc, char *argv[]) {
 				xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, Tsurf, DeltaTghe, xaq[0], xaq[1], xaq[3],
 				pH, 4.0*(pe+pH)-logKO2H2O, rainpH, (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir, xaq[3]*Mocean + xgas[3]*2.0*nAir, Mocean, nAir);
 	}
+	fclose (fout);
+
+	title[0] = '\0';
+	if (cmdline == 1) strncat(title,path,strlen(path)-20);
+	else strncat(title,path,strlen(path)-18);
+	strcat(title,"Outputs/Geotherm.txt");
+	fout = fopen(title,"w");
+	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+	fclose (fout);
+
+	title[0] = '\0';
+	if (cmdline == 1) strncat(title,path,strlen(path)-20);
+	else strncat(title,path,strlen(path)-18);
+	strcat(title,"Outputs/Outgassing.txt");
+	fout = fopen(title,"w");
+	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+	else fprintf(fout, "Time (Gyr) \t Tmantle (K) \t Ra \t Visc (Pa s) \t Heat flux (mW m-2) \t Lithospheric thickness (km) \t Boundary layer thickness coef \t Outgassing flux (mol C s-1) \t Convective velocity (m s-1)");
 	fclose (fout);
 
 	//-------------------------------------------------------------------
@@ -725,8 +744,8 @@ int main(int argc, char *argv[]) {
 		ir = 0;
 		for (i=iCMB;i<NR;i++) {
 			if (P[i] < 1.0e10) { // 10 GPa is above MELTS upper limit.
-				if (T[i]-Kelvin > 750.0) {
-					fprintf(fout, "%g %g\n", P[i]/bar2Pa, T[i]-Kelvin); // Don't input below 950 C to avoid MELTS crashing.
+				if (T[i]-Kelvin > TminMELTS) {
+					fprintf(fout, "%g %g\n", P[i]/bar2Pa, T[i]-Kelvin); // Don't input below 750 C to avoid MELTS crashing.
 					ir++;
 				}
 				else break;
@@ -741,7 +760,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		// Call alphaMELTS
-		if (realtime > 4.0*Gyr2sec && realtime <= 4.57*Gyr2sec) alphaMELTS(path, 0, ir, "ExoC/ExoC_env.txt", &sys_tbl);
+		if (realtime > tstart && realtime <= tend) alphaMELTS(path, 0, ir, "ExoC/ExoC_env.txt", &sys_tbl);
 
 		imin = 0;
 		imax = 0;
@@ -750,10 +769,10 @@ int main(int argc, char *argv[]) {
 			Meltfrac[i] = 0.0;
 			if (P[i] < 1.0e10) { // 10 GPa is above MELTS upper limit.
 				if (sys_tbl[j][4] > 0.0 && (sys_tbl[j][13] < 1.5*sys_tbl[j][14] || sys_tbl[j][4] == 1.0)) { // Don't store if volume melt fraction negative or if density of melt > n*density of solid
-					if (T[i]-Kelvin > 750.0) {
+					if (T[i]-Kelvin > TminMELTS) { // There was no input below 750 C to avoid MELTS crashing.
 						if (fabs(1.0-P[i]/(sys_tbl[j][0]*bar2Pa)) > 1.0e-3) printf("ExoCcycleGeo: pressures from grid (%g bar) and MELTS (%g bar) misaligned at grid index %d\n", P[i]/bar2Pa, sys_tbl[j][0], i);
 						if (fabs(1.0-T[i]/ sys_tbl[j][1]        ) > 1.0e-3) printf("ExoCcycleGeo: temperatures from grid (%g K) and MELTS (%g K) misaligned at grid index %d\n", T[i], sys_tbl[j][1], i);
-						Meltfrac[i] = sys_tbl[j][3]; // Don't input below 950 C to avoid MELTS crashing.
+						Meltfrac[i] = sys_tbl[j][3];
 						rhomelt = sys_tbl[j][13]*1000.0; // g cm-3 to kg m-3, taken at depth of highest melt fraction, for calculation of thickness of new crust generated
 						if (imin == 0) imin = i;
 					}
@@ -765,9 +784,10 @@ int main(int argc, char *argv[]) {
 
 		meltmass = 0.0;
 		slope = 0.0;
+		islope = 0;
 		ir = 0;
 		if (imax > imin) {
-			if (Meltfrac[imin] > 0.1) {
+			if (Meltfrac[imin] > 0.0) {
 				printf("ExoCcycleGeo: alphaMELTS could only calculate melting down to depth %g km (melt fraction %.2g > 0.1), extrapolating melting curve to 0 linearly with depth\n", (r_p-r[imin])/km2m, Meltfrac[imin]);
 				// Extrapolate starting from last 5 indices, provided melt fraction of all is < 1 (otherwise, use less indices)
 				if (imax-imin > 5) { // Only do this if there are > 5 grid zones of melt, otherwise chances are the slope will be skewed.
@@ -964,6 +984,18 @@ int main(int argc, char *argv[]) {
 			printf("Pressure (bar) \t Depth (km) \t Melt fraction \t Temp (K) \t Density (kg m-3)\n");
 			for (i=imin-ir-100;i<=NR;i++) printf("%g \t %g \t %g \t %g \t %g\n", P[i]/bar2Pa, (r_p-r[i])/km2m, Meltfrac[i], T[i], rho[i]);
 
+			title[0] = '\0';
+			if (cmdline == 1) strncat(title,path,strlen(path)-20);
+			else strncat(title,path,strlen(path)-18);
+			strcat(title,"Outputs/Geotherm.txt");
+			fout = fopen(title,"a");
+			if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+			else {
+				printf("Time (Gyr) \t Pressure (bar) \t Depth (km) \t Melt fraction \t Temp (K) \t Density (kg m-3)\n");
+				for (i=imin-ir-100;i<=NR;i++) printf("%g \t %g \t %g \t %g \t %g \t %g\n", realtime/Gyr2sec, P[i]/bar2Pa, (r_p-r[i])/km2m, Meltfrac[i], T[i], rho[i]);
+			}
+			fclose (fout);
+
 			for (i=imin-ir;i<=imax;i++) {
 				meltmass = meltmass + Meltfrac[i]*4.0/3.0*PI_greek*(pow(r[i+1],3)-pow(r[i],3))*rho[i];
 			}
@@ -1127,50 +1159,36 @@ int main(int argc, char *argv[]) {
 		title[0] = '\0';
 		if (cmdline == 1) strncat(title,path,strlen(path)-20);
 		else strncat(title,path,strlen(path)-18);
-		strcat(title,"Output.txt");
+		strcat(title,"Outputs/Output.txt");
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 		else {
-			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", realtime/Gyr2sec, Tmantle, Ra, nu*rho[(int)((iBDT+iCMB)/2)], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, bndcoef, FCoutgas, vConv*1.0e-6*Myr2sec);
-
-//			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-//					(double)itime*dtime/Myr2sec, Tmantle, RCmantle, RCatmoc, RCocean, FCoutgas, FCcontW, FCseafsubd, netFC);
-//
-//			fprintf(fout, "\n");
-//			fprintf(fout, "Time: %g Gyr\n", realtime/Gyr2sec);
-//			fprintf(fout, "---------------------------------------------------------------------------\n");
-//			fprintf(fout, "Quantity                                | Earth benchmark   | Model result \n");
-//			fprintf(fout, "---------------------------------------------------------------------------\n");
-//			fprintf(fout, "New crust generation rate (m Myr-1)     | 40                | %.3g \n", zNewcrust*Myr2sec);
-//			fprintf(fout, "New crust density (kg m-3)              | 2800              | %.4g \n", rhomelt);
-//			fprintf(fout, "C and H2O outgassing rate (mol s-1)     | 115000            | %.5g \n", FCoutgas);
-//			fprintf(fout, "Magma C mass fraction                   | 0.1-0.65%%         | %.3g%% \n", magmaCmassfrac*100.0);
-//			fprintf(fout, "Convective boundary layer thickness coef| 0.15 to 0.5       | %.2g \n", bndcoef);
-//			fprintf(fout, "Convective velocity (cm yr-1)           | ~1                | %.2g \n", vConv*100.0*1.0e-6*Myr2sec);
-//			fprintf(fout, "Mantle convection timescale (Myr)       | ~50-200 Myr       | %.4g \n", tConv/Myr2sec);
-//			fprintf(fout, "Rayleigh number                         | ~1e6-1e7          | %.2g \n", Ra);
-//			fprintf(fout, "Mantle adiabatic gradient (K km-1)      | 0.5               | %.3g \n", alpha*g[(int)((iBDT+iCMB)/2)]*Tmantle/Cp * km2m);
-//			fprintf(fout, "Half-mantle depth (km)                  | 1450              | %.4g \n", (r_p-r_c-zLith)/2.0/km2m);
-//			fprintf(fout, "Heat flux (mW m-2)                      | 86 (radiodecay 40)| %.2g \n", k*(Tmantle-Tsurf)/zLith*1000.0);
-//			fprintf(fout, "---------------------------------------------------------------------------\n");
-//			fprintf(fout, "Mid-mantle temperature: %g K \t Brittle-ductile transition temperature: %.3g K \t Temperature at base of lithosphere: %.4g K\n", Tmantle, T_BDT, T[iLith]);
-//			fprintf(fout, "Depth of brittle-ductile transition: %.3g km \t Thickness of lithosphere: %.3g km \n", (r_p-r[iBDT])/km2m, zLith/km2m);
-//			fprintf(fout, "Convective driving stress: %.4g MPa \t Lithospheric yield stress: %.4g MPa \t", driveStress/MPa2Pa, yieldStress/MPa2Pa);
-//			if (staglid) fprintf(fout, "Stagnant lid\n");
-//			else fprintf (fout, "Plate tectonics\n");
-//			fprintf(fout, "\n\n");
+			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					(double)itime*dtime/Myr2sec, Tmantle, RCmantle, RCatmoc, RCocean, FCoutgas, FCcontW, FCseafsubd, netFC);
 		}
 		fclose (fout);
 
 		title[0] = '\0';
 		if (cmdline == 1) strncat(title,path,strlen(path)-20);
 		else strncat(title,path,strlen(path)-18);
-		strcat(title,"CompoOceanAtm.txt");
+		strcat(title,"Outputs/CompoOceanAtm.txt");
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
 				(double)itime*dtime/Myr2sec, xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, Tsurf, DeltaTghe, xaq[0], xaq[1], xaq[3],
 				pH, 4.0*(pe+pH)-logKO2H2O, rainpH, (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir, xaq[3]*Mocean + xgas[3]*2.0*nAir, Mocean, nAir);
+		fclose (fout);
+
+		title[0] = '\0';
+		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+		else strncat(title,path,strlen(path)-18);
+		strcat(title,"Outputs/Outgassing.txt");
+		fout = fopen(title,"a");
+		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+		else {
+			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n", realtime/Gyr2sec, Tmantle, Ra,
+					nu*rho[(int)((iBDT+iCMB)/2)], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, bndcoef, FCoutgas, vConv*1.0e-6*Myr2sec);
+		}
 		fclose (fout);
 	} // End time loop
 
