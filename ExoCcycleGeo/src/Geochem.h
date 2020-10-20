@@ -15,7 +15,7 @@
 //-------------------------------------------------------------------
 
 int AqueousChem (char path[1024], char filename[64], int itime, double T, double *P, double *V, double *nAir, double *pH, double *pe,
-		double *mass_w, double **xgas, double **xaq, double ***xrain, int forcedPP, double kintime, int kinsteps, int nvar);
+		double *mass_w, double **xgas, double **xaq, double ***xriver, int forcedPP, double kintime, int kinsteps, int nvar);
 int ExtractWrite(int instance, double*** data, int line, int nvar);
 const char* ConCat (const char *str1, const char *str2);
 int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
@@ -38,7 +38,7 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
  *--------------------------------------------------------------------*/
 
 int AqueousChem (char path[1024], char filename[64], int itime, double T, double *P, double *V, double *nAir, double *pH, double *pe,
-		double *mass_w, double **xgas, double **xaq, double ***xrain, int forcedPP, double kintime, int kinsteps, int nvar) {
+		double *mass_w, double **xgas, double **xaq, double ***xriver, int forcedPP, double kintime, int kinsteps, int nvar) {
 
 	int phreeqc = 0;
 	int i = 0;
@@ -47,7 +47,6 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	char *dbase = (char*)malloc(1024);                           // Path to thermodynamic database
 	char *infile = (char*)malloc(1024);                          // Path to initial (template) input file
 	char *tempinput = (char*)malloc(1024);                       // Temporary PHREEQC input file, modified from template
-
 	double nAir0 = *nAir; // Scaling factor for gas volume and water mass, so PHREEQC doesn't have to handle large numbers
 
 	double **simdata = (double**) malloc(nvar*sizeof(double*));
@@ -67,11 +66,12 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 	if (cmdline == 1) strncat(dbase,path,strlen(path)-20);
 	else strncat(dbase,path,strlen(path)-18);
-	strcat(dbase,"PHREEQC-3.1.2/core10_idealgas.dat");
+	strcat(dbase,"PHREEQC-3.1.2/core11_idealgas.dat");
 
 	strncat(infile,dbase,strlen(dbase)-19);
 	strcat(infile, filename);
 
+	if (kintime) *mass_w *= nAir0; // Don't scale water mass for weathering, which does not require equilibrating ocean and atmosphere i.e. handling large numbers
 	WritePHREEQCInput(infile, itime, T-Kelvin, *P, *V/nAir0, *pH, *pe, *mass_w/nAir0, *xgas, *xaq, forcedPP, kintime, kinsteps, &tempinput);
 
 	phreeqc = CreateIPhreeqc(); // Run PHREEQC
@@ -97,51 +97,47 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 	// Setting initial ocean chemistry
 	if (strcmp(filename, "io/OceanStart.txt") == 0) {
-		(*pH) = simdata[7][0];
-		(*pe) = simdata[8][0];
+		(*pH) = simdata[1][0];
+		(*pe) = simdata[2][0];
 
-		(*xaq)[0] = simdata[45][0];             // C(4), i.e. dissolved CO2 and carbonate
-		(*xaq)[1] = simdata[43][0];             // C(-4), i.e. dissolved methane
-//		(*xaq)[2] = simdata[72][0];             // O(0), i.e. dissolved O2
-		(*xaq)[3] = simdata[28][0];             // Total dissolved N
-		(*xaq)[4] = simdata[69][0];             // N(0), i.e. dissolved N2
-		(*xaq)[5] = simdata[68][0];             // N(-3), i.e. dissolved NH3 and NH4+
+		(*xaq)[0] = simdata[39][0];             // C(4), i.e. dissolved CO2 and carbonate
+		(*xaq)[1] = simdata[37][0];             // C(-4), i.e. dissolved methane
+		(*xaq)[2] = simdata[66][0];             // O(0), i.e. dissolved O2
+		(*xaq)[3] = simdata[84][0];             // Ntg
+//		(*xaq)[4] = simdata[22][0];             // Total dissolved N
+//		(*xaq)[5] = simdata[62][0];             // N(-3), i.e. dissolved NH3 and NH4+
 	}
 
 	// Ocean dissolution
 	if (strcmp(filename, "io/OceanDiss.txt") == 0) {
-		(*pH) = simdata[7][0];
-		(*pe) = simdata[8][0];
-		(*nAir) = simdata[1007][0]*nAir0;
-		(*P) = simdata[1006][0]*atm2bar;
-		(*V) = simdata[1008][0]/1000.0*nAir0;
-		(*mass_w) = simdata[11][0]*nAir0;
+		(*pH) = simdata[1][0];
+		(*pe) = simdata[2][0];
+		(*nAir) = simdata[1006][0]*nAir0;
+		(*P) = simdata[1005][0]*atm2bar;
+		(*V) = simdata[1007][0]/1000.0*nAir0;
+		(*mass_w) = simdata[5][0]*nAir0;
 
-		(*xaq)[0] = simdata[45][0];             // C(4), i.e. dissolved CO2 and carbonate
-		(*xaq)[1] = simdata[43][0];             // C(-4), i.e. dissolved methane
-//		(*xaq)[2] = simdata[72][0];             // O(0), i.e. dissolved O2
-		(*xaq)[3] = simdata[28][0];             // Total dissolved N
-		(*xaq)[4] = simdata[69][0];             // N(0), i.e. dissolved N2
-		(*xaq)[5] = simdata[68][0];             // N(-3), i.e. dissolved NH3 and NH4+
+		(*xaq)[0] = simdata[39][0];             // C(4), i.e. dissolved CO2 and carbonate
+		(*xaq)[1] = simdata[37][0];             // C(-4), i.e. dissolved methane
+		(*xaq)[2] = simdata[66][0];             // O(0), i.e. dissolved O2
+		(*xaq)[3] = simdata[84][0];             // Ntg
+//		(*xaq)[4] = simdata[22][0];             // N excluding Ntg
+//		(*xaq)[5] = simdata[62][0];             // N(-3), i.e. dissolved NH3 and NH4+
 
-		(*xgas)[0] = simdata[1014][0];          // CO2(g)
-		(*xgas)[1] = simdata[1012][0];          // CH4(g)
-		(*xgas)[2] = simdata[1022][0];          // O2(g)
-		(*xgas)[3] = simdata[1018][0];          // N2(g)
-		(*xgas)[4] = simdata[1016][0];          // H2O(g)
+		(*xgas)[0] = simdata[1013][0];          // CO2(g)
+		(*xgas)[1] = simdata[1011][0];          // CH4(g)
+		(*xgas)[2] = simdata[1021][0];          // O2(g)
+		(*xgas)[3] = simdata[1025][0];          // Ntg(g)
+		(*xgas)[4] = simdata[1015][0];          // H2O(g)
 
-		for (i=0;i<nAtmSpecies;i++) (*xgas)[i] = (*xgas)[i]/simdata[1007][0]; // Divide by total mol gas to return mixing ratio
+		for (i=0;i<nAtmSpecies;i++) (*xgas)[i] = (*xgas)[i]/simdata[1006][0]; // Divide by total mol gas to return mixing ratio
 	}
 
 	// Continental weathering
 	if (strcmp(filename, "io/ContWeather.txt") == 0) {
 
-		(*xrain)[1][1] = simdata[3][1]; // Rainwater pH
-		(*xrain)[2][1] = simdata[9][1]; // Initial total dissolved C
-		for (i=2;i<kinsteps;i++) {
-			(*xrain)[0][i] = simdata[1][i]; // Time (s)
-			(*xrain)[1][i] = simdata[3][i]; // pH
-			(*xrain)[2][i] = simdata[9][i]; // Total dissolved C
+		for (i=0;i<kinsteps;i++) {
+			for (j=0;j<nvarKin;j++) (*xriver)[i][j] = simdata[i][j];
 		}
 	}
 
@@ -169,22 +165,10 @@ int ExtractWrite(int instance, double*** data, int line, int nvar) {
 	VarInit(&v);
 
 	if (nvar == nvarEq) { // Equilibrium simulation
-		GetSelectedOutputValue(instance,1,3,&v);           // temp
-		(*data)[0][0] = v.dVal;
-
-		GetSelectedOutputValue(instance,1,1,&v);           // pH
-		(*data)[2][0] = v.dVal;
-
-		GetSelectedOutputValue(instance,1,2,&v);           // pe
-		(*data)[3][0] = v.dVal;
-
-		GetSelectedOutputValue(instance,1,5,&v);           // W:R
-		(*data)[6][0] = v.dVal;
-
-		for (i=1;i<nvar-6;i++) {                           // Rest of parameters
+		for (i=0;i<nvar;i++) {                           // Rest of parameters
 			GetSelectedOutputValue(instance,line,i,&v);
-			if (fabs(v.dVal) < 1e-50) (*data)[i+6][0] = 0.0;
-			else (*data)[i+6][0] = v.dVal;
+			if (fabs(v.dVal) < 1e-50) (*data)[i][0] = 0.0;
+			else (*data)[i][0] = v.dVal;
 		}
 	}
 	else if (nvar == nvarKin) { // Kinetic simulation
@@ -279,6 +263,9 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	pressure = pressure/atm2bar; // Convert from bar to atm
 	gasvol = gasvol*1000.0;      // Convert from m3 to L
 
+	// Kinetic simulation applies only to continental weathering, for which the pH of rain is used, not that of the ocean
+	if (kintime) pH = 7.0;
+
 	// Assemble file title
 	sprintf(itime_str, "%d", itime);
 	sprintf(temp_str, "%g", temp);
@@ -310,13 +297,11 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	}
 	for (i=0;i<nAtmSpecies;i++) sprintf(gas_str3[i], "%g", xgas[i]*pressure); // Partial pressure
 
+	for (i=0;i<nAqSpecies;i++) sprintf(aq_str[i],"%g mol/kgw", xaq[i]);
+
 	strcpy(*tempinput,TemplateFile);
 //	strcat(*tempinput,itime_str);
 	strcat(*tempinput,"Exec.txt"); // File title complete
-
-	sprintf(aq_str[0],"%g mol/kgw", xaq[0]);  // mol per kg H2O of oxidized C
-	sprintf(aq_str[1],"%g mol/kgw", xaq[1]);  // mol per kg H2O of reduced C
-	sprintf(aq_str[3],"%g mol/kgw", xaq[3]);  // mol per kg H2O of N
 
 	sprintf(steps_str1,"%g in ", kintime);    // Duration of kinetic simulation
 	sprintf(steps_str2,"%d steps", kinsteps); // Number of time steps of kinetic simulation
@@ -344,7 +329,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 				strcat(aq_str[0], gas_str2[0]);
 				fprintf(fout, "%s\n", ConCat("\tC(4) \t\t", aq_str[0]));
 			}
-			else          fprintf(fout, "%s\n", ConCat("\tC(4) \t\t",aq_str[0]));
+			else fprintf(fout, "%s\n", ConCat("\tC(4) \t\t",aq_str[0]));
 		}
 		else if (!eqphases && line[1] == 'C' && line[2] == '(' && line[3] == '-' && line[4] == '4') {
 			if (forcedPP && xgas[1] > 0.0) {
@@ -352,15 +337,23 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 				strcat(aq_str[1], gas_str2[1]);
 				fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t", aq_str[1]));
 			}
-			else          fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t",aq_str[1]));
+			else fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t",aq_str[1]));
 		}
-		else if (!eqphases && line[1] == 'N' && line[2] == '\t') {
-			if (forcedPP && xgas[3] > 0.0) {
-				strcat(aq_str[3], "\tN2(g) \t");
-				strcat(aq_str[3], gas_str2[3]);
-				fprintf(fout, "%s\n", ConCat("\tN \t\t", aq_str[3]));
+		else if (!eqphases && line[1] == 'O' && line[2] == '('  && line[3] == '0' && line[4] == ')') {
+			if (forcedPP && xgas[2] > 0.0) {
+				strcat(aq_str[2], "\tO2(g) \t");
+				strcat(aq_str[2], gas_str2[2]);
+				fprintf(fout, "%s\n", ConCat("\tO(0) \t\t", aq_str[2]));
 			}
-			else          fprintf(fout, "%s\n", ConCat("\tN \t\t",aq_str[3]));
+			else fprintf(fout, "%s\n", ConCat("\tO(0) \t\t",aq_str[2]));
+		}
+		else if (!eqphases && line[1] == 'N' && line[2] == 't'  && line[3] == 'g' && line[4] == '\t') {
+			if (forcedPP && xgas[3] > 0.0) {
+				strcat(aq_str[3], "\tNtg(g) \t");
+				strcat(aq_str[3], gas_str2[3]);
+				fprintf(fout, "%s\n", ConCat("\tNtg \t\t", aq_str[3]));
+			}
+			else fprintf(fout, "%s\n", ConCat("\tNtg \t\t",aq_str[3]));
 		}
 		// KINETICS
 		else if (line[0] == '-' && line[1] == 's' && line[2] == 't' && line[3] == 'e')         fprintf(fout, "%s\n", ConCat("-steps\t",steps_str1));
@@ -369,13 +362,13 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 		else if (gasphase && line[1] == 'C' && line[2] == 'O' && line[3] == '2' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tCO2(g) \t\t",gas_str3[0]));
 		else if (gasphase && line[1] == 'C' && line[2] == 'H' && line[3] == '4' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tCH4(g) \t\t",gas_str3[1]));
 		else if (gasphase && line[1] == 'O' && line[2] == '2' && line[3] == '(' && line[4] == 'g') fprintf(fout, "%s\n", ConCat("\tO2(g) \t\t",gas_str3[2]));
-		else if (gasphase && line[1] == 'N' && line[2] == '2' && line[3] == '(' && line[4] == 'g') fprintf(fout, "%s\n", ConCat("\tN2(g) \t\t",gas_str3[3]));
+		else if (gasphase && line[1] == 'N' && line[2] == 't' && line[3] == 'g' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tNtg(g) \t\t",gas_str3[3]));
 		else if (gasphase && line[1] == 'H' && line[2] == '2' && line[3] == 'O' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tH2O(g) \t\t",gas_str3[4]));
 		// EQUILIBRIUM_PHASES
 		else if (eqphases && line[2] == 'C' && line[3] == 'O' && line[4] == '2' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tCO2(g) \t\t",gas_str1[0]));
 		else if (eqphases && line[2] == 'C' && line[3] == 'H' && line[4] == '4' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tCH4(g) \t\t",gas_str1[1]));
 		else if (eqphases && line[2] == 'O' && line[3] == '2' && line[4] == '(' && line[5] == 'g' && line[6] == ')') fprintf(fout, "%s\n", ConCat("\tO2(g) \t\t",gas_str1[2]));
-		else if (eqphases && line[2] == 'N' && line[3] == '2' && line[4] == '(' && line[5] == 'g' && line[6] == ')') fprintf(fout, "%s\n", ConCat("\tN2(g) \t\t",gas_str1[3]));
+		else if (eqphases && line[2] == 'N' && line[3] == 't' && line[4] == 'g' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tNtg(g) \t\t",gas_str1[3]));
 		else if (eqphases && line[2] == 'H' && line[3] == '2' && line[4] == 'O' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tH2O(g) \t\t",gas_str1[4]));
 
 		else fputs(line,fout);
@@ -460,7 +453,7 @@ double molmass_atm (double *xgas) {
 	molmass = (xgas[0]*(M_C + 2.0*M_O) // CO2
 			 + xgas[1]*(M_C + 4.0*M_H) // CH4
 			 + xgas[2]*2.0*M_O         // O2
-			 + xgas[3]*2.0*M_N         // N2
+			 + xgas[3]*2.0*M_N         // Ntg (i.e. inert N2)
 		     + xgas[4]*(2.0*M_H+M_O))  // H2O
 					 /(xgas[0]+xgas[1]+xgas[2]+xgas[3]+xgas[4])*0.001;
 

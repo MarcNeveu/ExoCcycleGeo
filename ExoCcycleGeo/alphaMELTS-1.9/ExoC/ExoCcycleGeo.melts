@@ -8,8 +8,8 @@ Title: It may help to remove K2O and / or Cr2O3 lines
 Title: Any NiO, MnO and CoO lines should be removed for pMELTS calculations
 Title: The effect of including CO2, SO3, Cl2O, F2O is unpredictable and is not recommended
 Title: Fractionate: phase for selective fractionation
-Title: Use table file to generate MELTS inputs along the P,T profile from ExoCcycleGeo?
-Title: One row per P,T[,fO2] condition, column headers: Temperature, Pressure, logfO2(?)
+Title: Use table file to generate MELTS inputs along the P,T profile from ExoCcycleGeo
+Title: One row per P,T[,fO2] condition, column headers: Temperature, Pressure, logfO2
 Title: fO2 could deal with redox changes upon ascent a la Gaillard and Scaillet 2007 
 Title: May need to remove corresponding values in the env file.
 Initial Composition: SiO2 48.68
