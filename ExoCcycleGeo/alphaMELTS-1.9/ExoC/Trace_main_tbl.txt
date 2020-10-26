@@ -1,0 +1,148 @@
+Title: Allan et al. 1989 (see Ghiorso 1997)
+
+Pressure 14000.00 Temperature 1850.00 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 15000.00 Temperature 1853.23 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 16000.00 Temperature 1856.46 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 17000.00 Temperature 1859.72 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 18000.00 Temperature 1862.98 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 19000.00 Temperature 1866.25 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 20000.00 Temperature 1869.54 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 21000.00 Temperature 1872.85 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 22000.00 Temperature 1876.16 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 23000.00 Temperature 1879.49 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 24000.00 Temperature 1882.84 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 25000.00 Temperature 1886.20 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 26000.00 Temperature 1889.58 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 27000.00 Temperature 1892.98 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 28000.00 Temperature 1896.39 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 29000.00 Temperature 1899.82 
+Partition 100.349001 ---
+Bulk 100.349001 
+Liquid 100.349001 
+Solid 0.000000 ---
+Pressure 30000.00 Temperature 1911.58 
+Partition 100.349001 
+Bulk 100.349001 
+Liquid 98.361901 
+Solid 1.987100 
+garnet_0 1.987100 
+Pressure 31000.00 Temperature 1924.54 
+Partition 100.349001 
+Bulk 100.349001 
+Liquid 96.129742 
+Solid 4.219259 
+garnet_0 4.219259 
+Pressure 32000.00 Temperature 1937.25 
+Partition 100.349001 
+Bulk 100.349001 
+Liquid 93.997556 
+Solid 6.351445 
+garnet_0 6.351445 
+Pressure 33000.00 Temperature 1949.72 
+Partition 100.349001 
+Bulk 100.349001 
+Liquid 91.959768 
+Solid 8.389233 
+garnet_0 8.389233 
+Pressure 34000.00 Temperature 1961.95 
+Partition 100.349001 
+Bulk 100.349001 
+Liquid 90.011210 
+Solid 10.337791 
+garnet_0 10.337791 
+Pressure 35000.00 Temperature 1973.96 
+Partition 100.349001 
+Bulk 100.349001 
+Liquid 88.147081 
+Solid 12.201920 
+garnet_0 12.201920 
+Pressure 36000.00 Temperature 1985.75 
+Partition 100.349001 
+Bulk 100.349001 
+Liquid 86.362914 
+Solid 13.986086 
+garnet_0 13.986086 
+Pressure 37000.00 Temperature 1997.33 
+Partition 100.349001 
+Bulk 100.349001 
+Liquid 84.654547 
+Solid 15.694454 
+garnet_0 15.694454 
+Pressure 38000.00 Temperature 2008.71 
+Partition 100.349001 
+Bulk 100.349001 
+Liquid 83.018092 
+Solid 17.330909 
+garnet_0 17.330909 
+Pressure 39000.00 Temperature 2019.89 
+Partition 100.349001 
+Bulk 100.349001 
+Liquid 81.449917 
+Solid 18.899084 
+garnet_0 18.899084 
+Pressure 40000.00 Temperature 2030.88 
+Partition 100.349001 
+Bulk 100.349001 
+Liquid 79.946622 
+Solid 20.402378 
+garnet_0 20.402378 
