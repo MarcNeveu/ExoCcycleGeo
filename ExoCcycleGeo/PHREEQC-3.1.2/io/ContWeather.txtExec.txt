@@ -1,0 +1,174 @@
+TITLE Kinetics of continental crust weathering
+
+PHASES
+
+Bytownite # 70-90% Anor, 10-30% Alb # Params for Anorthite, part of Anorthite input in this phase to average kinetics
+	CaAl2(SiO4)2 + 8 H+ = Ca+2 + 2 Al+3 + 2 SiO2 + 4 H2O
+	log_k		26.5780
+	-delta_H	-303.039	kJ/mol
+#	deltafH		-1007.55	kcal/mol
+	-analytic	3.9717e-1 -1.8751e-2 1.4897e4 -6.3078 -2.3885e5
+#	Range		0-350
+	-Vm		100.79
+#	Extrapol	supcrt92
+#	Ref		HDN+78
+
+RATES # Redefining rates for plagioclase to use rates for non-Na-Ca end-members, otherwise there is too much Ca and not enough Na weathered in Earth benchmark.
+
+Anorthite # Using the rate law for Labradorite: 50-70% Anor, 30-50% Alb
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-7.87) * exp(-42.1e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.626
+	20  kneut = 10^(-10.91) * exp(-45.2e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Anorthite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Bytownite # 70-90% Anor, 10-30% Alb
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-5.85) * exp(-29.3e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^1.018
+	20  kneut = 10^(-9.82) * exp(-31.5e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Bytownite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Albite # Using the rate law for Labradorite: 50-70% Anor, 30-50% Alb
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-7.87) * exp(-42.1e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.626
+	20  kneut = 10^(-10.91) * exp(-45.2e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Albite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+
+END
+
+KINETICS # No precipitation allowed except for the minerals undergoing dissolution
+
+Anorthite # Part of input, other part in Bytownite
+	-formula	CaAl2(SiO4)2		1
+	-m		6.0e-2
+	-m0		6.0e-2
+	-tol		1e-8
+Bytownite # Other part of Anorthite input
+	-formula	CaAl2(SiO4)2		1
+	-m		0.6e-2
+	-m0		0.6e-2
+	-tol		1e-8
+Albite
+	-formula	NaAlSi3O8		1
+	-m		1.2e-1
+	-m0		1.2e-1
+	-tol		1e-8
+Quartz
+	-formula	SiO2			1
+	-m		4.7e-1 # moles, assumed =m0 (fresh surface), scaled to 1 mol air
+	-m0		4.7e-1
+	-parms		24 87.7e3
+	-tol		1e-8
+Annite # Kinetics are those of phlogopite
+	-formula	KFe3AlSi3O10(OH)2	1
+	-m		7.7e-3
+	-m0		7.7e-3
+	-tol		1e-8
+Phlogopite
+	-formula	KAlMg3Si3O10(OH)2	1
+	-m		1.4e-2
+	-m0		1.4e-2
+	-tol		1e-8
+Clinochlore-14A
+	-formula	Mg5AlAlSi3O10(OH)8	1
+	-m		0
+	-m0		0
+	-tol		1e-8
+Daphnite-14A # (clinochlore-14A instead, listed as solid solution (Mg,Fe)5Al(Si3Al)O10(OH)8) on webmineral.com)
+	-formula	Fe5AlAlSi3O10(OH)8	1
+	-m		1.1e-2
+	-m0		1.1e-2
+	-tol		1e-8
+K-Feldspar
+	-formula	KAlSi3O8		1
+	-m		3.9e-2
+	-m0		3.9e-2
+	-tol		1e-8
+Anthophyllite
+	-formula	Mg7Si8O22(OH)2		1
+	-m		1.7e-3
+	-m0		1.7e-3
+	-tol		1e-8
+Riebeckite
+	-formula	Na2Fe5Si8O22(OH)2	1
+	-m		0
+	-m0		0
+	-tol		1e-8
+Tremolite
+	-formula	Ca2Mg5Si8O22(OH)2	1
+	-m		3.4e-3
+	-m0		3.4e-3
+	-tol		1e-8
+Calcite
+	-formula	CaCO3			1
+	-m		4.6e-2
+	-m0		4.6e-2
+	-tol		1e-8
+Dolomite-dis
+	-formula	CaMg(CO3)2		1
+	-m		1.1e-2
+	-m0		1.1e-2
+	-tol		1e-8
+Dolomite-ord
+	-formula	CaMg(CO3)2		1
+	-m		0
+	-m0		0
+	-tol		1e-8
+Magnesite
+	-formula	MgCO3			1
+	-m		0
+	-m0		0
+	-tol		1e-8
+Wollastonite
+	-formula	CaSiO3			1
+	-m		0
+	-m0		0
+	-tol		1e-8
+-steps	3.15576e+09 in 1000 steps
+-cvode	true
+
+INCREMENTAL_REACTIONS true
+
+SOLUTION 1 Rainwater
+
+	pH 	 	7 charge
+	temp 	 	14.85
+	pressure 	0.990925
+	-water 	 	5000
+	-units		mol/kgw
+	C(4) 		0.00283349 mol/kgw	CO2(g) 	-3.55855
+	C(-4) 		0 mol/kgw
+	Ntg 		0.00052628 mol/kgw	Ntg(g) 	-0.10809
+	N(-3)		1.0 NH3(g) -20
+	O(0) 		0.000525295 mol/kgw	O2(g) 	-0.704686
+
+SELECTED_OUTPUT
+
+#	-file		./Benchmark.sel
+	-state 		false	
+	-solution 	false
+	-distance 	false
+	-time 		true
+	-step 		true
+	-temperature	true
+	-ionic_strength	true
+	-water		true
+	-percent_error	true
+	-totals 	C Na Mg Si Ca Fe
+	-molalities 	HCO3- CO3-2 CO2 Na+ Mg+2 SiO2 Ca+2 Fe+2
+	-saturation_indices Calcite Dolomite-dis Dolomite-ord Magnesite
+	-kinetic_reactants Quartz Albite Anorthite K-Feldspar Phlogopite Annite Clinochlore-14A Daphnite-14A Anthophyllite Riebeckite Tremolite Calcite Dolomite-dis Dolomite-ord Magnesite Wollastonite
+
+END

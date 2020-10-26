@@ -1,0 +1,57 @@
+TITLE ExoCcycleGeo generated speciation input using core10.dat
+
+SOLUTION 1 Planetary ocean surface waters (PHREEQC v3 manual p. 282)
+
+	pH 	 	4.416 charge
+	temp 	 	14.85
+	pressure 	9.11729
+	pe 	 	16.95
+# Mass of Earth’s atmosphere: 5.1480e18 kg
+# Mean molecular mass of Earth’s atmosphere: 29 g mol -1
+# Moles of air in Earth’s atmosphere: 1.775e20 mol
+# Mass of Earth’s oceans: 1.4e21 kg (/(1-L): water-world)
+# Mass of ocean per mole of air: 7.9 kg
+	-water 	 	0.796431
+	units		mol/kgw
+	Ca		0.010287     # 412.3 ppm -> 412.3e-6 kg / 40.078 g/mol * 1000
+	Mg		0.05315      # 1291.8e-6/(24.305/1000)
+	Na		0.4684       # 10768.0e-6/(22.9898/1000)
+	K		0.01021      # 399.1e-6/(39.0983/1000)
+	Fe		0.0000000358 # 0.002e-6/(55.847/1000) # there would be much more if oceans weren't oxidized
+	Si		0.000071246  # 4.28e-6/((28.0855+2*15.994)/1000), SiO2 is master species
+	Cl		0.5459       # 19353.0e-6/(35.4527/1000)
+	S(6)		0.02824      # 2712.0e-6/((32.066+4*15.994)/1000), SO4 is master species
+	C(4) 		0.145786 mol/kgw
+	Ntg 		0.000521251 mol/kgw
+	O(0) 		0.000520281 mol/kgw
+
+GAS_PHASE 1 Atmosphere, no rock
+
+	-fixed_volume
+	temp 	 	14.85
+	pressure 	9.11729
+	volume 		2.59191
+	# partial pressures (atm = 1.01325 bar)
+	Ntg(g) 		0.775636
+	O2(g) 		0.196372
+	CO2(g) 		8.13168
+	CH4(g) 		0
+	H2O(g) 		0.013597
+
+SELECTED_OUTPUT 1
+	
+#	-file		/Users/marc/Documents/Research/2011-2016_ASU/2IcyDwarf/Git/IcyDwarf/IcyDwarf/PHREEQC-3.1.2/io/selectedIcyDwarf.out
+	-state 		false	
+	-solution 	false
+	-distance 	false
+	-time 		false
+	-step 		false
+	-temperature	true
+	-ionic_strength	true
+	-water		true
+	-totals 	Al B C Ca Cl Co Cr Cu Eu Fe Gd K Li Mg Mn Mo N Na Ni P S Sc Si Sm Th Ti U Zn B(3) C(-2) C(-3) C(-4) C(2) C(4) Cl(-1) Cl(1) Cl(3) Cl(5) Cl(7) Co(2) Co(3) Cr(2) Cr(3) Cr(6) Cu(1) Cu(2) Eu(2) Eu(3) Fe(2) Fe(3) Gd(3) H(0) Mn(2) Mn(3) Mn(6) Mn(7) N(-3) N(0) N(3) N(5) O(0) P(5) S(-2) S(2) S(3) S(4) S(5) S(6) S(7) S(8) Sm(2) Sm(3) U(3) U(4) U(5) U(6) Oxg Hdg Ntg Mtg H2Sg
+	-molalities 	OH-	H+	H2O	AlO2-	HAlO2	AlOH+2	Al+3	Al(CH3COO)2+	BO2-	B(OH)3	C2H4	C2H6	CH4	CO	CO3-2	HCOO-	CH3OH	HCO3-	NaHCO3	CaCO3	CH3COO-	NaCH3COO	ScCH3COO+2	HCOOH	CO2	MgCO3	C3H8	CH3CH2OH	CH2O	LiCH3COO	KCH3COO	CN-	CH3COOH	NH4CH3COO	CaCH3COO+	SCN-	CO(NH2)2	HCN	MnCH3COO+	MgCH3COO+	FeCH3COO+	ZnCH3COO+	CuCH3COO	NiCH3COO+	CoCH3COO+	Sc(CH3COO)2+	Na(CH3COO)2-	Li(CH3COO)2-	K(CH3COO)2-	Ca(CH3COO)2	NH4(CH3COO)2-		CuCH3COO+	Mn(CH3COO)2	Mg(CH3COO)2	Fe(CH3COO)2	Zn(CH3COO)2	Cu(CH3COO)2-	Ni(CH3COO)2	Co(CH3COO)2	Sc(CH3COO)3	Cu(CH3COO)2	Mn(CH3COO)3-	Zn(CH3COO)3-	Ni(CH3COO)3-	Co(CH3COO)3-	Cu(CH3COO)3-	Ca+2	CaCl+	CaCl2	CaSO4	Cl-	NaCl	LiCl	KCl	MnCl+	HCl	MgCl+	FeCl+	ZnCl+	FeCl2	NiCl+	CoCl+	ZnCl2	ZnCl3-	ZnCl4-2	FeCl+2	ClO-	ClO2-	ClO3-	ClO4-	Co+2	Co+3	Cr+2	Cr+3	CrO4-2	HCrO4-	Cr2O7-2	Cu+	Cu+2	FeOH+	Fe+2	FeOH+2	Fe+3	H2	K+	KSO4-	KHSO4	Li+	Mg+2	MgSO4	Mn+2	MnSO4	Mn+3	MnO4-2	MnO4-	MoO4-2	NH3	NH4+	N2	NO2-	HNO2	NO3-	HNO3	Na+	NaOH	NaHSiO3	Ni+2	O2	S2O6-2	S3O6-2	S4O6-2	S5O6-2	PO4-3	HPO4-2	P2O7-4	H2PO4-	HP2O7-3	H3PO4	H2P2O7-2	H3P2O7-	H4P2O7	HS-	H2S	S2-2	S3-2	S4-2	S5-2	S2O3-2	S2O4-2	SO3-2	HSO3-	SO2	S2O5-2	SO4-2	HSO4-	ZnSO4	S2O8-2	HSO5-	Sc+3	HSiO3-	SiO2	Th+4	Ti(OH)4	U+3	U+4	UO2+	UO2OH+	UO2+2	ZnOH+	Zn+2
+	-equilibrium_phases   	[(6)(CB)(CB)S] [(aro)-O-(aro)] Afwillite Akermanite Al Al2(SO4)3 Alabandite Albite Albite_high Albite_low Alum-K Alunite Amesite-14A Analcime Andalusite Andradite Anhydrite Annite Anorthite Anthophyllite Antigorite Aragonite Arcanite Artinite Atacamite Azurite B B2O3 Bassanite Bassetite Beidellite-Ca Beidellite-Fe Beidellite-K Beidellite-Mg Beidellite-Na Berlinite Bieberite Bixbyite Boehmite Borax Boric_acid Bornite Brezinaite Brochantite Brucite Bunsenite C Ca Ca-Al_Pyroxene Ca3Al2O6 Ca4Al2Fe2O10 CaAl2O4 CaAl4O7 Calcite Cattierite CaUO4 Celadonite Chalcanthite Chalcedony Chalcocite Chalcocyanite Chalcopyrite Chamosite  Chloromagnesite Chromite Chrysotile Clinochlore-14A Clinochlore-7A Clinoptilolite-Ca Clinoptilolite-K Clinoptilolite-Na Clinozoisite Co Co2SiO4 CoCl2 CoCl2:2H2O CoCl2:6H2O Coesite CoFe2O4 Coffinite CoO Cordierite_anhyd Cordierite_hydr Corundum CoS CoSO4 CoSO4:6H2O CoSO4:H2O Covellite Cr CrCl3 Cristobalite(alpha) Cristobalite(beta) CrO2 CrO3 Cronstedtite-7A CrS Cu CuCl2 CuCr2O4 Cuprite Daphnite-14A Daphnite-7A Dawsonite Delafossite Diaspore Dicalcium_silicate Diopside Dioptase Dolomite Dolomite-dis Dolomite-ord Enstatite Epidote Epidote-ord Eskolaite Ettringite Eu Eu(OH)3 Eu2(SO4)3:8H2O Eu2O3(cubic) Eu2O3(monoclinic) Eu3O4 EuCl2 EuCl3 EuCl3:6H2O Eucryptite EuOCl EuS EuSO4 Fayalite Fe Fe(OH)2 Fe(OH)3 Fe2(SO4)3 FeO Ferrite-Ca Ferrite-Cu Ferrite-Dicalcium Ferrite-Mg Ferrite-Zn Ferrosilite FeSO4 Forsterite Foshagite Gd Gehlenite Gibbsite Goethite Greenalite Grossular Gypsum Gyrolite Halite Hatrurite Hausmannite Heazlewoodite Hedenbergite Hematite Hercynite Hillebrandite Huntite Hydromagnesite Hydrophilite Hydroxyapatite Ice Ilmenite Jadeite Jarosite K K-Feldspar K2O KAl(SO4)2 Kalsilite Kaolinite KerogenC128 KerogenC292 KerogenC515 Kyanite Larnite Laumontite Lawrencite Lawsonite Li Lime Linnaeite Lizardite Lopezite Magnesiochromite Magnesite Magnetite Malachite Manganosite Margarite Maximum_Microcline Mayenite Melanterite Merwinite Mesolite Mg MgOHCl MgSO4 Millerite Minnesotaite Mirabilite Mn Mn(OH)2(am) MnCl2:2H2O MnCl2:4H2O MnCl2:H2O MnSO4 Mo Molysite Monohydrocalcite Monticellite Montmor-Ca Montmor-K Montmor-Mg Montmor-Na Mordenite Morenosite Muscovite Na Na2CO3 Na2CO3:7H2O Na2Cr2O7 Na2CrO4 Na2O Na2SiO3 Na2U2O7 NaFeO2 Nahcolite Nantokite Natrolite Natron Natrosilite NaUO3 Nepheline Nesquehonite NH4-feldspar NH4-muscovite NH4Cl NH4HCO3 Ni Ni(OH)2 Ni2SiO4 Nickelbischofite NiCl2 NiCl2:2H2O Ningyoite NiSO4 NiSO4:6H2O(alpha) Niter Nontronite-Ca Nontronite-K Nontronite-Mg Nontronite-Na Okenite P Paragonite Pargasite Periclase Petalite Phlogopite Polydymite Portlandite Prehnite Pseudowollastonite Pyridine Pyrite Pyrolusite Pyrophyllite Pyrrhotite Quartz Rankinite Rhodochrosite Rhodonite Ripidolite Rutherfordine Rutile S Saleeite Sanidine_high Saponite-Fe-Ca Saponite-Fe-K Saponite-Fe-Mg Saponite-Fe-Na Saponite-Mg-Ca Saponite-Mg-Fe Saponite-Mg-K Saponite-Mg-Mg Saponite-Mg-Na Sc Scacchite Schoepite Scolecite Sepiolite Si Siderite Sillimanite SiO2(am) Sm Smectite-high-Fe-Mg Smectite-low-Fe-Mg Smithsonite Sphaerocobaltite Sphalerite Spinel Spinel-Co Spodumene Stilbite Strengite Sylvite Talc Tarapacaite Tenorite Tephroite Th Th(NO3)4:5H2O Th(SO4)2 Th2S3 Th7S12 ThCl4 Thenardite Thermonatrite Thorianite ThS2 Ti Ti2O3 Ti3O5 TiB2 TiC TiCl2 TiCl3 TiN Titanite Tobermorite-11A Tremolite Trevorite Tridymite Troilite U U2O2Cl5 U3S5 UC UCl3 UCl4 UCl6 UH3(beta) UN UO2(NO3)2 UO2(NO3)2:6H2O UO2(OH)2(beta) UO2SO4 UO2SO4:3H2O UO3(beta) Uraninite Vaesite Wairakite Wollastonite Wurtzite Wustite Xonotlite Zincite Zn Zn(NO3)2:6H2O Zn(OH)2(beta) Zn(OH)2(epsilon) Zn2SiO4 ZnCl2 ZnCr2O4 ZnSO4 ZnSO4:6H2O Zoisite
+	-gases 		C2H4(g) C2H6(g)	C3H8(g) CH4(g) CO(g) CO2(g) H2(g) H2O(g) H2S(g) N2(g) NH3(g) NO(g) NO2(g) O2(g) SO2(g) Oxg(g) Hdg(g) Ntg(g) Mtg(g) H2Sg(g)
+
+END
