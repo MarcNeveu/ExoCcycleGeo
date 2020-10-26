@@ -419,7 +419,8 @@ int cleanup (char path[1024]) {
 	strcat(cmd,"rm ");
 	if (cmdline == 1) strncat(cmd,path,strlen(path)-20);
 	else strncat(cmd,path,strlen(path)-18);
-	strcat(cmd,"sel*");
+	if (cmdline == 1) strcat(cmd,"Debug/sel*");
+	else strcat(cmd,"sel*");
 	system(cmd);
 
 	// Restore path
