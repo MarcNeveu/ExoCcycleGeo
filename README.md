@@ -40,6 +40,11 @@ The folders within */Path_to_GitFolder/ExoCcycleGeo/* contain:
 - *PHREEQC-3.1.2*: The *PHREEQC* code executed by the weathering and ocean-atmosphere equilibrium subroutines within *ExoCcycleGeo*
 - *Data*: Lookup tables. Currently there is only one used for calculated the planet's self-compression.
 
+At this time, and I apologize for the clunkiness, you also need to manually edit three files to change the */Path_to_GitFolder/* from mine (*/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/*) to yours (*/Path_to_GitFolder/ExoCcycleGeo/*):
+- In *alphaMELTS-1.9/run_alphameltsExoC.command* at lines 10, 432 (3 instances), and 457 (2 instances)
+- In *alphaMELTS-1.9/ExoC/ExoC_env.txt* at l. 6
+- In *alphaMELTS-1.9/ExoCbatch.txt* at l. 2.
+    
 # Running the code
 
 ## Start the code
