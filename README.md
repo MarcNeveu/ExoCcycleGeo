@@ -56,6 +56,39 @@ and start the execution by typing
 
     ./ExoCcycleGeo &
     
+## Changing inputs
+
+### Planet composition
+
+**Outgassing**: the composition that controls carbon outgassing in the model is that of the upper mantle, which is set in *alphaMELTS-1.9/ExoC/ExoCcycleGeo.melts*. To change it, you can either edit the "Initial Composition" lines of this file or create a duplicate, *Duplicate.melts*, and tell *ExoCbatch.txt* in the same folder to run *Duplicate.melts* rather than *ExoCcycleGeo.melts*. The default composition is that of a mid-ocean ridge basalt (MORB).
+
+**Ocean-atmosphere equilibrium**: the composition that controls ocean-atmosphere equilibrium in the model is set in *PHREEQC-3.1.2/io/OceanDiss.txt*. At the first time step, it is initiated instead with *PHREEQC-3.1.2/io/OceanStart.txt*. The default composition is that of Earth's ocean.
+
+**Continental weathering**: the composition that controls continental weathering in the model is set in *PHREEQC-3.1.2/io/ContWeather.txt*.
+
+### Other inputs
+
+Other inputs are hardcoded in *Debug/ExoCcycleGeo.c* at this time and require source code modification and re-compilation to be changed. (See "Modifying the source code" below.) I plan to move them to an input file. These inputs include:
+- **Planet size** (default 1 Earth mass)
+- **Core mass** (default 0.325 Earth mass), which sets the mantle thickness, vigor of convection, and ultimately the near-surface pressure-temperature profile
+- **Rough core and mantle compositions** used to calculate core and mantle radii based on mass from compression equations of state (defaults set to approximate Earth's radius, solid metal inner core, liquid metal outer core, and silicate mantle)
+- **Mass fraction of carbon in the mantle** (default 0.2%)
+- **Mass of the ocean** (default 1.4e21 kg)
+- **Initial surface temperature** (default 288 K)
+- **Initial atmospheric composition** (default 79% N2, 20% O2, 1% H2O, 280 ppm CO2, 0.0001 ppm CH4)
+- **Land coverage** (default 29% by area)
+- **Runoff**, i.e. rate at which water is delivered from rivers into the ocean (default 0.7 mm/day, i.e., 70 cm/year precipitation with 35% of that rainwater reaching the ocean and the rest evaporated back to the atmosphere before reaching the ocean).
+- **Residence time of water on continents** (default 10 years), i.e. continental patchiness.
+- **Simulation time step** (default 10 million years, which achieves numerical convergence for the outgassing part of the code).
+- **Simulation start and end times** (default 0 billion years (Gyr) after formation, i.e. 4.57 Gyr ago, until 5 Gyr after formation, i.e. 0.4 Gyr into the future).
+
+## Reading outputs
+
+- *CompoOceanAtm.txt* provides the size and composition of the ocean and atmosphere at each time step.
+- *Geotherm.txt* provides the pressure, temperature, melt fraction, and density profiles at each time step, from the upper mantle up to the surface.
+- *Outgassing.txt* provides geophysical parameters of the planet at each time step.
+- *Output.txt* provides reservoirs and fluxes of carbon at each time step.
+    
 # Modifying the source code
 
 ## Install *gcc*
