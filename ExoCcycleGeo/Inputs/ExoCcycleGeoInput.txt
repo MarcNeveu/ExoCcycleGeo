@@ -1,0 +1,38 @@
+ExoCcycleGeo v20.x Input File
+
+|--------------------------------------------------------------|
+| Grid |||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+|-----------------------------------------------|--------------|
+| Simulation time step (Myr, default 10)        | 10           |
+| Simulation start time (Gyr, default 0.6)      | 0.6          |
+| Simulation end   time (Gyr, default 5)        | 5            |
+|-----------------------------------------------|--------------|
+| Planet Interior ||||||||||||||||||||||||||||||||||||||||||||||
+|-----------------------------------------------|--------------|
+| Planet mass (Earth masses, min 0.5, max 2)    | 1            |
+| Core mass fraction (default 0.325)            | 0.325        |
+| Inner layer material code (see planmat dbase) | 101          |
+| Mid   layer material code (see planmat dbase) | 107          |
+| Outer layer material code (see planmat dbase) | 201          |
+| Radionuclides (1 hi, 2 int, 3 lo, def. int)   | 1            |
+| Rheology (0 dry oliv, 1 wet oliv KK08)        | 0            |
+| Upper mantle redox (1 surf, 2 HM, 3 FMQ, 4 IW)| 2            |
+| Mass fraction of C in the mantle (def. 0.002) | 0.002        |
+|-----------------------------------------------|--------------|
+| Surface ||||||||||||||||||||||||||||||||||||||||||||||||||||||
+|-----------------------------------------------|--------------|
+| Mass of surface ocean (kg, def. 1.4e21)       | 1.4e21       |
+| Areal land fraction (default 0.29)            | 0.29         |
+| Initial temperature (K, default 288)          | 288          |
+| Initial pressure (bar)                        | 1            |
+| Runoff rate (m/day, default 0.7e-3)           | 0.7e-3       |
+| Water residence time, continents (yr, def. 10)| 10           |
+|-----------------------------------------------|--------------|
+| Initial Atmosphere |||||||||||||||||||||||||||||||||||||||||||
+|-----------------------------------------------|--------------|
+| CO2 (default 280e-6)                          | 280e-6       |
+| CH4                                           | 1e-10        |
+| O2  (default 0.2)                             | 0.2          |
+| N2  (default 0.79)                            | 0.79         |
+| H2O                                           | 0.01         |
+|--------------------------------------------------------------|

@@ -71,6 +71,166 @@
 #ifndef EXOCCYCLEGEO_H_
 #define EXOCCYCLEGEO_H_
 
+double *exoCinput (double *input, char path[1024]);
 
+//-------------------------------------------------------------------
+//                  Read ExoCcycleGeo input file
+//-------------------------------------------------------------------
+
+double *exoCinput (double *input, char path[1024]) {
+
+	FILE *f;
+	int i = 0;
+	int scan = 0;
+
+	int line_length = 300;
+	char line[line_length]; // Individual line
+	int line_no = 0;        // Line number
+	int tab = 51;           // Column number of inputs
+	fpos_t pos;
+
+	char *title = (char*)malloc(1024);
+	title[0] = '\0';
+	if (cmdline == 1) strncat(title,path,strlen(path)-20);
+	else strncat(title,path,strlen(path)-18);
+	strcat(title,"Inputs/ExoCcycleGeoInput.txt");
+
+	i = 0;
+	f = fopen (title,"r");
+	if (f == NULL) {
+		printf("ExoCcycleGeo: Cannot find ExoCcycleGeo.txt file.\n");
+		printf("Was ExoCcycleGeo launched from the right folder?\n");
+		printf("The following option is active: command line %d\n", cmdline);
+		exit(0);
+	}
+	else {
+		while (fgets(line, line_length, f)) {
+			line_no++;
+			// Grid
+			if (line_no == 5) {
+				fgets(line, tab, f);  // Simulation time step (years)
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 6) {
+				fgets(line, tab, f);  // Simulation start time (years)
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 7) {
+				fgets(line, tab, f);  // Simulation end time (years)
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			// Interior
+			else if (line_no == 11) {
+				fgets(line, tab, f);  // Planet mass (Earth masses)
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 12) {
+				fgets(line, tab, f);  // Core mass fraction
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 13) {
+				fgets(line, tab, f);  // Inner layer material code
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 14) {
+				fgets(line, tab, f);  // Mid layer material code
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 15) {
+				fgets(line, tab, f);  // Outer layer material code
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 16) {
+				fgets(line, tab, f);  // Radionuclide inventory
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 17) {
+				fgets(line, tab, f);  // Rheology
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 18) {
+				fgets(line, tab, f);  // Upper mantle redox
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 19) {
+				fgets(line, tab, f);  // Mass fraction of carbon in the mantle
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			// Surface
+			else if (line_no == 23) {
+				fgets(line, tab, f);  // Mass of surface ocean (kg)
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 24) {
+				fgets(line, tab, f);  // Areal land fraction
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 25) {
+				fgets(line, tab, f);  // Initial temperature (K)
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 26) {
+				fgets(line, tab, f);  // Initial pressure (bar)
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 27) {
+				fgets(line, tab, f);  // Runoff rate (m/day)
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 28) {
+				fgets(line, tab, f);  // Water residence time on continents (years)
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			// Atmosphere
+			else if (line_no == 32) {
+				fgets(line, tab, f);  // Atmospheric CO2 mixing ratio
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 33) {
+				fgets(line, tab, f);  // Atmospheric CH4 mixing ratio
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 34) {
+				fgets(line, tab, f);  // Atmospheric O2 mixing ratio
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 35) {
+				fgets(line, tab, f);  // Atmospheric N2 mixing ratio
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+			else if (line_no == 36) {
+				fgets(line, tab, f);  // Atmospheric H2O mixing ratio
+				scan = fscanf(f, "%lg", &input[i]), i++;
+				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
+			}
+		}
+	}
+	fclose(f);
+
+	free (title);
+	return input;
+}
 
 #endif /* EXOCCYCLEGEO_H_ */

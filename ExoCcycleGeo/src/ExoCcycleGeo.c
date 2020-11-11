@@ -5,14 +5,11 @@
  Computes net C fluxes (in mol C m-2 s-1) at the surface-atmosphere interface
  of a terrestrial planet due to geophysical and geochemical processes.
  TODO:
- 1- Lookup table based on PHREEQC calculations of kinetics of weathering for
- felsic and mafic rock, as a function of temperature and atmospheric carbon
- abundance
+ 1- Finish benchmarking and coding kinetic continental weathering
  2- Seafloor weathering on the timescale of emplacement of new crust. km3
  created per year * fraction getting within diffusional reach of seawater, if
  slow enough, let that determine the rate of consumption by assuming reaction
  has time to go to equilibrium. Confirm with PHREEQC simulations of rates.
- 3- Redox of outgassing. MELTS?
  ============================================================================
  */
 
@@ -28,7 +25,50 @@
 
 int main(int argc, char *argv[]) {
 
+	//-------------------------------------------------------------------
+	// Variable declarations and initializations
+	//-------------------------------------------------------------------
+
 	int i = 0;
+
+	int n_inputs = 23;
+	double *input = (double*) malloc(n_inputs*sizeof(double));
+	if (input == NULL) printf("IcyDwarf: Not enough memory to create input[%d]\n", n_inputs);
+	for (i=0;i<n_inputs;i++) input[i] = 0.0;
+
+// USER-SPECIFIED INPUTS
+
+	// User-specified grid parameters
+	double dtime = 0.0;                // Time step (s)
+	double tstart = 0.0;               // Time at which to start alphaMELTS calculations (s)
+	double tend = 0.0;                 // Time at which to end alphaMELTS calculations (s)
+
+	// User-specified planet interior parameters
+	double m_p = 0.0;                  // Planet mass (kg)
+	double m_c = 0.0;                  // Core mass (kg), default ≈0.3*m_p for Earth, Kite et al. (2009) use 0.325*m_p
+	int layerCode1 = 0;                // Inner layer material code used to compute a compressed planet structure (see Compression_planmat.txt database)
+	int layerCode2 = 0;                // Middle layer material code (see Compression_planmat.txt database)
+	int layerCode3 = 0;                // Outer layer material code (see Compression_planmat.txt database)
+	int radionuclides = 0;             // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
+	int rheology = 0;                  // 0 = dry olivine (KK08), 1 = wet olivine (KK08)
+    int redox = 0;                     // 1: current Earth surface, 2: hematite-magnetite, 3: fayalite-magnetite-quartz, 4: iron-wustite, code won't run with other values.
+    double magmaCmassfrac = 0.0;       // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; HArtley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
+
+    // User-specified planet surface parameters
+	double Mocean = 0.0;               // Mass of ocean (kg, default: Earth=1.4e21)
+	double L = 0.0;                    // Areal fraction of planet surface covered by land
+	double Tsurf0 = 0.0;               // Initial surface temperature (K)
+	double Psurf = 0.0;                // Surface pressure (bar)
+	double runoff = 0.0;               // Atmospheric runoff (m s-1), default runoff_0 = 0.665e-3 m day-1 (Broeker & Peng 1982 instead have 0.7 m per year left after evaporation)
+	double tContResidence = 0.0;       // Residence time of water on continents (s)
+
+    // User-specified planet atmosphere parameters
+	double *xgas = (double*) malloc(nAtmSpecies*sizeof(double));
+	if (xgas == NULL) printf("ExoCcycleGeo: Not enough memory to create xgas[nAtmSpecies]\n"); // Mixing ratios by volume (or by mol since all gases are pretty much ideal and have the same molar volume) of atmospheric gases
+    for (i=0;i<nAtmSpecies;i++) xgas[i] = 0.0;
+
+// OTHER QUANTITIES COMPUTED BY THE CODE
+
 	int ir = 0;
 	int j = 0;
 	int NR = 10000;                    // Number of radial grid zones used in determining planetary structure at setup. 10000 seems to achieve numerical convergence.
@@ -106,7 +146,9 @@ int main(int argc, char *argv[]) {
 
 	// Atmosphere parameters
 	double nAir = 0.0;                 // Number of mol in atmosphere (mol)
-	double S = 0;                      // Stellar flux at planet (W m-2)
+	double S = 0.0;                    // Stellar flux at planet (W m-2)
+	double S0 = 0.0;                   // Initial stellar flux at planet (W m-2)
+	double albedo = 0.0;               // Average surface albedo (dimensionless)
 	double Teff = 0.0;                 // Effective temperature (K)
 	double DeltaTghe = 0.0;            // Temperature increase over effective temperature due to greenhouse effect (K)
 	double psi = 0.0;                  // log10(pCO2) (bar)
@@ -116,6 +158,7 @@ int main(int argc, char *argv[]) {
 
 	// Kinetic parameters
 	int kinsteps = 0;                  // Number of time steps of PHREEQC kinetic simulation
+	double kintime = 0.0;              // Total time of PHREEQC kinetic simulation (s)
 	double WRcontW = 0.0;              // Water:rock mass ratio for continental weathering reactions (kg/kg)
 	double zContW = 0.0;               // Depth of continental weathering (m)
 	double rhoContCrust = 0.0;         // Density of continental crust (kg m-3)
@@ -152,35 +195,38 @@ int main(int argc, char *argv[]) {
 	double Tadiab = 0.0;               // Temperature in mantle adiabat (K)
 	double Tupbnd = 0.0;               // Temperature in conductive upper boundary layer (K)
 	double bndcoef = 0.0;              // Coefficient linking boundary layer thickness and (height of convection cell / Nusselt number)
+	double zLith = 0.0;                // Depth of lithosphere (both thermal: geotherm inflexion to adiabat and mechanical: brittle-ductile transition) (m)
+	double tConv = 0.0;                // Convection timescale (s), 200 Myr for deep Earth mantle today
+	double vConv = 0.0;                // Convective velocity (m s-1)
 
 	// Viscosity law constants (can't be #define'd because they are used as exponents)
-	double KK08DryOlDiff[5];          // Dry diffusion creep flow law (Korenaga & Karato 2008)
-	KK08DryOlDiff[0] = 261.0e3;       // Activation energy (J mol-1), default 261.0±28e3
-	KK08DryOlDiff[1] = 6.0e-6;        // Activation volume (m3 mol-1), default 6±5e-6
-	KK08DryOlDiff[2] = 5.25;          // Exponent of pre-exponential factor, default 5.25±0.03
-	KK08DryOlDiff[3] = 1.0;           // Stress exponent
-	KK08DryOlDiff[4] = 2.98;          // Grain size exponent, default 2.98±0.02
+	double KK08DryOlDiff[5];           // Dry diffusion creep flow law (Korenaga & Karato 2008)
+	KK08DryOlDiff[0] = 261.0e3;        // Activation energy (J mol-1), default 261.0±28e3
+	KK08DryOlDiff[1] = 6.0e-6;         // Activation volume (m3 mol-1), default 6±5e-6
+	KK08DryOlDiff[2] = 5.25;           // Exponent of pre-exponential factor, default 5.25±0.03
+	KK08DryOlDiff[3] = 1.0;            // Stress exponent
+	KK08DryOlDiff[4] = 2.98;           // Grain size exponent, default 2.98±0.02
 
-	double KK08WetOlDiff[5];		  // Wet diffusion creep flow law
-	KK08WetOlDiff[0] = 387.0e3;       // Activation energy (J mol-1), default 387±53e3
-	KK08WetOlDiff[1] = 25.0e-6;       // Activation volume (m3 mol-1), default 25±4e-6
-	KK08WetOlDiff[2] = 4.32;          // Exponent of pre-exponential factor, default 4.32±0.38
-	KK08WetOlDiff[3] = 1.0;           // Stress exponent
-	KK08WetOlDiff[4] = 2.56;          // Grain size exponent, default 2.56±0.24
+	double KK08WetOlDiff[5];		   // Wet diffusion creep flow law
+	KK08WetOlDiff[0] = 387.0e3;        // Activation energy (J mol-1), default 387±53e3
+	KK08WetOlDiff[1] = 25.0e-6;        // Activation volume (m3 mol-1), default 25±4e-6
+	KK08WetOlDiff[2] = 4.32;           // Exponent of pre-exponential factor, default 4.32±0.38
+	KK08WetOlDiff[3] = 1.0;            // Stress exponent
+	KK08WetOlDiff[4] = 2.56;           // Grain size exponent, default 2.56±0.24
 
-	double KK08DryOlDisl[5];          // Dry dislocation creep flow law (Korenaga & Karato 2008)
-	KK08DryOlDisl[0] = 610.0e3;       // Activation energy (J mol-1), default 610±30e3
-	KK08DryOlDisl[1] = 13.0e-6;       // Activation volume (m3 mol-1), default 13±8e-6
-	KK08DryOlDisl[2] = 6.09;          // Exponent of pre-exponential factor, default 6.09±0.11
-	KK08DryOlDisl[3] = 4.94;          // Stress exponent, default 4.94±0.05
-	KK08DryOlDisl[4] = 0.0;           // Grain size exponent
+	double KK08DryOlDisl[5];           // Dry dislocation creep flow law (Korenaga & Karato 2008)
+	KK08DryOlDisl[0] = 610.0e3;        // Activation energy (J mol-1), default 610±30e3
+	KK08DryOlDisl[1] = 13.0e-6;        // Activation volume (m3 mol-1), default 13±8e-6
+	KK08DryOlDisl[2] = 6.09;           // Exponent of pre-exponential factor, default 6.09±0.11
+	KK08DryOlDisl[3] = 4.94;           // Stress exponent, default 4.94±0.05
+	KK08DryOlDisl[4] = 0.0;            // Grain size exponent
 
-	double KK08WetOlDisl[5];          // Wet dislocation creep flow law
-	KK08WetOlDisl[0] = 523.0e3;       // Activation energy (J mol-1), default 523±100e3
-	KK08WetOlDisl[1] = 4.0e-6;        // Activation volume (m3 mol-1), default 4±3e-6
-	KK08WetOlDisl[2] = 0.6;           // Exponent of pre-exponential factor, default 0.6±0.5
-	KK08WetOlDisl[3] = 3.60;          // Stress exponent, default 3.60±0.24
-	KK08WetOlDisl[4] = 0.0;           // Grain size exponent
+	double KK08WetOlDisl[5];           // Wet dislocation creep flow law
+	KK08WetOlDisl[0] = 523.0e3;        // Activation energy (J mol-1), default 523±100e3
+	KK08WetOlDisl[1] = 4.0e-6;         // Activation volume (m3 mol-1), default 4±3e-6
+	KK08WetOlDisl[2] = 0.6;            // Exponent of pre-exponential factor, default 0.6±0.5
+	KK08WetOlDisl[3] = 3.60;           // Stress exponent, default 3.60±0.24
+	KK08WetOlDisl[4] = 0.0;            // Grain size exponent
 
 	double flowLawDiff[5];
 	for (i=0;i<5;i++) flowLawDiff[i] = 0.0;
@@ -190,17 +236,10 @@ int main(int argc, char *argv[]) {
 
 	const double grainSize = 1.0e3;	   // Grain size for computation of viscosity and creep laws (µm)
 
-	// Quantities to be computed by melting model
-	double vConv = 0.0;                // Convective velocity (m s-1)
-
 	// Quantities to be computed by seafloor weathering model
 	double zCrack = 0.0;               // Depth of fracturing below seafloor (m)
 	double tcirc = 0.0;                // Time scale of hydrothermal circulation (s)
 	double deltaCreac = 0.0;           // Net C leached/precipitated per kg of rock (mol kg-1)
-
-	double *xgas = (double*) malloc(nAtmSpecies*sizeof(double));
-	if (xgas == NULL) printf("ExoCcycleGeo: Not enough memory to create xgas[nAtmSpecies]\n"); // Mixing ratios by volume (or by mol since all gases are pretty much ideal and have the same molar volume) of atmospheric gases
-    for (i=0;i<nAtmSpecies;i++) xgas[i] = 0.0;
 
 	double *xaq = (double*) malloc(nAqSpecies*sizeof(double));
 	if (xaq == NULL) printf("ExoCcycleGeo: Not enough memory to create xaq[nAqSpecies]\n"); // Molalities of aqueous species (mol (kg H2O)-1)
@@ -220,55 +259,6 @@ int main(int argc, char *argv[]) {
 	char *title = (char*)malloc(1024*sizeof(char)); title[0] = '\0';
 
 	//-------------------------------------------------------------------
-	// Inputs
-	//-------------------------------------------------------------------
-
-	double dtime = 10.0*Myr2sec;       // Time step (s)
-
-	ntime = (int) (5000.0*Myr2sec/dtime); // Number of time steps of simulation
-
-	// Planet parameters
-	double m_p = 1.0*mEarth;           // Planet mass (kg)
-	double m_c = 0.325*m_p;            // Core mass (kg), default ≈0.3*m_p for Earth, Kite et al. (2009) use 0.325*m_p
-	double L = 0.29;                   // Fraction of planet surface covered by land
-	double Mocean = 1.4e21;            // Mass of ocean (kg, default: Earth=1.4e21)
-    int redox = 2;                     // 1: current Earth surface, 2: hematite-magnetite, 3: fayalite-magnetite-quartz, 4: iron-wustite, code won't run with other values.
-    double magmaCmassfrac = 0.002;     // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; HArtley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
-	double zLith = 100.0*km2m;         // Depth of lithosphere (both thermal: geotherm inflexion to adiabat and mechanical: brittle-ductile transition) (m)
-	double tConv = 10.0*Myr2sec;       // Convection timescale (s), default 200 Myr for deep Earth mantle today
-	int rheology = 0;                  // 0 = dry olivine (KK08), 1 = wet olivine (KK08)
-	int radionuclides = 1;             // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
-	double tstart = 0.6*Gyr2sec;       // Time at which to start alphaMELTS calculations (s)
-	double tend = 5.0*Gyr2sec;         // Time at which to end alphaMELTS calculations (s)
-	zCrust = 0.0;
-
-	// Atmospheric inputs
-	double Tsurf0 = 288.0;             // Initial surface temperature (K)
-	double S0 = 1368.0;                // Stellar flux for G2V star at 1 AU and 4.55 Gyr
-	double albedo = 0.3;
-	double Psurf = 1.0;                // Surface pressure (bar)
-	double runoff = 0.7e-3/86400.0;    // Atmospheric runoff (m s-1), default runoff_0 = 0.665e-3 m day-1
-	xgas[0] = 280.0e-6;                     // CO2
-    xgas[1] = 1.0e-10;                     // CH4
-    xgas[2] = 0.2;                     // O2
-    xgas[3] = 0.79;                     // N2
-    xgas[4] = 0.01;                     // H2O
-
-    // Ocean inputs
-	pH = 8.22;
-//    xaq[0] = 27.0/12.0/1000.0;         // 27 ppm C in today's oceans (scaled from 141 ppm Alk*M(C)/M(HCO3), M being molecular mass)
-//    xaq[1] = 0.0/12.0/1000.0;
-//    xaq[3] = 0.0/14.0/1000.0;          // ppm N in ocean
-
-    // Continental weathering inputs
-	double deplCcrit = 0.18;           // Chemical depletion fraction, i.e. how much carbon has been consumed from rain water by the time fresh rock is emplaced
-	double kintime = 1.0e-6*Yr2sec;    // Total time of PHREEQC kinetic simulation (s), default: 1.0e-6 year
-	kinsteps = 1000;                   // 100 steps by default, could be more
-	zContW = 10.0;
-	rhoContCrust = 2740.0;
-	molmassContCrust = 0.149;
-
-	//-------------------------------------------------------------------
 	// Startup
 	//-------------------------------------------------------------------
 
@@ -285,6 +275,84 @@ int main(int argc, char *argv[]) {
 	if (_NSGetExecutablePath(path, &size) == 0) printf("\n");
 	else printf("ExoCcycleGeo: Couldn't retrieve executable directory. Buffer too small; need size %u\n", size);
 
+	// Read input file
+	input = exoCinput(input, path);
+
+	i = 0;
+	// Grid inputs
+	dtime = input[i]*Myr2sec; i++;     // Timestep
+	tstart = input[i]*Gyr2sec; i++;    // Simulation start time
+	tend = input[i]*Gyr2sec; i++;      // Simulation end time
+	// Interior inputs
+	m_p = input[i]*mEarth; i++;
+	m_c = input[i]*m_p; i++;
+	layerCode1 = (int) input[i]; i++;  // Inner layer material code (see planmat dbase)
+	layerCode2 = (int) input[i]; i++;  // Middle layer material code (see planmat dbase)
+	layerCode3 = (int) input[i]; i++;  // Outer layer material code (see planmat dbase)
+	radionuclides = (int) input[i]; i++; // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
+	rheology = (int) input[i]; i++;    // 0 = dry olivine (KK08), 1 = wet olivine (KK08)
+    redox = (int) input[i]; i++;       // 1 = current Earth surface, 2 = hematite-magnetite, 3 = fayalite-magnetite-quartz, 4 = iron-wustite, code won't run with other values
+    magmaCmassfrac = input[i]; i++;    // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; Hartley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
+    // Surface inputs
+	Mocean = input[i]; i++;            // Mass of ocean (kg, default: Earth=1.4e21)
+	L = input[i]; i++;                 // Areal fraction of planet surface covered by land
+	Tsurf0 = input[i]; i++;            // Initial surface temperature (K)
+	Psurf = input[i]; i++;             // Surface pressure (bar)
+	runoff = input[i]/86400.0; i++;    // Atmospheric runoff (m s-1), default runoff_0 = 0.665e-3 m day-1 (Broeker & Peng 1982 instead have 0.7 m per year left after evaporation)
+	tContResidence = input[i]*1.0e-6*Myr2sec; i++; // Residence time of rain- and river water on continents (s)
+	// Atmospheric inputs
+	xgas[0] = input[i]; i++;           // CO2 mixing ratio
+    xgas[1] = input[i]; i++;           // CH4 mixing ratio
+    xgas[2] = input[i]; i++;           // O2 mixing ratio
+    xgas[3] = input[i]; i++;           // N2 mixing ratio
+    xgas[4] = input[i]; i++;           // H2O mixing ratio
+
+	printf("\n");
+	printf("ExoCcycleGeo v20.11\n");
+	if (cmdline == 1) printf("Command line mode\n");
+
+	printf("|--------------------------------------------------------------|\n");
+	printf("| Grid |||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
+	printf("|-----------------------------------------------|--------------|\n");
+	printf("| Simulation time step (Myr, default 10)        | %g \n", dtime/Myr2sec);
+	printf("| Simulation start time (Gyr, default 0.6)      | %g \n", tstart/Gyr2sec);
+	printf("| Simulation end   time (Gyr, default 5)        | %g \n", tend/Gyr2sec);
+	printf("|-----------------------------------------------|--------------|\n");
+	printf("| Planet Interior ||||||||||||||||||||||||||||||||||||||||||||||\n");
+	printf("|-----------------------------------------------|--------------|\n");
+	printf("| Planet mass (Earth masses, min 0.5, max 2)    | %g \n", m_p/mEarth);
+	printf("| Core mass fraction (default 0.325)            | %g \n", m_c/m_p);
+	printf("| Inner layer material code (see planmat dbase) | %d \n", layerCode1);
+	printf("| Mid   layer material code (see planmat dbase) | %d \n", layerCode2);
+	printf("| Outer layer material code (see planmat dbase) | %d \n", layerCode3);
+	printf("| Radionuclides (1 hi, 2 int, 3 lo, def. int)   | %d \n", radionuclides);
+	printf("| Rheology (0 dry oliv, 1 wet oliv KK08)        | %d \n", rheology);
+	printf("| Upper mantle redox (1 surf, 2 HM, 3 FMQ, 4 IW)| %d \n", redox);
+	printf("| Mass fraction of C in the mantle (def. 0.002) | %g \n", magmaCmassfrac);
+	printf("|-----------------------------------------------|--------------|\n");
+	printf("| Surface ||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
+	printf("|-----------------------------------------------|--------------|\n");
+	printf("| Mass of surface ocean (kg, def. 1.4e21)       | %g \n", Mocean);
+	printf("| Areal land fraction (default 0.29)            | %g \n", L);
+	printf("| Initial temperature (K, default 288)          | %g \n", Tsurf0);
+	printf("| Initial pressure (bar)                        | %g \n", Psurf);
+	printf("| Runoff rate (m/day, default 0.7e-3)           | %g \n", runoff*86400.0);
+	printf("| Water residence time, continents (yr, def. 10)| %g \n", tContResidence/Myr2sec*1.0e6);
+	printf("|-----------------------------------------------|--------------|\n");
+	printf("| Initial Atmosphere |||||||||||||||||||||||||||||||||||||||||||\n");
+	printf("|-----------------------------------------------|--------------|\n");
+	printf("| CO2 (default 280e-6)                          | %g \n", xgas[0]);
+	printf("| CH4                                           | %g \n", xgas[1]);
+	printf("| O2  (default 0.2)                             | %g \n", xgas[2]);
+	printf("| N2  (default 0.79)                            | %g \n", xgas[3]);
+	printf("| H2O                                           | %g \n", xgas[4]);
+	printf("|--------------------------------------------------------------|\n");
+
+	printf("\n");
+	printf("Computing geo C fluxes through time...\n");
+
+	ntime = (int) (tend/dtime);        // Number of time steps of simulation
+
 	// Get pressure and density profiles with depth, accounting for compression and self-gravity
 	compression(NR, m_p, m_c, Tsurf, 101, 107, 203, &r, &P, &rho, &g, &iCMB, path);
 
@@ -298,6 +366,8 @@ int main(int argc, char *argv[]) {
 	Asurf = 4.0*PI_greek*r_p*r_p;
 	nAir = Psurf*bar2Pa*Asurf/g[NR]/molmass_atm(xgas);
 
+	zLith = 100.0*km2m;                // Initial value
+	tConv = 10.0*Myr2sec;              // Initial value
 	vConv = (r_p-zLith-r[iCMB])/tConv;
 
 	// Calculate Tmantle from accretion (Canup et al. 2020 Pluto chapter; volume averaging leads to 3/5 term)
@@ -372,31 +442,6 @@ int main(int argc, char *argv[]) {
 		break;
 	}
 
-	printf("\n");
-	printf("-------------------------------------------------------------------\n");
-	printf("ExoCcycleGeo v20.9\n");
-	printf("This code is in development and cannot be used for science yet.\n");
-	if (cmdline == 1) printf("Command line mode\n");
-	printf("-------------------------------------------------------------------\n");
-
-	printf("\n");
-	printf("Inputs:\n");
-	printf("Planet mass \t \t \t \t %g M_Earth\n", m_p/mEarth);
-	printf("Land coverage of planet surface \t %g%%\n", L*100.0);
-	printf("Surface temperature \t \t \t %g K\n", Tsurf);
-	printf("Mantle temperature \t \t \t %g K\n", Tmantle);
-	printf("Surface pressure \t \t \t %g bar\n", Psurf);
-	printf("Atmospheric CO2 molar mixing ratio \t %g\n", xgas[0]);
-	printf("Atmospheric CH4 molar mixing ratio \t %g\n", xgas[1]);
-	printf("Atmospheric O2 molar mixing ratio \t %g\n", xgas[2]);
-	printf("Atmospheric N2 molar mixing ratio \t %g\n", xgas[3]);
-	printf("Ocean pH \t \t \t \t %g \n", pH);
-	printf("Surface runoff \t \t \t \t %g mm d-1\n", runoff);
-	printf("-------------------------------------------------------------------\n");
-
-	printf("\n");
-	printf("Computing geo C fluxes through time...\n");
-
 	//-------------------------------------------------------------------
 	// Choose redox state (from most oxidized to most reduced)
 	//-------------------------------------------------------------------
@@ -437,6 +482,27 @@ int main(int argc, char *argv[]) {
 
 	printf("log f(O2) = %g\n", logfO2);
 	pe = -pH + 0.25*(logfO2+logKO2H2O);
+
+	//-------------------------------------------------------------------
+	// Initialize parameters not specified by user
+	//-------------------------------------------------------------------
+
+	// Radiative transfer
+	S0 = 1368.0;
+	albedo = 0.3;
+
+    // Ocean
+	pH = 8.22;
+//    xaq[0] = 27.0/12.0/1000.0;         // 27 ppm C in today's oceans (scaled from 141 ppm Alk*M(C)/M(HCO3), M being molecular mass)
+//    xaq[1] = 0.0/12.0/1000.0;
+//    xaq[3] = 0.0/14.0/1000.0;          // ppm N in ocean
+
+    // Continental weathering
+	kintime = 1.0e-6*Yr2sec;    // Total time of PHREEQC kinetic simulation (s), default: 1.0e-6 year
+	kinsteps = 1000;                   // 100 steps by default, could be more
+	zContW = 10.0;
+	rhoContCrust = 2740.0;
+	molmassContCrust = 0.149;
 
 	//-------------------------------------------------------------------
 	// Initialize reservoirs
@@ -1127,7 +1193,7 @@ int main(int argc, char *argv[]) {
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 		else {
 			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-					(double)itime*dtime/Myr2sec, Tmantle, RCmantle, RCatmoc, RCocean, FCoutgas, FCcontW, FCseafsubd, netFC);
+					realtime/Gyr2sec, Tmantle, RCmantle, RCatmoc, RCocean, FCoutgas, FCcontW, FCseafsubd, netFC);
 		}
 		fclose (fout);
 
@@ -1138,7 +1204,7 @@ int main(int argc, char *argv[]) {
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-				(double)itime*dtime/Myr2sec, xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, Tsurf, DeltaTghe, xaq[0], xaq[1], xaq[3],
+				realtime/Gyr2sec, xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, Tsurf, DeltaTghe, xaq[0], xaq[1], xaq[3],
 				pH, 4.0*(pe+pH)-logKO2H2O, rainpH, (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir, xaq[3]*Mocean + xgas[3]*2.0*nAir, Mocean, nAir);
 		fclose (fout);
 
@@ -1159,7 +1225,7 @@ int main(int argc, char *argv[]) {
 
 	for (i=0;i<NR;i++) free (sys_tbl[i]);
 	free (sys_tbl);
-
+	free (input);
 	free (title);
 	free (xgas);
 	free (xaq);
