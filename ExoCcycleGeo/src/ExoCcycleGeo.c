@@ -389,25 +389,6 @@ int main(int argc, char *argv[]) {
 	T_BDT = T[iLith];
 	P_BDT = P[iLith];
 
-	// Rheology
-	switch (rheology) {
-	case 0: // Dry olivine rheology of Korenaga & Karato (2008)
-		for (i=0;i<5;i++) {
-			flowLawDiff[i] = KK08DryOlDiff[i];
-			flowLawDisl[i] = KK08DryOlDisl[i];
-		}
-		break;
-	case 1: // Wet olivine rheology of Korenaga & Karato (2008)
-		for (i=0;i<5;i++) {
-			flowLawDiff[i] = KK08WetOlDiff[i];
-			flowLawDisl[i] = KK08WetOlDisl[i];
-		}
-		break;
-	default:
-		printf("ExoCcycleGeo: Choice of rheology is not recognized. Exiting.\n");
-		exit(0);
-	}
-
 	// Radionuclides
 	switch (radionuclides) {
 	case 0: // Custom: LK07 (case 3), low endmember
@@ -442,10 +423,26 @@ int main(int argc, char *argv[]) {
 		break;
 	}
 
-	//-------------------------------------------------------------------
-	// Choose redox state (from most oxidized to most reduced)
-	//-------------------------------------------------------------------
+	// Rheology
+	switch (rheology) {
+	case 0: // Dry olivine rheology of Korenaga & Karato (2008)
+		for (i=0;i<5;i++) {
+			flowLawDiff[i] = KK08DryOlDiff[i];
+			flowLawDisl[i] = KK08DryOlDisl[i];
+		}
+		break;
+	case 1: // Wet olivine rheology of Korenaga & Karato (2008)
+		for (i=0;i<5;i++) {
+			flowLawDiff[i] = KK08WetOlDiff[i];
+			flowLawDisl[i] = KK08WetOlDisl[i];
+		}
+		break;
+	default:
+		printf("ExoCcycleGeo: Choice of rheology is not recognized. Exiting.\n");
+		exit(0);
+	}
 
+	// Redox (from most oxidized to most reduced)
 	switch(redox) {
 	case 1: // Present-day Earth surface
 		printf("Redox set to present-day Earth surface\n");
