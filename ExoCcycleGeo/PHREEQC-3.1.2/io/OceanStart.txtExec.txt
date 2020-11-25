@@ -5,7 +5,7 @@ SOLUTION 1 Planetary ocean surface waters (PHREEQC v3 manual p. 282)
 	pH 	 	8.22 charge
 	temp 	 	14.85
 	pressure 	0.986923
-	pe 	 	-5.05207
+	pe 	 	3.16793
 # Mass of Earth’s atmosphere: 5.1480e18 kg
 # Mean molecular mass of Earth’s atmosphere: 29 g mol -1
 # Moles of air in Earth’s atmosphere: 1.775e20 mol
