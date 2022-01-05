@@ -1,6 +1,6 @@
 DATABASE /Users/mneveu/Downloads/PhreeqcExoC/core11_idealgas.dat 
 
-TITLE Kinetics of continental crust weathering
+TITLE Kinetics of continental crust weathering, avg. molar mass 117.8 g/mol <-- this number is ExoCcycleGeo input
 
 PHASES
 

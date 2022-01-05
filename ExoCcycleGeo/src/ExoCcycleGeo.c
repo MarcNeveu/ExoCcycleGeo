@@ -80,9 +80,6 @@ int main(int argc, char *argv[]) {
 	int itime = 0;                     // Time step counter
 	int ntime = 0;                     // Total number of steps
 
-	int iter = 0;                      // Iteration counter
-	int niter = 10;                    // Number of iterations for ocean-atmosphere equilibrium
-
 	int nslopeAvg = 5;                 // Target number of data points used for averaging melt fraction slope in the mantle
 	int islope = 0;                    // Actual numbers of data points used for averaging melt fraction slope in the mantle
 
@@ -146,24 +143,15 @@ int main(int argc, char *argv[]) {
 
 	// Atmosphere parameters
 	double nAir = 0.0;                 // Number of mol in atmosphere (mol)
-	double S = 0.0;                    // Stellar flux at planet (W m-2)
-	double S0 = 0.0;                   // Initial stellar flux at planet (W m-2)
-	double albedo = 0.0;               // Average surface albedo (dimensionless)
-	double Teff = 0.0;                 // Effective temperature (K)
+//	double S = 0.0;                    // Stellar flux at planet (W m-2)
+//	double S0 = 0.0;                   // Initial stellar flux at planet (W m-2)
+//	double albedo = 0.0;               // Average surface albedo (dimensionless)
+//	double Teff = 0.0;                 // Effective temperature (K)
 	double DeltaTghe = 0.0;            // Temperature increase over effective temperature due to greenhouse effect (K)
 	double psi = 0.0;                  // log10(pCO2) (bar)
 	double Vatm1 = 0.0;                // Initial atmospheric volume (m3), determined at second time step to avoid skew of starting values
 	double Tsurf1 = 0.0;               // Surface temperature used to determine Vatm1 (K)
 	double Vatm = 0.0;                 // Atmospheric volume (m3)
-
-	// Kinetic parameters
-	int kinsteps = 0;                  // Number of time steps of PHREEQC kinetic simulation
-	double kintime = 0.0;              // Total time of PHREEQC kinetic simulation (s)
-	double WRcontW = 0.0;              // Water:rock mass ratio for continental weathering reactions (kg/kg)
-	double zContW = 0.0;               // Depth of continental weathering (m)
-	double rhoContCrust = 0.0;         // Density of continental crust (kg m-3)
-	double molmassContCrust = 0.0;     // Molar mass of continental crust (kg mol-1)
-	double dCdtContW = 0.0;            // Carbon drawdown rate due to continental weathering (mol (kg H2O)-1 s-1)
 
 	// Quantities to be computed by thermal/geodynamic model
 	int staglid = 1;                   // 1 if stagnant-lid, 0 if mobile-lid
@@ -236,6 +224,52 @@ int main(int argc, char *argv[]) {
 
 	const double grainSize = 1.0e3;	   // Grain size for computation of viscosity and creep laws (µm)
 
+
+	// Quantities to be computed by continental weathering model
+    int iResTime = 0;
+	int kinsteps = 1000;                  // Number of time steps of PHREEQC kinetic simulation
+
+	double **xriver = (double**) malloc(kinsteps*sizeof(double*)); // Molalities of aqueous species and moles (remaining or consumed since last step) of minerals at different times (mol (kg H2O)-1 or mol, xriver[][1]: time in s)
+	if (xriver == NULL) printf("ExoCcycleGeo: Not enough memory to create xriver[kinsteps]\n");
+    for (i=0;i<kinsteps;i++) {
+    	xriver[i] = (double*) malloc(nvarKin*sizeof(double));
+    	if (xriver[i] == NULL) printf("ExoCcycleGeo: Not enough memory to create xriver[kinsteps][nvarKin]\n");
+    }
+	for (i=0;i<kinsteps;i++) {
+		for (j=0;j<nvarKin;j++) xriver[i][j] = 0.0;
+	}
+
+	double kintime = 0.0;              // Total time of PHREEQC kinetic simulation (s)
+	double WRcontW = 0.0;              // Water:rock mass ratio for continental weathering reactions (kg/kg)
+
+	double fracEvap = 0.65; // Fraction of rain/river water that evaporates before reaching the ocean (Berner et al. 1983)
+	double massH2Oriver = 0.0;
+
+	double xriver_Mg_evap = 0.0; // River abundance of Mg accounting for evaporation (mol/kg)
+	double xriver_Ca_evap = 0.0; // River abundance of Ca accounting for evaporation (mol/kg)
+//	double xriver_Si_evap = 0.0; // River abundance of Si accounting for evaporation (mol/kg)
+//	double xriver_Na_evap = 0.0; // River abundance of Na accounting for evaporation (mol/kg)
+	double xriver_Fe_evap = 0.0; // River abundance of Fe accounting for evaporation (mol/kg)
+
+	double Mg_carb_consumed = 0.0; // Amount of crustal magnesium carbonate dissolved (mol)
+	double Ca_carb_consumed = 0.0; // Amount of crustal calcium carbonate dissolved (mol)
+	double Ca_sulf_consumed = 0.0; // Amount of crustal calcium sulfate dissolved (mol)
+	double Fe_sulf_consumed = 0.0; // Amount of crustal iron sulfide dissolved (mol)
+
+	double FC_Mg = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Mg ions (mol/s)
+	double FC_Mg_carb = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Mg carbonate dissolution (mol/s)
+	double FC_Mg_sil = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Mg silicate dissolution (mol/s)
+
+	double FC_Ca = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Ca ions (mol/s)
+	double FC_Ca_carb = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Ca carbonate dissolution (mol/s)
+	double FC_Ca_sulf = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Ca sulfate dissolution (mol/s)
+	double FC_Ca_sil = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Ca silicate dissolution (mol/s)
+
+	double FC_Fe = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Fe ions (mol/s)
+	double FC_Fe_sulf = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Fe sulfide dissolution (mol/s)
+	double FC_Fe_sil = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Fe silicate dissolution (mol/s)
+
+
 	// Quantities to be computed by seafloor weathering model
 	double zCrack = 0.0;               // Depth of fracturing below seafloor (m)
 	double tcirc = 0.0;                // Time scale of hydrothermal circulation (s)
@@ -299,7 +333,7 @@ int main(int argc, char *argv[]) {
 	Tsurf0 = input[i]; i++;            // Initial surface temperature (K)
 	Psurf = input[i]; i++;             // Surface pressure (bar)
 	runoff = input[i]/86400.0; i++;    // Atmospheric runoff (m s-1), default runoff_0 = 0.665e-3 m day-1 (Broeker & Peng 1982 instead have 0.7 m per year left after evaporation)
-	tContResidence = input[i]*1.0e-6*Myr2sec; i++; // Residence time of rain- and river water on continents (s)
+	tContResidence = input[i]*Yr2sec; i++; // Residence time of rain- and river water on continents (s)
 	// Atmospheric inputs
 	xgas[0] = input[i]; i++;           // CO2 mixing ratio
     xgas[1] = input[i]; i++;           // CH4 mixing ratio
@@ -337,7 +371,7 @@ int main(int argc, char *argv[]) {
 	printf("| Initial temperature (K, default 288)          | %g \n", Tsurf0);
 	printf("| Initial pressure (bar)                        | %g \n", Psurf);
 	printf("| Runoff rate (m/day, default 0.7e-3)           | %g \n", runoff*86400.0);
-	printf("| Water residence time, continents (yr, def. 10)| %g \n", tContResidence/Myr2sec*1.0e6);
+	printf("| Water residence time, continents (yr, def. 10)| %g \n", tContResidence/Yr2sec);
 	printf("|-----------------------------------------------|--------------|\n");
 	printf("| Initial Atmosphere |||||||||||||||||||||||||||||||||||||||||||\n");
 	printf("|-----------------------------------------------|--------------|\n");
@@ -485,21 +519,14 @@ int main(int argc, char *argv[]) {
 	//-------------------------------------------------------------------
 
 	// Radiative transfer
-	S0 = 1368.0;
-	albedo = 0.3;
+//	S0 = 1368.0;
+//	albedo = 0.3;
 
     // Ocean
 	pH = 8.22;
 //    xaq[0] = 27.0/12.0/1000.0;         // 27 ppm C in today's oceans (scaled from 141 ppm Alk*M(C)/M(HCO3), M being molecular mass)
 //    xaq[1] = 0.0/12.0/1000.0;
 //    xaq[3] = 0.0/14.0/1000.0;          // ppm N in ocean
-
-    // Continental weathering
-//	kintime = 1.0e-6*Yr2sec;    // Total time of PHREEQC kinetic simulation (s), default: 1.0e-6 year
-	kinsteps = 1000;                   // 100 steps by default, could be more
-	zContW = 10.0;
-	rhoContCrust = 2740.0;
-	molmassContCrust = 0.149;
 
 	//-------------------------------------------------------------------
 	// Initialize reservoirs
@@ -575,7 +602,7 @@ int main(int argc, char *argv[]) {
 	// Start time loop
 	//-------------------------------------------------------------------
 
-	double TotalN0 = xgas[3]*2.0*nAir + xaq[3]*Mocean;
+//	double TotalN0 = xgas[3]*2.0*nAir + xaq[3]*Mocean;
 
 	printf("Starting time loop...\n");
 	for (itime = 0;itime<ntime;itime++) {
@@ -596,8 +623,8 @@ int main(int argc, char *argv[]) {
 
 		// Parameterization of Caldeira & Kasting (1992) equation (4), valid between psi=-8 to -2 and T=0 to 100C
 //		S = S0/(1.0-0.38*(realtime/Gyr2sec/4.55-1.0));
-		S = S0;
-		Teff = pow((1.0-albedo)*S/(4.0*sigStefBoltz),0.25);
+//		S = S0;
+//		Teff = pow((1.0-albedo)*S/(4.0*sigStefBoltz),0.25);
 		psi = log(xgas[0]*Psurf)/log(10.0);
 		if (psi <= -2) DeltaTghe = 815.17 + 4.895e7/Tsurf/Tsurf - 3.9787e5/Tsurf - 6.7084/psi/psi + 73.221/psi - 30882.0/Tsurf/psi;
 		else           DeltaTghe = 815.17 + 4.895e7/Tsurf/Tsurf - 3.9787e5/Tsurf - 6.7084/4.0     - 73.221/2.0 + 30882.0/Tsurf/2.0
@@ -1121,81 +1148,57 @@ int main(int argc, char *argv[]) {
 			// Analytical calculation from Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
 //			FCcontW = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7);
 
-			double **xriver = (double**) malloc(kinsteps*sizeof(double*));
-			if (xriver == NULL) printf("ExoCcycleGeo: Not enough memory to create xriver[kinsteps]\n"); // Molalities of aqueous species in rain at different times (mol (kg H2O)-1, rain[0][kinstep]: time in s)
-		    for (i=0;i<kinsteps;i++) {
-		    	xriver[i] = (double*) malloc(kinsteps*sizeof(double));
-		    	if (xriver[i] == NULL) printf("ExoCcycleGeo: Not enough memory to create xriver[kinsteps][nvarKin]\n");
-		    }
-
-		    kintime = 10.1*Yr2sec; // Total time of kinetic simulation
-		    double riverResTime = 10.0*Yr2sec; // Residence time of rainwater in rivers before delivery to the ocean TODO scale w/ planet size for given patchiness
-		    int iResTime = 0;
-		    iResTime = floor(riverResTime / kintime * (double)kinsteps); // Index in xriver corresponding to output at riverResTime;
+		    kintime = 1.01*tContResidence; // Total time of kinetic simulation
+		    iResTime = floor(tContResidence / kintime * (double)kinsteps); // Index in xriver corresponding to output at riverResTime;
 
 			for (i=0;i<kinsteps;i++) {
 				for (j=0;j<nvarKin;j++) xriver[i][j] = 0.0;
 			}
 
-			WRcontW = 5000.0; // W:R=5000 for Earth, Martin & Meybeck 1979 Table V footnote 3, before 65% evaporation; Berner et al. 1983. TODO Scale with runoff or land fraction/patchiness?
-			WRcontW *= 117.8/1000; // TODO Adjust mass of water based on mass of crust in contweather nput file (= mol of each mineral * molar mass).
+			WRcontW = 5000.0*runoff/runoff_0;
+
 			printf("Weathering...\n");
 			AqueousChem(path, "io/ContWeather.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 1, kintime, kinsteps, nvarKin); // TODO No need to pass WRcontW as modifiable here, as well as Mocean elsewhere?
 
 			rainpH = xriver[1][3];
-
-			double rainfall = 0.7/Yr2sec;  // m/s
-			double fracEvap = 0.65; // Fraction of rain/river water that evaporates before reaching the ocean (Berner et al. 1983)
-			double massH2Oriver = 0.0;
 			massH2Oriver = xriver[iResTime][7];
-
-			double xriver_Mg_evap = 0.0; // River abundance of Mg accounting for evaporation (mol/kg)
-			double xriver_Ca_evap = 0.0; // River abundance of Ca accounting for evaporation (mol/kg)
-
-			double Mg_carb_consumed = 0.0; // Amount of crustal magnesium carbonate dissolved (mol)
-			double Ca_carb_consumed = 0.0; // Amount of crustal calcium carbonate dissolved (mol)
-			double Ca_sulf_consumed = 0.0; // Amount of crustal calcium sulfate dissolved (mol)
-
-			double FC_Mg = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Mg ions (mol/s)
-			double FC_Mg_carb = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Mg carbonate dissolution (mol/s)
-			double FC_Mg_sil = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Mg silicate dissolution (mol/s)
-
-			double FC_Ca = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Ca ions (mol/s)
-			double FC_Ca_carb = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Ca carbonate dissolution (mol/s)
-			double FC_Ca_sulf = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Ca sulfate dissolution (mol/s)
-			double FC_Ca_sil = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Ca silicate dissolution (mol/s)
-
-			double FC_Fe = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Fe ions (mol/s)
 
 			// River abundances of cations (mol/kg)
 			xriver_Mg_evap = xriver[iResTime][11]/(1.0-fracEvap);
 			xriver_Ca_evap = xriver[iResTime][13]/(1.0-fracEvap);
+//			xriver_Si_evap = xriver[iResTime][12]/(1.0-fracEvap);
+//			xriver_Na_evap = xriver[iResTime][10]/(1.0-fracEvap);
+			xriver_Fe_evap = xriver[iResTime][14]/(1.0-fracEvap);
 
 			// Dissolved carbonates, sulfates, sulfides (mol)
-			for (i=nvarKin-7;i<=nvarKin-5;i++) Mg_carb_consumed -= xriver[iResTime][i]; // Dolomite-dis, -ord, and magnesite
-			for (i=nvarKin-8;i<=nvarKin-6;i++) Ca_carb_consumed -= xriver[iResTime][i]; // Dolomite-dis, -ord, and calcite
+			Mg_carb_consumed = - xriver[iResTime][nvarKin-7] - xriver[iResTime][nvarKin-6] - xriver[iResTime][nvarKin-5]; // Dolomite-dis, -ord, and magnesite
+			Ca_carb_consumed = - xriver[iResTime][nvarKin-8] - xriver[iResTime][nvarKin-7] - xriver[iResTime][nvarKin-6]; // Dolomite-dis, -ord, and calcite
 			Ca_sulf_consumed = - xriver[iResTime][nvarKin-4] - xriver[iResTime][nvarKin-3]; // Anhydrite and gypsum
+			Fe_sulf_consumed = - xriver[iResTime][nvarKin-2] - xriver[iResTime][nvarKin-1]; // Pyrite and pyrrhotite
 
-			// Individual weathering fluxes (mol/s)
-			FC_Mg_carb =     Mg_carb_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*rainfall*rhoH2O; // Factor of 1 because despite divalent cation vs. monovalent bicarbonate, 1 biarbonate is released in dissolution, so net 1
-			FC_Mg_sil  = 2.0*(xriver[iResTime][11]        *4.0*PI_greek*r_p*r_p*L*rainfall*rhoH2O - FC_Mg_carb); // Factor of 2 because of divalent cation and monovalent bicarbonate
+			// Individual carbon fluxes (mol/s). Rainout = (river runoff)/fracEvap.
+			FC_Mg_carb =     Mg_carb_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*runoff/fracEvap*rhoH2O; // Factor of 1 because despite divalent cation vs. monovalent bicarbonate, 1 biarbonate is released in dissolution, so net 1
+			FC_Mg_sil  = 2.0*(xriver[iResTime][11]        *4.0*PI_greek*r_p*r_p*L*runoff/fracEvap*rhoH2O - FC_Mg_carb); // Factor of 2 because of divalent cation and monovalent bicarbonate
 			if (FC_Mg_sil < 0.0) printf("itime=%d, Continental weathering: Mg silicate net formation\n", itime);
 			FC_Mg = FC_Mg_carb + FC_Mg_sil;
 
-			FC_Ca_carb =     Ca_carb_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*rainfall*rhoH2O;
-			FC_Ca_sulf = 2.0*Ca_sulf_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*rainfall*rhoH2O; // Factor of 2 because of divalent cation and monovalent bicarbonate
-			FC_Ca_sil  = 2.0*(xriver[iResTime][13]        *4.0*PI_greek*r_p*r_p*L*rainfall*rhoH2O - FC_Ca_carb - 0.5*FC_Ca_sulf);
+			FC_Ca_carb =     Ca_carb_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*runoff/fracEvap*rhoH2O;
+			FC_Ca_sulf = 2.0*Ca_sulf_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*runoff/fracEvap*rhoH2O; // Factor of 2 because of divalent cation and monovalent bicarbonate
+			FC_Ca_sil  = 2.0*(xriver[iResTime][13]        *4.0*PI_greek*r_p*r_p*L*runoff/fracEvap*rhoH2O - FC_Ca_carb - 0.5*FC_Ca_sulf);
 			if (FC_Ca_sil < 0.0) printf("itime=%d, Continental weathering: Ca silicate net formation\n", itime);
-			FC_Ca = FC_Ca_carb + FC_Ca_sil;
+			FC_Ca = FC_Ca_carb + FC_Ca_sulf + FC_Ca_sil;
+
+			FC_Fe_sulf = 2.0*Fe_sulf_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*runoff/fracEvap*rhoH2O; // Factor of 2 because of divalent cation and monovalent bicarbonate
+			FC_Fe_sil  = 2.0*(xriver[iResTime][14]        *4.0*PI_greek*r_p*r_p*L*runoff/fracEvap*rhoH2O - 0.5*FC_Fe_sulf);
+			if (FC_Fe_sil < 0.0) printf("itime=%d, Continental weathering: Fe silicate net formation\n", itime);
+			FC_Fe = FC_Fe_sulf + FC_Fe_sil;
 
 			FCcontW = FC_Mg + FC_Ca + FC_Fe;
 
-//			printf("%d %g %g %g %g %g\n", iResTime, xriver_Mg_evap, Mg_carb_consumed, massH2Oriver, FC_Mg_carb/1.0e12*Yr2sec, FC_Mg_sil/1.0e12*Yr2sec); // Tmol/yr
-//			printf("%g %g %g %g %g %g %g\n", xriver_Ca_evap, Ca_carb_consumed, Ca_sulf_consumed, massH2Oriver, FC_Ca_carb/1.0e12*Yr2sec, FC_Ca_sulf/1.0e12*Yr2sec, FC_Ca_sil/1.0e12*Yr2sec); // Tmol/yr
-//			exit(0);
-
-			for (i=0;i<kinsteps;i++) free (xriver[i]);
-			free (xriver);
+			printf("%d %g %g %g %g %g %g\n", iResTime, xriver_Mg_evap, Mg_carb_consumed, massH2Oriver, FC_Mg_carb/1.0e12*Yr2sec, FC_Mg_sil/1.0e12*Yr2sec, FC_Mg/1.0e12*Yr2sec); // Tmol/yr
+			printf("%g %g %g %g %g %g %g %g\n", xriver_Ca_evap, Ca_carb_consumed, Ca_sulf_consumed, massH2Oriver, FC_Ca_carb/1.0e12*Yr2sec, FC_Ca_sulf/1.0e12*Yr2sec, FC_Ca_sil/1.0e12*Yr2sec, FC_Ca/1.0e12*Yr2sec); // Tmol/yr
+			printf("%g %g %g %g %g %g\n", xriver_Fe_evap, Fe_sulf_consumed, massH2Oriver, FC_Fe_sulf/1.0e12*Yr2sec, FC_Fe_sil/1.0e12*Yr2sec, FC_Fe/1.0e12*Yr2sec); // Tmol/yr
+			exit(0);
 		}
 
 		//-------------------------------------------------------------------
@@ -1270,6 +1273,8 @@ int main(int argc, char *argv[]) {
 
 	for (i=0;i<NR;i++) free (sys_tbl[i]);
 	free (sys_tbl);
+	for (i=0;i<kinsteps;i++) free (xriver[i]);
+	free (xriver);
 	free (input);
 	free (title);
 	free (xgas);

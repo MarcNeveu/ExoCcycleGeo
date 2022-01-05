@@ -58,7 +58,7 @@
 
 // Atmosphere parameters
 #define xCO2g0 355.0e-6                 // Reference atmospheric CO2 mixing ratio (ppmv)
-#define runoff_0 7.70e-9                // Reference runoff (m s-1) = 0.665e-3 m day-1 (Edson et al. 2012, http://dx.doi.org/10.1089/ast.2011.0762)
+#define runoff_0 7.75e-9                // Reference runoff (m s-1) = 0.67e-3 m day-1 (Edson et al. 2012, http://dx.doi.org/10.1089/ast.2011.0762)
 
 // Geochem parameters
 #define nAtmSpecies 5                   // Number of atmospheric species whose abundances are passed between the physical and chemical models
@@ -89,7 +89,7 @@ double *exoCinput (double *input, char path[1024]) {
 	char line[line_length]; // Individual line
 	int line_no = 0;        // Line number
 	int tab = 51;           // Column number of inputs
-	fpos_t pos;
+//	fpos_t pos;
 
 	char *title = (char*)malloc(1024);
 	title[0] = '\0';

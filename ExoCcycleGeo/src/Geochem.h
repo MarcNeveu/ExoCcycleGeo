@@ -236,6 +236,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	char pe_str[32];
 	char mass_w_str[32];
 	char steps_str1[64]; char steps_str2[64];
+	char molMassCrust[10];
 
 	char **gas_str1 = (char**)malloc(nAtmSpecies*sizeof(char*));
 	for (i=0;i<nAtmSpecies;i++) gas_str1[i] = (char*)malloc(1024);
@@ -275,14 +276,12 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	// Kinetic simulation applies only to continental weathering, for which the pH of rain is used, not that of the ocean
 	if (kintime) pH = 7.0;
 
-	// Assemble file title
 	sprintf(itime_str, "%d", itime);
 	sprintf(temp_str, "%g", temp);
 	sprintf(pressure_str, "%g", pressure);
 	sprintf(vol_str, "%g", gasvol);
 	sprintf(pH_str, "%g", pH);
 	sprintf(pe_str, "%g", pe);
-	sprintf(mass_w_str, "%g", mass_w);
 
 	if (!forcedPP) {
 		for (i=0;i<nAtmSpecies;i++) {
@@ -323,6 +322,13 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 
 	while (fgets(line, line_length, fin)) {
 		// Block switches
+		if (kintime) { // Continental weathering simulation only
+			if (line[0] == 'T' && line[1] == 'I' && line[2] == 'T' && line[3] == 'L') { // TITLE line with crust molar mass value
+				for (i=0;i<10;i++) molMassCrust[i] = line[i+64];
+				mass_w *= strtod((const char*)molMassCrust, NULL)/1000.0; // Multiply W:R by crust molar mass to get mass of water in kg
+				sprintf(mass_w_str, "%g", mass_w);
+			}
+		}
 		if (line[0] == 'E' && line[1] == 'Q' && line[2] == 'U' && line[3] == 'I') eqphases = 1; // EQUILIBRIUM_PHASES block
 		if (line[0] == 'G' && line[1] == 'A' && line[2] == 'S' && line[3] == '_') gasphase = 1; // EQUILIBRIUM_PHASES block
 		if (line[0] == 'S' && line[1] == 'E' && line[2] == 'L' && line[3] == 'E') sel = 1;      // SELECTED_OUTPUT block
