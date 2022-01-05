@@ -282,6 +282,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	sprintf(vol_str, "%g", gasvol);
 	sprintf(pH_str, "%g", pH);
 	sprintf(pe_str, "%g", pe);
+	sprintf(mass_w_str, "%g", mass_w);
 
 	if (!forcedPP) {
 		for (i=0;i<nAtmSpecies;i++) {

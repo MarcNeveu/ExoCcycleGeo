@@ -245,11 +245,11 @@ int main(int argc, char *argv[]) {
 	double fracEvap = 0.65; // Fraction of rain/river water that evaporates before reaching the ocean (Berner et al. 1983)
 	double massH2Oriver = 0.0;
 
-	double xriver_Mg_evap = 0.0; // River abundance of Mg accounting for evaporation (mol/kg)
-	double xriver_Ca_evap = 0.0; // River abundance of Ca accounting for evaporation (mol/kg)
+//	double xriver_Mg_evap = 0.0; // River abundance of Mg accounting for evaporation (mol/kg)
+//	double xriver_Ca_evap = 0.0; // River abundance of Ca accounting for evaporation (mol/kg)
 //	double xriver_Si_evap = 0.0; // River abundance of Si accounting for evaporation (mol/kg)
 //	double xriver_Na_evap = 0.0; // River abundance of Na accounting for evaporation (mol/kg)
-	double xriver_Fe_evap = 0.0; // River abundance of Fe accounting for evaporation (mol/kg)
+//	double xriver_Fe_evap = 0.0; // River abundance of Fe accounting for evaporation (mol/kg)
 
 	double Mg_carb_consumed = 0.0; // Amount of crustal magnesium carbonate dissolved (mol)
 	double Ca_carb_consumed = 0.0; // Amount of crustal calcium carbonate dissolved (mol)
@@ -1144,7 +1144,7 @@ int main(int argc, char *argv[]) {
 		// Calculate surface C flux from continental weathering
 		//-------------------------------------------------------------------
 
-		if (Tsurf > Tfreeze) {
+		if (Tsurf > Tfreeze && realtime > tstart && realtime <= tend) {
 			// Analytical calculation from Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
 //			FCcontW = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7);
 
@@ -1157,18 +1157,18 @@ int main(int argc, char *argv[]) {
 
 			WRcontW = 5000.0*runoff/runoff_0;
 
-			printf("Weathering...\n");
+//			printf("Weathering...\n");
 			AqueousChem(path, "io/ContWeather.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 1, kintime, kinsteps, nvarKin); // TODO No need to pass WRcontW as modifiable here, as well as Mocean elsewhere?
 
 			rainpH = xriver[1][3];
 			massH2Oriver = xriver[iResTime][7];
 
 			// River abundances of cations (mol/kg)
-			xriver_Mg_evap = xriver[iResTime][11]/(1.0-fracEvap);
-			xriver_Ca_evap = xriver[iResTime][13]/(1.0-fracEvap);
+//			xriver_Mg_evap = xriver[iResTime][11]/(1.0-fracEvap);
+//			xriver_Ca_evap = xriver[iResTime][13]/(1.0-fracEvap);
 //			xriver_Si_evap = xriver[iResTime][12]/(1.0-fracEvap);
 //			xriver_Na_evap = xriver[iResTime][10]/(1.0-fracEvap);
-			xriver_Fe_evap = xriver[iResTime][14]/(1.0-fracEvap);
+//			xriver_Fe_evap = xriver[iResTime][14]/(1.0-fracEvap);
 
 			// Dissolved carbonates, sulfates, sulfides (mol)
 			Mg_carb_consumed = - xriver[iResTime][nvarKin-7] - xriver[iResTime][nvarKin-6] - xriver[iResTime][nvarKin-5]; // Dolomite-dis, -ord, and magnesite
@@ -1193,12 +1193,11 @@ int main(int argc, char *argv[]) {
 			if (FC_Fe_sil < 0.0) printf("itime=%d, Continental weathering: Fe silicate net formation\n", itime);
 			FC_Fe = FC_Fe_sulf + FC_Fe_sil;
 
-			FCcontW = FC_Mg + FC_Ca + FC_Fe;
+			FCcontW = - FC_Mg - FC_Ca - FC_Fe; // Negative out of atmosphere
 
-			printf("%d %g %g %g %g %g %g\n", iResTime, xriver_Mg_evap, Mg_carb_consumed, massH2Oriver, FC_Mg_carb/1.0e12*Yr2sec, FC_Mg_sil/1.0e12*Yr2sec, FC_Mg/1.0e12*Yr2sec); // Tmol/yr
-			printf("%g %g %g %g %g %g %g %g\n", xriver_Ca_evap, Ca_carb_consumed, Ca_sulf_consumed, massH2Oriver, FC_Ca_carb/1.0e12*Yr2sec, FC_Ca_sulf/1.0e12*Yr2sec, FC_Ca_sil/1.0e12*Yr2sec, FC_Ca/1.0e12*Yr2sec); // Tmol/yr
-			printf("%g %g %g %g %g %g\n", xriver_Fe_evap, Fe_sulf_consumed, massH2Oriver, FC_Fe_sulf/1.0e12*Yr2sec, FC_Fe_sil/1.0e12*Yr2sec, FC_Fe/1.0e12*Yr2sec); // Tmol/yr
-			exit(0);
+//			printf("%d %g %g %g %g %g %g\n", iResTime, xriver_Mg_evap, Mg_carb_consumed, massH2Oriver, FC_Mg_carb/1.0e12*Yr2sec, FC_Mg_sil/1.0e12*Yr2sec, FC_Mg/1.0e12*Yr2sec); // Tmol/yr
+//			printf("%g %g %g %g %g %g %g %g\n", xriver_Ca_evap, Ca_carb_consumed, Ca_sulf_consumed, massH2Oriver, FC_Ca_carb/1.0e12*Yr2sec, FC_Ca_sulf/1.0e12*Yr2sec, FC_Ca_sil/1.0e12*Yr2sec, FC_Ca/1.0e12*Yr2sec); // Tmol/yr
+//			printf("%g %g %g %g %g %g\n", xriver_Fe_evap, Fe_sulf_consumed, massH2Oriver, FC_Fe_sulf/1.0e12*Yr2sec, FC_Fe_sil/1.0e12*Yr2sec, FC_Fe/1.0e12*Yr2sec); // Tmol/yr
 		}
 
 		//-------------------------------------------------------------------
