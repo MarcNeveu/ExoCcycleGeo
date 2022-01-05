@@ -49,19 +49,19 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	char *tempinput = (char*)malloc(1024);                       // Temporary PHREEQC input file, modified from template
 	double nAir0 = *nAir; // Scaling factor for gas volume and water mass, so PHREEQC doesn't have to handle large numbers
 
-	double **simdata = (double**) malloc(nvar*sizeof(double*));
-	if (simdata == NULL) printf("AqueousChem: Not enough memory to create simdata[nvar][kinsteps]\n");
-	for (i=0;i<nvar;i++) {
-		simdata[i] = (double*) malloc(kinsteps*sizeof(double));
-		if (simdata[i] == NULL) printf("AqueousChem: Not enough memory to create simdata[nvar][kinsteps]\n");
+	double **simdata = (double**) malloc(kinsteps*sizeof(double*));
+	if (simdata == NULL) printf("AqueousChem: Not enough memory to create simdata[kinsteps][kinsteps]\n");
+	for (i=0;i<kinsteps;i++) {
+		simdata[i] = (double*) malloc(nvar*sizeof(double));
+		if (simdata[i] == NULL) printf("AqueousChem: Not enough memory to create simdata[kinsteps][nvar]\n");
 	}
 
 	// Initializations
 	dbase[0] = '\0';
 	infile[0] = '\0';
 	tempinput[0] = '\0';
-	for (i=0;i<nvar;i++) {
-		for (j=0;j<kinsteps;j++) simdata[i][j] = 0.0;
+	for (i=0;i<kinsteps;i++) {
+		for (j=0;j<nvar;j++) simdata[i][j] = 0.0;
 	}
 
 	if (cmdline == 1) strncat(dbase,path,strlen(path)-20);
@@ -87,9 +87,9 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	if (DestroyIPhreeqc(phreeqc) != IPQ_OK) OutputErrorString(phreeqc);
 
 //	if (strcmp(filename, "io/OceanDiss") == 0) {
-//		for (i=0;i<nvar;i++) {
+//		for (i=0;i<kinsteps;i++) {
 //			printf("%d\t", i);
-//			for (j=0;j<kinsteps;j++) printf("%g\t", simdata[i][j]);
+//			for (j=0;j<nvar;j++) printf("%g\t", simdata[i][j]);
 //			printf("\n");
 //		}
 //		exit(0);
@@ -97,51 +97,60 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 	// Setting initial ocean chemistry
 	if (strcmp(filename, "io/OceanStart.txt") == 0) {
-		(*pH) = simdata[1][0];
-		(*pe) = simdata[2][0];
+		(*pH) = simdata[0][1];
+		(*pe) = simdata[0][2];
 
-		(*xaq)[0] = simdata[39][0];             // C(4), i.e. dissolved CO2 and carbonate
-		(*xaq)[1] = simdata[37][0];             // C(-4), i.e. dissolved methane
-		(*xaq)[2] = simdata[66][0];             // O(0), i.e. dissolved O2
-		(*xaq)[3] = simdata[84][0];             // Ntg
-//		(*xaq)[4] = simdata[22][0];             // Total dissolved N
-//		(*xaq)[5] = simdata[62][0];             // N(-3), i.e. dissolved NH3 and NH4+
+		(*xaq)[0] = simdata[0][39];             // C(4), i.e. dissolved CO2 and carbonate
+		(*xaq)[1] = simdata[0][37];             // C(-4), i.e. dissolved methane
+		(*xaq)[2] = simdata[0][66];             // O(0), i.e. dissolved O2
+		(*xaq)[3] = simdata[0][84];             // Ntg
+//		(*xaq)[4] = simdata[0][22];             // Total dissolved N
+//		(*xaq)[5] = simdata[0][62];             // N(-3), i.e. dissolved NH3 and NH4+
 	}
 
 	// Ocean dissolution
 	if (strcmp(filename, "io/OceanDiss.txt") == 0) {
-		(*pH) = simdata[1][0];
-		(*pe) = simdata[2][0];
-		(*nAir) = simdata[1006][0]*nAir0;
-		(*P) = simdata[1005][0]*atm2bar;
-		(*V) = simdata[1007][0]/1000.0*nAir0;
-		(*mass_w) = simdata[5][0]*nAir0;
+		(*pH) = simdata[0][1];
+		(*pe) = simdata[0][2];
+		(*nAir) = simdata[0][1006]*nAir0;
+		(*P) = simdata[0][1005]*atm2bar;
+		(*V) = simdata[0][1007]/1000.0*nAir0;
+		(*mass_w) = simdata[0][5]*nAir0;
 
-		(*xaq)[0] = simdata[39][0];             // C(4), i.e. dissolved CO2 and carbonate
-		(*xaq)[1] = simdata[37][0];             // C(-4), i.e. dissolved methane
-		(*xaq)[2] = simdata[66][0];             // O(0), i.e. dissolved O2
-		(*xaq)[3] = simdata[84][0];             // Ntg
-//		(*xaq)[4] = simdata[22][0];             // N excluding Ntg
-//		(*xaq)[5] = simdata[62][0];             // N(-3), i.e. dissolved NH3 and NH4+
+		(*xaq)[0] = simdata[0][39];             // C(4), i.e. dissolved CO2 and carbonate
+		(*xaq)[1] = simdata[0][37];             // C(-4), i.e. dissolved methane
+		(*xaq)[2] = simdata[0][66];             // O(0), i.e. dissolved O2
+		(*xaq)[3] = simdata[0][84];             // Ntg
+//		(*xaq)[4] = simdata[0][22];             // N excluding Ntg
+//		(*xaq)[5] = simdata[0][62];             // N(-3), i.e. dissolved NH3 and NH4+
 
-		(*xgas)[0] = simdata[1013][0];          // CO2(g)
-		(*xgas)[1] = simdata[1011][0];          // CH4(g)
-		(*xgas)[2] = simdata[1021][0];          // O2(g)
-		(*xgas)[3] = simdata[1025][0];          // Ntg(g)
-		(*xgas)[4] = simdata[1015][0];          // H2O(g)
+		(*xgas)[0] = simdata[0][1013];          // CO2(g)
+		(*xgas)[1] = simdata[0][1011];          // CH4(g)
+		(*xgas)[2] = simdata[0][1021];          // O2(g)
+		(*xgas)[3] = simdata[0][1025];          // Ntg(g)
+		(*xgas)[4] = simdata[0][1015];          // H2O(g)
 
-		for (i=0;i<nAtmSpecies;i++) (*xgas)[i] = (*xgas)[i]/simdata[1006][0]; // Divide by total mol gas to return mixing ratio
+		for (i=0;i<nAtmSpecies;i++) (*xgas)[i] = (*xgas)[i]/simdata[0][1006]; // Divide by total mol gas to return mixing ratio
 	}
 
 	// Continental weathering
 	if (strcmp(filename, "io/ContWeather.txt") == 0) {
-
 		for (i=0;i<kinsteps;i++) {
-			for (j=0;j<nvarKin;j++) (*xriver)[i][j] = simdata[i][j];
+			for (j=0;j<nvarKin-8;j++) (*xriver)[i][j] = simdata[i][j];
+			if (i > 0) {
+				(*xriver)[i][nvarKin-8] = (*xriver)[i-1][nvarKin-8] + (*xriver)[i][107]; // Cumulative calcite consumed (mol)
+				(*xriver)[i][nvarKin-7] = (*xriver)[i-1][nvarKin-7] + (*xriver)[i][109]; // Cumulative dolomite-disordered consumed (mol)
+				(*xriver)[i][nvarKin-6] = (*xriver)[i-1][nvarKin-6] + (*xriver)[i][111]; // Cumulative dolomite-ordered consumed (mol)
+				(*xriver)[i][nvarKin-5] = (*xriver)[i-1][nvarKin-5] + (*xriver)[i][113]; // Cumulative magnesite consumed (mol)
+				(*xriver)[i][nvarKin-4] = (*xriver)[i-1][nvarKin-4] + (*xriver)[i][115]; // Cumulative anhydrite consumed (mol)
+				(*xriver)[i][nvarKin-3] = (*xriver)[i-1][nvarKin-3] + (*xriver)[i][117]; // Cumulative gypsum consumed (mol)
+				(*xriver)[i][nvarKin-2] = (*xriver)[i-1][nvarKin-2] + (*xriver)[i][119]; // Cumulative pyrite consumed (mol)
+				(*xriver)[i][nvarKin-1] = (*xriver)[i-1][nvarKin-1] + (*xriver)[i][121]; // Cumulative pyrrhotite consumed (mol)
+			}
 		}
 	}
 
-	for (i=0;i<nvar;i++) free (simdata[i]);
+	for (i=0;i<kinsteps;i++) free (simdata[i]);
 	free (dbase);
 	free (infile);
 	free (tempinput);
@@ -167,16 +176,16 @@ int ExtractWrite(int instance, double*** data, int line, int nvar) {
 	if (nvar == nvarEq) { // Equilibrium simulation
 		for (i=0;i<nvar;i++) {                           // Rest of parameters
 			GetSelectedOutputValue(instance,line,i,&v);
-			if (fabs(v.dVal) < 1e-50) (*data)[i][0] = 0.0;
-			else (*data)[i][0] = v.dVal;
+			if (fabs(v.dVal) < 1e-50) (*data)[0][i] = 0.0;
+			else (*data)[0][i] = v.dVal;
 		}
 	}
 	else if (nvar == nvarKin) { // Kinetic simulation
 		for (i=0;i<nvar;i++) {
 			for (j=0;j<line;j++) {
 				GetSelectedOutputValue(instance,j,i,&v);
-				if (fabs(v.dVal) < 1e-50) (*data)[i][j] = 0.0;
-				else (*data)[i][j] = v.dVal;
+				if (fabs(v.dVal) < 1e-50) (*data)[j][i] = 0.0;
+				else (*data)[j][i] = v.dVal;
 			}
 		}
 	}

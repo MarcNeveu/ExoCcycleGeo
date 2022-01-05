@@ -6878,35 +6878,45 @@ Mtg(g)
 
 RATES
 
+#----------
+# 56 Solids
+#----------
+
+# --- SiO2 polymorphs ---
+
 Quartz
 	-start
-	1   REM Ref PK04 
-	2   REM dQtz/dt = -k * (1 - ΩQtz^p)^q. k = A*exp(-E/RT) mol m-2 s-1. p=q=1 approximation
-	3   REM k = 1e-13.99 at 25 C, 1/k = 3.1 Myr
-	4   REM parm(1) = A, pre-exponential factor (mol m-2 s-1)
-	5   REM parm(2) = E, activation energy (J mol-1)
-	10  rate = parm(1) * exp(-parm(2)/(8.314*TK)) * (1 - SR("Quartz"))
-	20  moles = rate * TIME
-	30  SAVE moles
+	1   REM Ref PK04
+	20  kneut = 10^(-13.99) * exp(-87.7e3/8.314 * (1/TK-1/298.15))
+	30  kbase = 10^(-16.29) * exp(-108366e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^-0.5
+	40  k = kneut + kbase
+	50  rate = k * (1 - SR("Quartz"))
+	60  moles = rate * TIME
+	70  SAVE moles
 	-end
+SiO2(am) # Precipitation only, see PK04 for dissolution rates
+	-start
+	1   REM Ref PK04
+	20  kneut = 10^(-9.42) * exp(-49.8e3/8.314 * (1/TK-1/298.15))
+	40  k = kneut
+	50  rate = k * (1 - SR("SiO2(am)"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+
+# --- Feldspars ---
+
 Albite # Na-endmember of plagioclase
 	-start
 	1   REM 3 mechanisms: acid, neutral, base (PK04)
+	2   REM Chemical affinity parameters p and q for albite are 0.760 and 90.0 respectively
+        3   REM (Alekseyev et al., 1997), but their use in modeling should be limited to conditions 
+        4   REM near the experimental conditions under which they were obtained, 300 °C and pH = 9.
 	10  kacid = 10^(-10.16) * exp(-65.0e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.457
 	20  kneut = 10^(-12.56) * exp(-69.8e3/8.314 * (1/TK-1/298.15))
 	30  kbase = 10^(-15.60) * exp(-71.0e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^-0.572
 	40  k = kacid + kneut + kbase
 	50  rate = k * (1 - SR("Albite"))
-	60  moles = rate * TIME
-	70  SAVE moles
-	-end
-Anorthite # Ca-endmember of plagioclase
-	-start
-	1   REM Ref PK04
-	10  kacid = 10^(-3.50) * exp(-16.6e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^1.411
-	20  kneut = 10^(-9.12) * exp(-17.8e3/8.314 * (1/TK-1/298.15))
-	40  k = kacid + kneut
-	50  rate = k * (1 - SR("Anorthite"))
 	60  moles = rate * TIME
 	70  SAVE moles
 	-end
@@ -6950,6 +6960,16 @@ Anorthite # Ca-endmember of plagioclase
 #	60  moles = rate * TIME
 #	70  SAVE moles
 #	-end
+Anorthite # Ca-endmember of plagioclase
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-3.50) * exp(-16.6e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^1.411
+	20  kneut = 10^(-9.12) * exp(-17.8e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Anorthite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
 K-Feldspar
 	-start
 	1   REM Ref PK04
@@ -6961,44 +6981,169 @@ K-Feldspar
 	60  moles = rate * TIME
 	70  SAVE moles
 	-end
-Phlogopite
+
+# --- Feldspathoids ---
+
+Nepheline
 	-start
 	1   REM Ref PK04
-	20  kneut = 10^(-12.40) * exp(-29.0e3/8.314 * (1/TK-1/298.15))
-	40  k = kneut
-	50  rate = k * (1 - SR("Phlogopite"))
+	10  kacid = 10^(-2.73) * exp(-62.9e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^1.13
+	20  kneut = 10^(-8.56) * exp(-65.4e3/8.314 * (1/TK-1/298.15))
+	30  kbase = 10^(-10.76) * exp(-37.8e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^-0.2
+	40  k = kacid + kneut + kbase
+	50  rate = k * (1 - SR("Nepheline"))
 	60  moles = rate * TIME
 	70  SAVE moles
 	-end
-Annite # Assuming kinetics are the same as for the Mg-end-member phlogopite
+
+# --- Olivine ---
+
+Forsterite
 	-start
-	1   REM Ref PK04 for phlogopite
-	20  kneut = 10^(-12.40) * exp(-29.0e3/8.314 * (1/TK-1/298.15))
-	40  k = kneut
-	50  rate = k * (1 - SR("Annite"))
-	60  moles = rate * TIME
-	70  SAVE moles
-	-end
-Clinochlore-14A
-	-start
-	1   REM Ref PK04 for chlorite
-	10  kacid = 10^(-11.11) * exp(-88.0e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.5
-	20  kneut = 10^(-12.52) * exp(-88.0e3/8.314 * (1/TK-1/298.15))
+	1   REM Ref PK04
+	10  kacid = 10^(-6.85) * exp(-67.2e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.47
+	20  kneut = 10^(-10.64) * exp(-79.0e3/8.314 * (1/TK-1/298.15))
 	40  k = kacid + kneut
-	50  rate = k * (1 - SR("Clinochlore-14A"))
+	50  rate = k * (1 - SR("Forsterite"))
 	60  moles = rate * TIME
 	70  SAVE moles
 	-end
-Daphnite-14A # Assuming kinetics are the same as for Clinochlore-14A (Mg,Fe)5Al(Si3Al)O10(OH)8
+Fayalite
 	-start
-	1   REM Ref PK04 for chlorite
-	10  kacid = 10^(-11.11) * exp(-88.0e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.5
-	20  kneut = 10^(-12.52) * exp(-88.0e3/8.314 * (1/TK-1/298.15))
+	1   REM Ref PK04
+	10  kacid = 10^(-4.80) * exp(-94.4e3/8.314 * (1/TK-1/298.15))
+	20  kneut = 10^(-12.80) * exp(-94.4e3/8.314 * (1/TK-1/298.15))
 	40  k = kacid + kneut
-	50  rate = k * (1 - SR("Daphnite-14A"))
+	50  rate = k * (1 - SR("Fayalite"))
 	60  moles = rate * TIME
 	70  SAVE moles
 	-end
+
+# --- Garnet ---
+
+Grossular
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-5.10) * exp(-85.0e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^1.0
+	20  kneut = 10^(-10.70) * exp(-103.8e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Grossular"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Andradite
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-5.20) * exp(-94.4e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^1.0
+	20  kneut = 10^(-10.70) * exp(-103.8e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Andradite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+
+# --- Other orthosilicates ---
+
+Kyanite
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-10.17) * exp(-53.9e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^1.268
+	20  kneut = 10^(-17.44) * exp(-53.9e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Kyanite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Epidote
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-10.60) * exp(-71.1e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.338
+	20  kneut = 10^(-11.99) * exp(-70.7e3/8.314 * (1/TK-1/298.15))
+	30  kbase = 10^(-17.33) * exp(-79.1e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^-0.556
+	40  k = kacid + kneut + kbase
+	50  rate = k * (1 - SR("Epidote"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Zoisite
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-7.50) * exp(-66.1e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.5
+	20  kneut = 10^(-11.20) * exp(-66.1e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Zoisite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+
+# --- Cyclosilicates ---
+
+Cordierite_anhyd
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-3.80) * exp(-113.3e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^1.0
+	20  kneut = 10^(-11.20) * exp(-28.3e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Cordierite_anhyd"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+
+# --- Pyroxenes & pyroxenoids ---
+
+Diopside
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-6.36) * exp(-96.1e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.71
+	20  kneut = 10^(-11.11) * exp(-40.6e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Diopside"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Enstatite
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-9.02) * exp(-80.0e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.6
+	20  kneut = 10^(-12.72) * exp(-80.0e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Enstatite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Jadeite
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-6.00) * exp(-132.2e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.7
+	20  kneut = 10^(-9.50) * exp(-94.4e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Jadeite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Spodumene
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-4.60) * exp(-94.4e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.7
+	20  kneut = 10^(-9.30) * exp(-66.1e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Spodumene"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Wollastonite
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-5.37) * exp(-54.7e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.4
+	20  kneut = 10^(-8.88) * exp(-54.7e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Wollastonite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+
+# --- Amphiboles ---
+
 Anthophyllite
 	-start
 	1   REM Ref PK04
@@ -7029,6 +7174,227 @@ Tremolite
 	60  moles = rate * TIME
 	70  SAVE moles
 	-end
+
+# --- Micas ---
+
+Muscovite
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-11.85) * exp(-22.0e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.37
+	20  kneut = 10^(-13.55) * exp(-22.0e3/8.314 * (1/TK-1/298.15))
+	30  kbase = 10^(-14.55) * exp(-22.0e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^-0.22
+	40  k = kacid + kneut + kbase
+	50  rate = k * (1 - SR("Muscovite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Paragonite
+	-start
+	1   REM Ref PK04
+	20  kneut = 10^(-13.0) * exp(-22.0e3/8.314 * (1/TK-1/298.15))
+	40  k = kneut
+	50  rate = k * (1 - SR("Paragonite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Phlogopite
+	-start
+	1   REM Ref PK04
+	20  kneut = 10^(-12.40) * exp(-29.0e3/8.314 * (1/TK-1/298.15))
+	40  k = kneut
+	50  rate = k * (1 - SR("Phlogopite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Pyrophyllite
+	-start
+	1   REM Ref PK04
+	20  kneut = 10^(-12.40) * exp(-29.0e3/8.314 * (1/TK-1/298.15))
+	40  k = kneut
+	50  rate = k * (1 - SR("Pyrophyllite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+
+# --- Clays ---
+
+Kaolinite
+	-start
+	1   REM Ref PK04
+	2   REM Nagy et al. (1991) have quantified the chemical affinity parameters 
+        3   REM at 80 °C and pH = 3 as either p = 1.000 and q = 0.897, or p = 0.850 and q = 1.000 
+        4   REM within experimental uncertainty.
+	10  kacid = 10^(-11.31) * exp(-65.9e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.777
+	20  kneut = 10^(-13.18) * exp(-22.2e3/8.314 * (1/TK-1/298.15))
+	30  kbase = 10^(-17.05) * exp(-17.9e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^-0.472
+	40  k = kacid + kneut + kbase
+	50  rate = k * (1 - SR("Kaolinite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Montmor-K
+	-start
+	1   REM Ref PK04 for montmorillonite K0.318(Si3.975Al0.025)(Al1.509Fe0.205Mg0.283)(OH)2
+	10  kacid = 10^(-12.71) * exp(-48.0e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.22
+	20  kneut = 10^(-14.41) * exp(-48.0e3/8.314 * (1/TK-1/298.15))
+	30  kbase = 10^(-14.41) * exp(-48.0e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^-0.13
+	40  k = kacid + kneut + kbase
+	50  rate = k * (1 - SR("Montmor-K"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Smectite-low-Fe-Mg
+	-start
+	1   REM Ref PK04 for smectite K0.04Ca0.5(Al2.8Fe0.53Mg0.7)(Si7.65Al0.35)O20(OH)4
+	10  kacid = 10^(-10.98) * exp(-23.6e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.34
+	20  kneut = 10^(-12.78) * exp(-35.0e3/8.314 * (1/TK-1/298.15))
+	30  kbase = 10^(-16.52) * exp(-58.9e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^-0.4
+	40  k = kacid + kneut + kbase
+	50  rate = k * (1 - SR("Smectite-low-Fe-Mg"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+
+# --- Other phyllosilicates ---
+
+Lizardite
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-5.70) * exp(-75.5e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.8
+	20  kneut = 10^(-12.40) * exp(-56.6e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Lizardite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Chrysotile
+	-start
+	1   REM Ref PK04
+	20  kneut = 10^(-12.00) * exp(-73.5e3/8.314 * (1/TK-1/298.15))
+	30  kbase = 10^(-13.58) * exp(-73.5e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^-0.23
+	40  k = kneut + kbase
+	50  rate = k * (1 - SR("Chrysotile"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Clinochlore-14A
+	-start
+	1   REM Ref PK04 for chlorite
+	10  kacid = 10^(-11.11) * exp(-88.0e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.5
+	20  kneut = 10^(-12.52) * exp(-88.0e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Clinochlore-14A"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Talc
+	-start
+	1   REM Ref PK04
+	20  kneut = 10^(-12.00) * exp(-42.0e3/8.314 * (1/TK-1/298.15))
+	40  k = kneut
+	50  rate = k * (1 - SR("Talc"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Prehnite
+	-start
+	1   REM Ref PK04 for smectite
+	10  kacid = 10^(-10.66) * exp(-80.5e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.256
+	20  kneut = 10^(-13.16) * exp(-93.4e3/8.314 * (1/TK-1/298.15))
+	30  kbase = 10^(-14.86) * exp(-93.4e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^-0.2
+	40  k = kacid + kneut + kbase
+	50  rate = k * (1 - SR("Prehnite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+
+# --- Oxides ---
+
+Goethite
+	-start
+	1   REM Ref PK04
+	20  kneut = 10^(-7.94) * exp(-86.5e3/8.314 * (1/TK-1/298.15))
+	40  k = kneut
+	50  rate = k * (1 - SR("Goethite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Hematite
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-9.39) * exp(-66.2e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^1.0
+	20  kneut = 10^(-14.60) * exp(-66.2e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Hematite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Magnetite
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-8.59) * exp(-18.6e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.279
+	20  kneut = 10^(-10.78) * exp(-18.6e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Magnetite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Ilmenite
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-8.35) * exp(-37.9e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.421
+	20  kneut = 10^(-11.16) * exp(-37.9e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Ilmenite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Uraninite
+	-start
+	1   REM Ref PK04
+	20  kneut = 10^(-7.98) * exp(-32.0e3/8.314 * (1/TK-1/298.15))
+	40  k = kneut
+	50  rate = k * (1 - SR("Uraninite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+
+# --- Hydroxides ---
+
+Brucite
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-4.73) * exp(-59.0e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.5
+	20  kneut = 10^(-8.24) * exp(-42.0e3/8.314 * (1/TK-1/298.15))
+	40  k = kacid + kneut
+	50  rate = k * (1 - SR("Brucite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Gibbsite
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-7.65) * exp(-47.5e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.992
+	20  kneut = 10^(-11.5) * exp(-61.2e3/8.314 * (1/TK-1/298.15))
+	30  kbase = 10^(-16.65) * exp(-80.1e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^-0.784
+	40  k = kacid + kneut + kbase
+	50  rate = k * (1 - SR("Gibbsite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+Diaspore
+	-start
+	1   REM Ref PK04
+	20  kneut = 10^(-13.33) * exp(-47.5e3/8.314 * (1/TK-1/298.15))
+	30  kbase = 10^(-23.60) * exp(-47.5e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^-1.503
+	40  k = kneut + kbase
+	50  rate = k * (1 - SR("Diaspore"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+
+# --- Carbonates ---
+
 Calcite
 	-start
 	1   REM Ref PK04
@@ -7067,7 +7433,9 @@ Dolomite-ord # hydrothermal
 	-end
 Magnesite
 	-start
-	1   REM Ref PK04, assigned activation energies of calcite
+	1   REM Ref PK04 who assigned activation energies of calcite
+	2   REM Pokrovsky and Schott (1999) have quantified the chemical affinity parameters
+        3   REM at 25 °C with pH ranging from 0.2 to 12, with p = 4.00 and q = 1.00. 
 	10  kacid = 10^(-6.38) * exp(-14.4e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^1.0
 	20  kneut = 10^(-9.34) * exp(-23.5e3/8.314 * (1/TK-1/298.15))
 	29  P_CO2 = SR("CO2(g)")
@@ -7079,43 +7447,71 @@ Magnesite
 	60  moles = rate * TIME
 	70  SAVE moles
 	-end
-Wollastonite
+
+# --- Sulfates ---
+
+Anhydrite
 	-start
 	1   REM Ref PK04
-	10  kacid = 10^(-5.37) * exp(-54.7e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.4
-	20  kneut = 10^(-8.88) * exp(-54.7e3/8.314 * (1/TK-1/298.15))
-	40  k = kacid + kneut
-	50  rate = k * (1 - SR("Wollastonite"))
+	20  kneut = 10^(-3.19) * exp(-14.3e3/8.314 * (1/TK-1/298.15))
+	40  k = kneut
+	50  rate = k * (1 - SR("Anhydrite"))
 	60  moles = rate * TIME
 	70  SAVE moles
 	-end
-Enstatite
+Gypsum
 	-start
 	1   REM Ref PK04
-	10  kacid = 10^(-9.02) * exp(-80.0e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.6
-	20  kneut = 10^(-12.72) * exp(-80.0e3/8.314 * (1/TK-1/298.15))
-	40  k = kacid + kneut
-	50  rate = k * (1 - SR("Enstatite"))
+	20  kneut = 10^(-2.79) * exp(-0.0e3/8.314 * (1/TK-1/298.15))
+	40  k = kneut
+	50  rate = k * (1 - SR("Gypsum"))
 	60  moles = rate * TIME
 	70  SAVE moles
 	-end
-Forsterite
+
+# --- Sulfides ---
+
+Pyrite
 	-start
 	1   REM Ref PK04
-	10  kacid = 10^(-6.85) * exp(-67.2e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.47
-	20  kneut = 10^(-10.64) * exp(-79.0e3/8.314 * (1/TK-1/298.15))
+	10  kacid = 10^(-7.52) * exp(-56.9e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^-0.5 * ACT("Fe+3")^0.5
+	20  kneut = 10^(-4.55) * exp(-56.9e3/8.314 * (1/TK-1/298.15)) * ACT("O2")^0.5
 	40  k = kacid + kneut
-	50  rate = k * (1 - SR("Forsterite"))
+	50  rate = k * (1 - SR("Pyrite"))
 	60  moles = rate * TIME
 	70  SAVE moles
 	-end
-Fayalite
+Pyrrhotite
 	-start
 	1   REM Ref PK04
-	10  kacid = 10^(-4.80) * exp(-94.4e3/8.314 * (1/TK-1/298.15))
-	20  kneut = 10^(-12.80) * exp(-94.4e3/8.314 * (1/TK-1/298.15))
+	10  kacid = 10^(-8.04) * exp(-50.8e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^-0.597 * ACT("Fe+3")^0.355
+	40  k = kacid
+	50  rate = k * (1 - SR("Pyrrhotite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+
+# --- Phosphates ---
+
+Hydroxyapatite
+	-start
+	1   REM Ref PK04
+	10  kacid = 10^(-4.29) * exp(-250.0e3/8.314 * (1/TK-1/298.15)) * ACT("H+")^0.171
+	20  kneut = 10^(-6.00) * exp(-250.0e3/8.314 * (1/TK-1/298.15))
 	40  k = kacid + kneut
-	50  rate = k * (1 - SR("Fayalite"))
+	50  rate = k * (1 - SR("Hydroxyapatite"))
+	60  moles = rate * TIME
+	70  SAVE moles
+	-end
+
+# --- Halides ---
+
+Halite
+	-start
+	1   REM Ref PK04
+	20  kneut = 10^(-0.21) * exp(-7.4e3/8.314 * (1/TK-1/298.15))
+	40  k = kneut
+	50  rate = k * (1 - SR("Halite"))
 	60  moles = rate * TIME
 	70  SAVE moles
 	-end

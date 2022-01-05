@@ -345,13 +345,13 @@ int planmat(int ncomp, int **dbindex, int **eos, double **rho0, double **c, doub
 						&(*rho0)[i], &(*c)[i], &(*nn)[i], &(*Ks0)[i], &(*Ksp)[i], &(*V0)[i], &(*Tref)[i], &(*a0)[i],
 						&(*a1)[i], &(*b0)[i], &(*b1)[i], &(*b2)[i]);
 			if (scan != 14) {                                                         // If scanning error
-				printf("%d components found in planmat database\n",i);
+				printf("\n%d components found in planmat database\n",i);
 				break;
 			}
 			else {
-				printf("%d \t %d \t %lg \t %lg \t %lg \t %lg \t %lg \t %lg \t %lg \t %lg \t %lg \t %lg \t %lg \t %lg", (*dbindex)[i], (*eos)[i],
-						(*rho0)[i], (*c)[i], (*nn)[i], (*Ks0)[i], (*Ksp)[i], (*V0)[i], (*Tref)[i], (*a0)[i],
-						(*a1)[i], (*b0)[i], (*b1)[i], (*b2)[i]);
+//				printf("%d \t %d \t %lg \t %lg \t %lg \t %lg \t %lg \t %lg \t %lg \t %lg \t %lg \t %lg \t %lg \t %lg", (*dbindex)[i], (*eos)[i],
+//						(*rho0)[i], (*c)[i], (*nn)[i], (*Ks0)[i], (*Ksp)[i], (*V0)[i], (*Tref)[i], (*a0)[i],
+//						(*a1)[i], (*b0)[i], (*b1)[i], (*b2)[i]);
 			}
 			if (fgets(str, 1024, fid) != NULL) puts(str);
 		}

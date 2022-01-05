@@ -14,6 +14,7 @@
 #include <Rinternals.h>
 #include <Rembedded.h>
 #include <IPhreeqc.h>                   // To use the external PHREEQC geochemical code
+#include <Var.h>                        // To use the external PHREEQC geochemical code
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -63,10 +64,11 @@
 #define nAtmSpecies 5                   // Number of atmospheric species whose abundances are passed between the physical and chemical models
 #define nAqSpecies 6                    // Number of aqueous species whose concentrations are passed between the physical and chemical models
 #define nvarEq 1036                     // Number of geochemical variables stored in each PHREEQC equilibrium simulation
-#define nvarKin 60                      // Number of geochemical variables stored in each PHREEQC kinetic simulation
+#define nvarKin 140                     // Number of geochemical variables stored in each PHREEQC kinetic simulation
 #define naq 258                         // Number of aqueous species (+ physical parameters)
 #define nmingas 389                     // Number of minerals and gases
 #define nelts 31                        // 30 elements + 1 extra column in WaterRock/Molar_masses.txt
+#define rhoH2O 1000.0                   // Density of water (kg m-3)
 
 #ifndef EXOCCYCLEGEO_H_
 #define EXOCCYCLEGEO_H_
