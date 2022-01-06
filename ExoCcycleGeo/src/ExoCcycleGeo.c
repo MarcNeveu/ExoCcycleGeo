@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
 	if (rho == NULL) printf("Compression: Not enough memory to create rho[NR]\n");
 	for (ir=0;ir<NR+1;ir++) rho[ir] = 0.0;
 
-	double *g = (double*) malloc((NR+1)*sizeof(double)); // Gravitational acceleration
+	double *g = (double*) malloc((NR+1)*sizeof(double)); // Gravitational acceleration (m s-2)
 	if (g == NULL) printf("Compression: Not enough memory to create g[NR]\n");
 	for (ir=0;ir<NR+1;ir++) g[ir] = 0.0;
 
@@ -549,7 +549,8 @@ int main(int argc, char *argv[]) {
 
 	RCocean = (xaq[0]+xaq[1])*Mocean;
 	RCatmoc = RCatm + RCocean;
-	RCmantle = 10.0*(RCatmoc);
+	RCmantle = 1.0e4*(RCatmoc); // Dasgupta and Hirschmann (2010): 0.8 to 12.5 e23 g = 0.07 to 1.04 e23 mol
+	RCmantle = (m_p-m_c)*magmaCmassfrac/10.0/0.012; // Dasgupta and Hirschmann (2010): parent mantle of magma is depleted in C relative to magma, has 20-1800 ppm. Choosing 200 ppm by default (0.002/10)
 
 	// Print first line of outputs
 	title[0] = '\0';
@@ -560,8 +561,8 @@ int main(int argc, char *argv[]) {
 	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 	else {
 		fprintf(fout, "'Reservoirs in mol, fluxes in mol s-1'\n");
-		fprintf(fout, "'Time (Myr)' \t 'Tmantle (K)' \t RCmantle \t RCatmoc \t RCocean \t FCoutgas \t FCcontw \t FCseafsubd \t 'Net C flux'\n");
-		fprintf(fout, "Init \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \n", Tmantle, RCmantle, RCatmoc, RCocean, FCoutgas, FCcontW, FCseafsubd, netFC);
+		fprintf(fout, "'Time (Myr)' \t 'Tmantle (K)' \t RCmantle \t RCatm \t RCocean \t RCatm+RCoc \t RCatmoc \t FCoutgas \t FCcontw \t FCseafsubd \t 'Net C flux'\n");
+		fprintf(fout, "Init \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \n", Tmantle, RCmantle, RCatm, RCocean, RCatm+RCocean, RCatmoc, FCoutgas, FCcontW, FCseafsubd, netFC);
 	}
 	fclose (fout);
 
@@ -878,7 +879,7 @@ int main(int argc, char *argv[]) {
 		ir = 0;
 		if (imax > imin) {
 			if (Meltfrac[imin] > 0.0) {
-				printf("ExoCcycleGeo: alphaMELTS could only calculate melting down to depth %g km (melt fraction %.2g > 0.1), extrapolating melting curve to 0 linearly with depth\n", (r_p-r[imin])/km2m, Meltfrac[imin]);
+//				printf("ExoCcycleGeo: alphaMELTS could only calculate melting down to depth %g km (melt fraction %.2g > 0.1), extrapolating melting curve to 0 linearly with depth\n", (r_p-r[imin])/km2m, Meltfrac[imin]);
 				// Extrapolate starting from last 5 indices, provided melt fraction of all is < 1 (otherwise, use less indices)
 				if (imax-imin > 5) { // Only do this if there are > 5 grid zones of melt, otherwise chances are the slope will be skewed.
 					for (i=imin;i<imin+nslopeAvg;i++) {
@@ -1071,8 +1072,8 @@ int main(int argc, char *argv[]) {
 
 		if (imax > imin) {
 
-			printf("Pressure (bar) \t Depth (km) \t Melt fraction \t Temp (K) \t Density (kg m-3)\n");
-			for (i=imin-ir-100;i<=NR;i++) printf("%g \t %g \t %g \t %g \t %g\n", P[i]/bar2Pa, (r_p-r[i])/km2m, Meltfrac[i], T[i], rho[i]);
+//			printf("Pressure (bar) \t Depth (km) \t Melt fraction \t Temp (K) \t Density (kg m-3)\n");
+//			for (i=imin-ir-100;i<=NR;i++) printf("%g \t %g \t %g \t %g \t %g\n", P[i]/bar2Pa, (r_p-r[i])/km2m, Meltfrac[i], T[i], rho[i]);
 
 			title[0] = '\0';
 			if (cmdline == 1) strncat(title,path,strlen(path)-20);
@@ -1239,8 +1240,8 @@ int main(int argc, char *argv[]) {
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 		else {
-			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-					realtime/Gyr2sec, Tmantle, RCmantle, RCatmoc, RCocean, FCoutgas, FCcontW, FCseafsubd, netFC);
+			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					realtime/Gyr2sec, Tmantle, RCmantle, RCatm, RCocean, RCatm+RCocean, RCatmoc, FCoutgas, FCcontW, FCseafsubd, netFC);
 		}
 		fclose (fout);
 
