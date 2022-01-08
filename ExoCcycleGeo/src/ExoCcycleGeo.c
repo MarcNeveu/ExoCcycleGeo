@@ -271,9 +271,11 @@ int main(int argc, char *argv[]) {
 
 
 	// Quantities to be computed by seafloor weathering model
-	double zCrack = 0.0;               // Depth of fracturing below seafloor (m)
-	double tcirc = 0.0;                // Time scale of hydrothermal circulation (s)
+//	double zCrack = 0.0;               // Depth of fracturing below seafloor (m)
+//	double tcirc = 0.0;                // Time scale of hydrothermal circulation (s)
 	double deltaCreac = 0.0;           // Net C leached/precipitated per kg of rock (mol kg-1)
+	double Pseaf = 0.0;
+	double WRseafW = 1.0;
 
 	double *xaq = (double*) malloc(nAqSpecies*sizeof(double));
 	if (xaq == NULL) printf("ExoCcycleGeo: Not enough memory to create xaq[nAqSpecies]\n"); // Molalities of aqueous species (mol (kg H2O)-1)
@@ -851,7 +853,10 @@ int main(int argc, char *argv[]) {
 		}
 
 		// Call alphaMELTS
-		if (realtime > tstart && realtime <= tend) alphaMELTS(path, 0, ir, "ExoC/ExoC_env.txt", &sys_tbl);
+		if (realtime > tstart && realtime <= tend) {
+			printf("Time: %g Gyr. Outgassing... ", realtime/Myr2sec/1000.0);
+			alphaMELTS(path, 0, ir, "ExoC/ExoC_env.txt", &sys_tbl);
+		}
 
 		imin = 0;
 		imax = 0;
@@ -1158,7 +1163,7 @@ int main(int argc, char *argv[]) {
 
 			WRcontW = 5000.0*runoff/runoff_0;
 
-//			printf("Weathering...\n");
+			printf("Continental weathering... ");
 			AqueousChem(path, "io/ContWeather.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 1, kintime, kinsteps, nvarKin); // TODO No need to pass WRcontW as modifiable here, as well as Mocean elsewhere?
 
 			rainpH = xriver[1][3];
@@ -1177,20 +1182,20 @@ int main(int argc, char *argv[]) {
 			Ca_sulf_consumed = - xriver[iResTime][nvarKin-4] - xriver[iResTime][nvarKin-3]; // Anhydrite and gypsum
 			Fe_sulf_consumed = - xriver[iResTime][nvarKin-2] - xriver[iResTime][nvarKin-1]; // Pyrite and pyrrhotite
 
-			// Individual carbon fluxes (mol/s). Rainout = (river runoff)/fracEvap.
-			FC_Mg_carb =     Mg_carb_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*runoff/fracEvap*rhoH2O; // Factor of 1 because despite divalent cation vs. monovalent bicarbonate, 1 biarbonate is released in dissolution, so net 1
-			FC_Mg_sil  = 2.0*(xriver[iResTime][11]        *4.0*PI_greek*r_p*r_p*L*runoff/fracEvap*rhoH2O - FC_Mg_carb); // Factor of 2 because of divalent cation and monovalent bicarbonate
+			// Individual carbon fluxes (mol/s). Rainout = (river runoff)/(1-fracEvap).
+			FC_Mg_carb =     Mg_carb_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O; // Factor of 1 because despite divalent cation vs. monovalent bicarbonate, 1 biarbonate is released in dissolution, so net 1
+			FC_Mg_sil  = 2.0*(xriver[iResTime][11]        *4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O - FC_Mg_carb); // Factor of 2 because of divalent cation and monovalent bicarbonate
 			if (FC_Mg_sil < 0.0) printf("itime=%d, Continental weathering: Mg silicate net formation\n", itime);
 			FC_Mg = FC_Mg_carb + FC_Mg_sil;
 
-			FC_Ca_carb =     Ca_carb_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*runoff/fracEvap*rhoH2O;
-			FC_Ca_sulf = 2.0*Ca_sulf_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*runoff/fracEvap*rhoH2O; // Factor of 2 because of divalent cation and monovalent bicarbonate
-			FC_Ca_sil  = 2.0*(xriver[iResTime][13]        *4.0*PI_greek*r_p*r_p*L*runoff/fracEvap*rhoH2O - FC_Ca_carb - 0.5*FC_Ca_sulf);
+			FC_Ca_carb =     Ca_carb_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O;
+			FC_Ca_sulf = 2.0*Ca_sulf_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O; // Factor of 2 because of divalent cation and monovalent bicarbonate
+			FC_Ca_sil  = 2.0*(xriver[iResTime][13]        *4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O - FC_Ca_carb - 0.5*FC_Ca_sulf);
 			if (FC_Ca_sil < 0.0) printf("itime=%d, Continental weathering: Ca silicate net formation\n", itime);
 			FC_Ca = FC_Ca_carb + FC_Ca_sulf + FC_Ca_sil;
 
-			FC_Fe_sulf = 2.0*Fe_sulf_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*runoff/fracEvap*rhoH2O; // Factor of 2 because of divalent cation and monovalent bicarbonate
-			FC_Fe_sil  = 2.0*(xriver[iResTime][14]        *4.0*PI_greek*r_p*r_p*L*runoff/fracEvap*rhoH2O - 0.5*FC_Fe_sulf);
+			FC_Fe_sulf = 2.0*Fe_sulf_consumed/massH2Oriver*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O; // Factor of 2 because of divalent cation and monovalent bicarbonate
+			FC_Fe_sil  = 2.0*(xriver[iResTime][14]        *4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O - 0.5*FC_Fe_sulf);
 			if (FC_Fe_sil < 0.0) printf("itime=%d, Continental weathering: Fe silicate net formation\n", itime);
 			FC_Fe = FC_Fe_sulf + FC_Fe_sil;
 
@@ -1205,15 +1210,33 @@ int main(int argc, char *argv[]) {
 		// Calculate surface C flux from seafloor weathering and subduction
 		//-------------------------------------------------------------------
 
-		// 1. Call PHREEQC to get deltaCreac, net mol C leached/precipitated per kg of rock
-		deltaCreac = 0.0;
+		if (realtime > tstart && realtime <= tend) {
 
-		// Chemical equilibrium, depth of cracking*conv velocity
+			xaq[0] += xriver[iResTime][17]*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O*dtime/Mocean; // Bicarbonate riverine flux
+			xaq[6] += xriver[iResTime][11]*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O*dtime/Mocean; // Mg
+			xaq[7] += xriver[iResTime][13]*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O*dtime/Mocean; // Ca
+			xaq[8] += xriver[iResTime][14]*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O*dtime/Mocean; // Fe
+			xaq[9] += xriver[iResTime][12]*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O*dtime/Mocean; // Si
+			xaq[10]+= xriver[iResTime][10]*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O*dtime/Mocean; // Na
+			xaq[11]+= xriver[iResTime][15]*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O*dtime/Mocean; // S
+			xaq[12]+= xriver[iResTime][16]*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O*dtime/Mocean; // Cl
+			deltaCreac = xaq[0]; // Net mol/kg C leached/precipitated, initialized as oxidized C concentration
 
-//		AqueousChem(path, "io/OceanStart.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, NULL, 1, 0.0, 1, nvarEq);
+			Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth
+			WRseafW = 19.0;
 
-		tcirc = 1.0;      // TODO compute tcirc based on Nu(Ra(basal heat flux))
-		FCseafsubd = -(1.0-L) * 4.0/3.0*PI_greek*(pow(r_p,3)-pow(r_p-zCrack,3))/tcirc*deltaCreac*rho[NR] / (4.0*PI_greek*r_p*r_p);
+			printf("Seafloor weathering...\n");
+			AqueousChem(path, "io/SeafWeather.txt", itime, Tsurf, &Pseaf, &Vatm, &nAir, &pH, &pe, &WRseafW, &xgas, &xaq, NULL, 0, 0.0, 1, nvarEq);
+
+			// Debug: oxidize all carbon
+			xaq[0] += xaq[1];
+			xaq[1] = 0.0;
+
+			deltaCreac = xaq[0]-deltaCreac;
+			printf("Seafloor weathering: deltaCreac = %g mol/kgw\n", deltaCreac);
+//			FCseafsubd = -(1.0-L) * 4.0/3.0*PI_greek*(pow(r_p,3)-pow(r_p-zCrack,3))/tcirc*deltaCreac*rho[NR] / (4.0*PI_greek*r_p*r_p);
+			FCseafsubd = (1.0-L) * 4.0*PI_greek*r_p*r_p*vConv * rho[NR] * deltaCreac; // m3/s * kg/m3 * mol/(kg water = kg rock) = mol/s, crust assumed fully cracked TODO tone down with cracking depth and circulation velocity instead?
+		}
 
 		//-------------------------------------------------------------------
 		// Compute net geo C fluxes

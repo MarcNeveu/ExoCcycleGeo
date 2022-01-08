@@ -11,10 +11,10 @@ Title: Fractionate: phase for selective fractionation
 Title: One row per P,T[,fO2] condition, column headers: Temperature, Pressure, logfO2
 Title: fO2 could deal with redox changes upon ascent a la Gaillard and Scaillet 2007 
 Title: May need to remove corresponding values in the env file.
+Title: Removed Initial Composition: Cr2O3 0.45
 Initial Composition: SiO2 45.0
 Initial Composition: TiO2 0.22
 Initial Composition: Al2O3 4.3
-Initial Composition: Cr2O3 0.45
 Initial Composition: FeO 7.9
 Initial Composition: MgO 38.3
 Initial Composition: CaO 3.5

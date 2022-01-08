@@ -1,4 +1,4 @@
-Title: Ringwood 1991 pyrolite (i.e. parent of MORB+peridotite)
+Title: Allan et al. 1989 (see Ghiorso 1997)
 Title: Temperature input in Celsius, output in Kelvin
 Title: Pressure in bar
 Title: P-T are overwritten by those in the environment variable file
@@ -8,17 +8,22 @@ Title: It may help to remove K2O and / or Cr2O3 lines
 Title: Any NiO, MnO and CoO lines should be removed for pMELTS calculations
 Title: The effect of including CO2, SO3, Cl2O, F2O is unpredictable and is not recommended
 Title: Fractionate: phase for selective fractionation
+Title: Use table file to generate MELTS inputs along the P,T profile from ExoCcycleGeo
 Title: One row per P,T[,fO2] condition, column headers: Temperature, Pressure, logfO2
 Title: fO2 could deal with redox changes upon ascent a la Gaillard and Scaillet 2007 
 Title: May need to remove corresponding values in the env file.
-Title: Removed Initial Composition: Cr2O3 0.45
-Initial Composition: SiO2 45.0
-Initial Composition: TiO2 0.22
-Initial Composition: Al2O3 4.3
-Initial Composition: FeO 7.9
-Initial Composition: MgO 38.3
-Initial Composition: CaO 3.5
-Initial Composition: Na2O 0.33
+Initial Composition: SiO2 48.68
+Initial Composition: TiO2 1.01
+Initial Composition: Al2O3 17.64
+Initial Composition: Fe2O3 0.89
+Initial Composition: Cr2O3 0.03
+Initial Composition: FeO 7.59
+Initial Composition: MgO 9.10
+Initial Composition: CaO 12.45
+Initial Composition: Na2O 2.65
+Initial Composition: K2O 0.03
+Initial Composition: P2O5 0.08
+Initial Composition: H2O 0.20
 Initial Temperature: 1747.74 !T[iLith] from ExoCcycleGeo
 Final Temperature: 1576.85
 Increment Temperature: 3.00

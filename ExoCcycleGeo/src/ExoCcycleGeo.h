@@ -62,7 +62,7 @@
 
 // Geochem parameters
 #define nAtmSpecies 5                   // Number of atmospheric species whose abundances are passed between the physical and chemical models
-#define nAqSpecies 6                    // Number of aqueous species whose concentrations are passed between the physical and chemical models
+#define nAqSpecies 13                   // Number of aqueous species whose concentrations are passed between the physical and chemical models
 #define nvarEq 1036                     // Number of geochemical variables stored in each PHREEQC equilibrium simulation
 #define nvarKin 140                     // Number of geochemical variables stored in each PHREEQC kinetic simulation
 #define naq 258                         // Number of aqueous species (+ physical parameters)
