@@ -78,7 +78,9 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	phreeqc = CreateIPhreeqc(); // Run PHREEQC
 	if (LoadDatabase(phreeqc,dbase) != 0) OutputErrorString(phreeqc);
 	SetSelectedOutputFileOn(phreeqc,1);
+	printf("Running PHREEQC\n");
 	if (RunFile(phreeqc,tempinput) != 0) OutputErrorString(phreeqc);
+	printf("PHREEQC ran successfully\n");
 
 	if      (strcmp(filename, "io/OceanStart.txt") == 0) ExtractWrite(phreeqc, &simdata, 1, nvarEq); // 1st line of selected output has initial solution composition = equilibrium when there are no equilibrium phases
 	else if (strcmp(filename, "io/OceanDiss.txt") == 0) ExtractWrite(phreeqc, &simdata, 2, nvarEq);  // 2nd line of PHREEQC selected output solution and mineral+gas composition at equilibrium
@@ -162,6 +164,8 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 		// Scale by (original water mass)/(new water mass) under assumption that hydration and dehydration (but not carbonation/decarbonation) of ocean crust are balanced
 		(*xaq)[0] = simdata[0][23] * (*mass_w)/nAir0 / simdata[0][5]; // C(4), i.e. dissolved CO2 and carbonate
 		(*xaq)[1] = simdata[0][21] * (*mass_w)/nAir0 / simdata[0][5]; // C(-4), i.e. dissolved methane
+		(*xaq)[2] = simdata[0][36] * (*mass_w)/nAir0 / simdata[0][5]; // O(0), i.e. dissolved O2
+		(*xaq)[3] = simdata[0][46] * (*mass_w)/nAir0 / simdata[0][5]; // Ntg
 		(*xaq)[6] = simdata[0][12] * (*mass_w)/nAir0 / simdata[0][5]; // Mg
 		(*xaq)[7] = simdata[0][8] * (*mass_w)/nAir0 / simdata[0][5]; // Ca
 		(*xaq)[8] = simdata[0][10] * (*mass_w)/nAir0 / simdata[0][5]; // Fe
@@ -360,7 +364,10 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 			}
 		}
 		if (line[0] == 'S' && line[1] == 'O' && line[2] == 'L' && line[3] == 'U') solution = 1; // SOLUTION block
-		if (line[0] == 'E' && line[1] == 'Q' && line[2] == 'U' && line[3] == 'I') eqphases = 1; // EQUILIBRIUM_PHASES block
+		if (line[0] == 'E' && line[1] == 'Q' && line[2] == 'U' && line[3] == 'I') {
+			eqphases = 1; // EQUILIBRIUM_PHASES block
+			solution = 0;
+		}
 		if (line[0] == 'G' && line[1] == 'A' && line[2] == 'S' && line[3] == '_') gasphase = 1; // GAS_PHASE block
 		if (line[0] == 'S' && line[1] == 'E' && line[2] == 'L' && line[3] == 'E') sel = 1;      // SELECTED_OUTPUT block
 		// SOLUTION
@@ -576,7 +583,9 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
 	strcat(aMELTSsys, aMELTStmp);
 
 	// --- Run alphaMELTS ---
+	printf("Running alphaMELTS\n");
 	system(aMELTSsys);
+	printf("alphaMELTS ran successfully\n");
 	// Alternative if ever needed: echo [interactive inputs] |.
 	// system("echo \"1 /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCcycleGeo.melts 4 1 0\" | /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/run_alphameltsExoC.command -f /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/Mantle_env.txt");
 

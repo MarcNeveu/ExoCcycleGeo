@@ -396,7 +396,7 @@ SELECTED_OUTPUT
 	-ionic_strength	true
 	-water		true
 	-percent_error	true
-	-totals 	C Na Mg Si Ca Fe S
+	-totals 	C Na Mg Si Ca Fe S Cl
 	-molalities 	HCO3- CO3-2 CO2 Na+ Mg+2 SiO2 Ca+2 Fe+2
 #	-saturation_indices Calcite Dolomite-dis Dolomite-ord Magnesite
 	-kinetic_reactants Quartz SiO2(am) Albite Anorthite K-Feldspar Nepheline Forsterite Fayalite Grossular Andradite Kyanite Epidote Zoisite Cordierite_anhyd Diopside Enstatite Jadeite Wollastonite Anthophyllite Riebeckite Tremolite Muscovite Paragonite Phlogopite Annite Pyrophyllite Kaolinite Montmor-K Smectite-low-Fe-Mg Lizardite Chrysotile Clinochlore-14A Daphnite-14A Talc Prehnite Goethite Hematite Magnetite Brucite Gibbsite Diaspore Calcite Dolomite-dis Dolomite-ord Magnesite Anhydrite Gypsum Pyrite Pyrrhotite Hydroxyapatite Halite

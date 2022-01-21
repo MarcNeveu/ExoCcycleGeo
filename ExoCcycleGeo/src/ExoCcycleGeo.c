@@ -271,7 +271,7 @@ int main(int argc, char *argv[]) {
 
 
 	// Quantities to be computed by seafloor weathering model
-//	double zCrack = 0.0;               // Depth of fracturing below seafloor (m)
+	double zCrack = 6000.0;               // Depth of fracturing below seafloor (m)
 //	double tcirc = 0.0;                // Time scale of hydrothermal circulation (s)
 	double deltaCreac = 0.0;           // Net C leached/precipitated per kg of rock (mol kg-1)
 	double Pseaf = 0.0;
@@ -683,6 +683,7 @@ int main(int argc, char *argv[]) {
 		//-------------------------------------------------------------------
 
 		if (Tsurf > Tfreeze) {
+			printf("\nTime: %g Gyr. Equilibrating ocean and atmosphere... ", realtime/Myr2sec/1000.0);
 			AqueousChem(path, "io/OceanDiss.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, NULL, 0, 0.0, 1, nvarEq);
 
 			if (Psurf < 0.01) {
@@ -854,7 +855,7 @@ int main(int argc, char *argv[]) {
 
 		// Call alphaMELTS
 		if (realtime > tstart && realtime <= tend) {
-			printf("Time: %g Gyr. Outgassing... ", realtime/Myr2sec/1000.0);
+			printf("Outgassing... ");
 			alphaMELTS(path, 0, ir, "ExoC/ExoC_env.txt", &sys_tbl);
 		}
 
@@ -1220,7 +1221,7 @@ int main(int argc, char *argv[]) {
 			xaq[10]+= xriver[iResTime][10]*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O*dtime/Mocean; // Na
 			xaq[11]+= xriver[iResTime][15]*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O*dtime/Mocean; // S
 			xaq[12]+= xriver[iResTime][16]*4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O*dtime/Mocean; // Cl
-			deltaCreac = xaq[0]; // Net mol/kg C leached/precipitated, initialized as oxidized C concentration
+			deltaCreac = xaq[0]+xaq[1]; // Net mol/kg C leached/precipitated, initialized as oxidized+reduced C concentrations
 
 			Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth
 			WRseafW = 19.0;
@@ -1228,27 +1229,17 @@ int main(int argc, char *argv[]) {
 			printf("Seafloor weathering...\n");
 			AqueousChem(path, "io/SeafWeather.txt", itime, Tsurf, &Pseaf, &Vatm, &nAir, &pH, &pe, &WRseafW, &xgas, &xaq, NULL, 0, 0.0, 1, nvarEq);
 
-			// Debug: oxidize all carbon
-			xaq[0] += xaq[1];
-			xaq[1] = 0.0;
+			deltaCreac = xaq[0]+xaq[1]-deltaCreac;
 
-			deltaCreac = xaq[0]-deltaCreac;
-			printf("Seafloor weathering: deltaCreac = %g mol/kgw\n", deltaCreac);
-//			FCseafsubd = -(1.0-L) * 4.0/3.0*PI_greek*(pow(r_p,3)-pow(r_p-zCrack,3))/tcirc*deltaCreac*rho[NR] / (4.0*PI_greek*r_p*r_p);
-			FCseafsubd = (1.0-L) * 4.0*PI_greek*r_p*r_p*vConv * rho[NR] * deltaCreac; // m3/s * kg/m3 * mol/(kg water = kg rock) = mol/s, crust assumed fully cracked TODO tone down with cracking depth and circulation velocity instead?
+			FCseafsubd = (1.0-L) * 6.5*2.0*PI_greek*r_p*vConv*zCrack * rho[NR] * deltaCreac; // m3/s * kg/m3 * mol/(kg water = kg rock) = mol/s, crust assumed fully cracked, MOR length = 6.5*Earth circumference
 		}
 
 		//-------------------------------------------------------------------
 		// Compute net geo C fluxes
 		//-------------------------------------------------------------------
 
-		// Usually, continental weathering fluxes /2 because 1/2 of weathered crust is carbonate that re-precipitates in the ocean, releasing CO2 (Gaillardet+ 1999; Foley+ 2015).
-		// The only significant reactions are weathering of Ca and Mg *silicates* on continents, as is the case here.
-		// The control of atm CO2 by weathering of Na & K silicates on land is less obvious: alkalis are involved in
-		// ‘reverse weathering’ reactions in seawater, forming Na and K silicates and converting HCO3- back to atm CO2.
-//		RCplate = RCplate + dtime*(FCcontw/2.0 + FCseafw - FCsubd);
-//		RCmantle = RCmantle + dtime*((1.0-farc)*FCsubd - FCoutgas); // Assuming instantaneous mixing into the mantle once subducted (in practice could take 1 Gyr)
-		netFC = FCoutgas + FCcontW + (1.0-farc)*FCseafsubd; // FCcontw < 0, FCseafw < 0, FCsubd < 0
+		netFC = FCoutgas + FCcontW + (1.0-farc)*FCseafsubd; // FCcontw < 0, FCseafsubd < 0
+//		netFC = FCoutgas + (1.0-farc)*FCseafsubd; // FCcontw < 0, FCseafsubd < 0, ignore FCcontW
 		RCmantle = RCmantle - dtime*netFC; // Assuming plate = mantle (unlike Foley et al. 2015) and instantaneous mixing into the mantle once subducted (in practice could take 1 Gyr)
 		RCatmoc = RCatmoc + dtime*netFC; // Sum of atmospheric and ocean reservoirs, still needs partitioning
 
