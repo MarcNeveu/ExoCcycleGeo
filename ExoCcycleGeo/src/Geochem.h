@@ -161,13 +161,17 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 	// Seafloor weathering
 	if (strcmp(filename, "io/SeafWeather.txt") == 0) {
+		(*pH) = simdata[0][1];
+		(*pe) = simdata[0][2];
 		// Scale by (original water mass)/(new water mass) under assumption that hydration and dehydration (but not carbonation/decarbonation) of ocean crust are balanced
 		(*xaq)[0] = simdata[0][23] * (*mass_w)/nAir0 / simdata[0][5]; // C(4), i.e. dissolved CO2 and carbonate
 		(*xaq)[1] = simdata[0][21] * (*mass_w)/nAir0 / simdata[0][5]; // C(-4), i.e. dissolved methane
-		(*xaq)[2] = simdata[0][36] * (*mass_w)/nAir0 / simdata[0][5]; // O(0), i.e. dissolved O2
+//		(*xaq)[2] = simdata[0][36] * (*mass_w)/nAir0 / simdata[0][5]; // O(0), i.e. dissolved O2
 		(*xaq)[3] = simdata[0][46] * (*mass_w)/nAir0 / simdata[0][5]; // Ntg
+//		(*xaq)[4] = 0.0;                                              // N excluding Ntg
+//		(*xaq)[5] = 0.0;                                              // N(-3), i.e. dissolved NH3 and NH4+
 		(*xaq)[6] = simdata[0][12] * (*mass_w)/nAir0 / simdata[0][5]; // Mg
-		(*xaq)[7] = simdata[0][8] * (*mass_w)/nAir0 / simdata[0][5]; // Ca
+		(*xaq)[7] = simdata[0][8]  * (*mass_w)/nAir0 / simdata[0][5]; // Ca
 		(*xaq)[8] = simdata[0][10] * (*mass_w)/nAir0 / simdata[0][5]; // Fe
 		(*xaq)[9] = simdata[0][17] * (*mass_w)/nAir0 / simdata[0][5]; // Si
 		(*xaq)[10]= simdata[0][14] * (*mass_w)/nAir0 / simdata[0][5]; // Na
