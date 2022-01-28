@@ -548,7 +548,7 @@ int main(int argc, char *argv[]) {
 		if (xgas[i] > 0.0 && xaq[i] == 0.0) xaq[i] = 1.0; // xaq must be >0 otherwise PHREEQC ignores it, set to 1 mol/kgw (initial guess).
 	}
 
-	AqueousChem(path, "io/OceanStart.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, NULL, 1, 0.0, 1, nvarEq);
+	AqueousChem(path, "io/OceanStart.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 1, 0.0, 1, nvarEq);
 
 	RCocean = (xaq[0]+xaq[1])*Mocean;
 	RCatmoc = RCatm + RCocean;
@@ -685,12 +685,16 @@ int main(int argc, char *argv[]) {
 
 		if (Tsurf > Tfreeze) {
 			printf("\nTime: %g Gyr. Equilibrating ocean and atmosphere... ", realtime/Myr2sec/1000.0);
-			AqueousChem(path, "io/OceanDiss.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, NULL, 0, 0.0, 1, nvarEq);
+
+			AqueousChem(path, "io/OceanDiss.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq);
 
 			if (Psurf < 0.01) {
 				printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
 				exit(0);
 			}
+
+			RCatm = (xgas[0]+xgas[1])*nAir;
+			RCocean = (xaq[0]+xaq[1])*Mocean;
 
 			cleanup(path); // Remove PHREEQC selected output file
 		}
@@ -1166,7 +1170,7 @@ int main(int argc, char *argv[]) {
 			WRcontW = 5000.0*runoff/runoff_0;
 
 			printf("Continental weathering... ");
-			AqueousChem(path, "io/ContWeather.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 1, kintime, kinsteps, nvarKin); // TODO No need to pass WRcontW as modifiable here, as well as Mocean elsewhere?
+			AqueousChem(path, "io/ContWeather.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin); // TODO No need to pass WRcontW as modifiable here, as well as Mocean elsewhere?
 
 			rainpH = xriver[1][3];
 			massH2Oriver = xriver[iResTime][7];
@@ -1215,38 +1219,37 @@ int main(int argc, char *argv[]) {
 		//-------------------------------------------------------------------
 
 		if (realtime > tstart && realtime <= tend) {
-			printf("Seafloor weathering...\n");
 
 			// Run in sub-time steps commensurate with Mocean/runoff*4*pi*r_p^2
 			int iterSeafW = 0;
-			double dtSeafW = 0.0;
+			double dtSeafW = dtime;
+			double mix = 0.0;
 			iterSeafW = floor(Mriver/Mocean);
-			dtSeafW = dtime/(double)iterSeafW;
+//			dtSeafW = dtime/(double)iterSeafW;
+			mix = Mocean/Mriver * dtime/dtSeafW;
 
 			printf("iterSeafW = %d, dtSeafW = %g\n", iterSeafW, dtSeafW/Yr2sec);
 
-			deltaCreac = xaq[0]+xaq[1]; // Net mol/kg C leached/precipitated, initialized as oxidized+reduced C concentrations
+			double deltaCreacTot = 0.0;
 
-			for (i=0;i<iterSeafW;i++) {
+//			for (i=0;i<iterSeafW;i++) {
 
-				xaq[0] += xriver[iResTime][17] * Mriver/Mocean * dtSeafW/dtime; // Bicarbonate riverine flux
-				xaq[6] += xriver[iResTime][11] * Mriver/Mocean * dtSeafW/dtime; // Mg
-				xaq[7] += xriver[iResTime][13] * Mriver/Mocean * dtSeafW/dtime; // Ca
-				xaq[8] += xriver[iResTime][14] * Mriver/Mocean * dtSeafW/dtime; // Fe
-				xaq[9] += xriver[iResTime][12] * Mriver/Mocean * dtSeafW/dtime; // Si
-				xaq[10]+= xriver[iResTime][10] * Mriver/Mocean * dtSeafW/dtime; // Na
-				xaq[11]+= xriver[iResTime][15] * Mriver/Mocean * dtSeafW/dtime; // S
-				xaq[12]+= xriver[iResTime][16] * Mriver/Mocean * dtSeafW/dtime; // Cl
-				pe = (pe*Mocean + xriver[iResTime][4]*Mriver*dtSeafW/dtime) / (Mocean + Mriver*dtSeafW/dtime);// TODO THIS IS WRONG. NEED TO REPLACE THIS AND THE ABOVE WITH PHREEQC MIX CALCULATION
+				printf("Mixing river input into ocean...");
+				AqueousChem(path, "io/MixRiverOcean.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq); // TODO force PP of O2 or is river more oxidizing than ocean?
+
+				// Equilibrate resulting solution with seafloor
+				deltaCreac = xaq[0]+xaq[1]; // Net mol/kg C leached/precipitated, initialized as oxidized+reduced C concentrations
 
 				Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth
 				WRseafW = 19.0;
 
-				AqueousChem(path, "io/SeafWeather.txt", itime, Tsurf, &Pseaf, &Vatm, &nAir, &pH, &pe, &WRseafW, &xgas, &xaq, NULL, 0, 0.0, 1, nvarEq);
+				printf("Seafloor weathering...");
+				AqueousChem(path, "io/SeafWeather.txt", itime, Tsurf, &Pseaf, &Vatm, &nAir, &pH, &pe, &WRseafW, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq);
 
 				deltaCreac = xaq[0]+xaq[1]-deltaCreac;
-			}
-			FCseafsubd = (1.0-L)/(1.0-0.29) * 6.5*2.0*PI_greek*r_p*vConv*zCrack * rho[NR] * deltaCreac; // m3/s * kg/m3 * mol/(kg water = kg rock) = mol/s, crust assumed fully cracked, MOR length = 6.5*Earth circumference
+				deltaCreacTot += deltaCreac;
+//			}
+			FCseafsubd = (1.0-L)/(1.0-0.29) * 6.5*2.0*PI_greek*r_p*vConv*zCrack * rho[NR] * deltaCreacTot; // m3/s * kg/m3 * mol/(kg water = kg rock) = mol/s, crust assumed fully cracked, MOR length = 6.5*Earth circumference
 		}
 
 		//-------------------------------------------------------------------
@@ -1257,9 +1260,6 @@ int main(int argc, char *argv[]) {
 		netFC = FCoutgas + (1.0-farc)*FCseafsubd; // FCcontw < 0, FCseafsubd < 0, ignore FCcontW
 		RCmantle = RCmantle - dtime*netFC; // Assuming plate = mantle (unlike Foley et al. 2015) and instantaneous mixing into the mantle once subducted (in practice could take 1 Gyr)
 		RCatmoc = RCatmoc + dtime*netFC; // Sum of atmospheric and ocean reservoirs, still needs partitioning
-
-		RCatm = (xgas[0]+xgas[1])*nAir;
-		RCocean = (xaq[0]+xaq[1])*Mocean;
 
 		// Write outputs
 		title[0] = '\0';

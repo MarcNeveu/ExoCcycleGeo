@@ -15,11 +15,11 @@
 //-------------------------------------------------------------------
 
 int AqueousChem (char path[1024], char filename[64], int itime, double T, double *P, double *V, double *nAir, double *pH, double *pe,
-		double *mass_w, double **xgas, double **xaq, double ***xriver, int forcedPP, double kintime, int kinsteps, int nvar);
+		double *mass_w, double **xgas, double **xaq, double ***xriver, int iResTime, int forcedPP, double kintime, int kinsteps, int nvar);
 int ExtractWrite(int instance, double*** data, int line, int nvar);
 const char* ConCat (const char *str1, const char *str2);
 int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
-		double *xgas, double *xaq, int forcedPP, double kintime, int kinsteps, char **tempinput);
+		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput);
 int cleanup (char path[1024]);
 double molmass_atm (double *xgas);
 int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, double ***sys_tbl);
@@ -38,7 +38,7 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
  *--------------------------------------------------------------------*/
 
 int AqueousChem (char path[1024], char filename[64], int itime, double T, double *P, double *V, double *nAir, double *pH, double *pe,
-		double *mass_w, double **xgas, double **xaq, double ***xriver, int forcedPP, double kintime, int kinsteps, int nvar) {
+		double *mass_w, double **xgas, double **xaq, double ***xriver, int iResTime, int forcedPP, double kintime, int kinsteps, int nvar) {
 
 	int phreeqc = 0;
 	int i = 0;
@@ -71,9 +71,9 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	strncat(infile,dbase,strlen(dbase)-19);
 	strcat(infile, filename);
 
-	if (kintime || strcmp(filename, "io/SeafWeather.txt") == 0) *mass_w *= nAir0; // Don't scale water mass for weathering, which does not require equilibrating ocean and atmosphere i.e. handling large numbers
+	if (kintime || strcmp(filename, "io/MixRiverOcean.txt") == 0  || strcmp(filename, "io/SeafWeather.txt") == 0) *mass_w *= nAir0; // Don't scale water mass for weathering, which does not require equilibrating ocean and atmosphere i.e. handling large numbers
 
-	WritePHREEQCInput(infile, itime, T-Kelvin, *P, *V/nAir0, *pH, *pe, *mass_w/nAir0, *xgas, *xaq, forcedPP, kintime, kinsteps, &tempinput);
+	WritePHREEQCInput(infile, itime, T-Kelvin, *P, *V/nAir0, *pH, *pe, *mass_w/nAir0, *xgas, *xaq, (*xriver)[iResTime], forcedPP, kintime, kinsteps, &tempinput);
 
 	phreeqc = CreateIPhreeqc(); // Run PHREEQC
 	if (LoadDatabase(phreeqc,dbase) != 0) OutputErrorString(phreeqc);
@@ -83,8 +83,9 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	printf("PHREEQC ran successfully\n");
 
 	if      (strcmp(filename, "io/OceanStart.txt") == 0) ExtractWrite(phreeqc, &simdata, 1, nvarEq); // 1st line of selected output has initial solution composition = equilibrium when there are no equilibrium phases
-	else if (strcmp(filename, "io/OceanDiss.txt") == 0) ExtractWrite(phreeqc, &simdata, 2, nvarEq);  // 2nd line of PHREEQC selected output solution and mineral+gas composition at equilibrium
+	else if (strcmp(filename, "io/OceanDiss.txt") == 0) ExtractWrite(phreeqc, &simdata, 2, nvarEq);  // 2nd line of PHREEQC selected output: solution and mineral+gas composition at equilibrium
 	else if (strcmp(filename, "io/ContWeather.txt") == 0) ExtractWrite(phreeqc, &simdata, kinsteps, nvarKin);
+	else if (strcmp(filename, "io/MixRiverOcean.txt") == 0) ExtractWrite(phreeqc, &simdata, 3, nvarEq); // 3rd line of PHREEQC selected output: mixed solution
 	else if (strcmp(filename, "io/SeafWeather.txt") == 0) ExtractWrite(phreeqc, &simdata, 2, nvarEq);
 	else printf("AqueousChem: Cannot extract PHREEQC output data because input path %s is inaccurate.\n", filename);
 
@@ -101,45 +102,37 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 		(*xaq)[3] = simdata[0][84];             // Ntg
 //		(*xaq)[4] = simdata[0][22];             // Total dissolved N
 //		(*xaq)[5] = simdata[0][62];             // N(-3), i.e. dissolved NH3 and NH4+
-		(*xaq)[6] = simdata[0][19] * (*mass_w)/nAir0 / simdata[0][5]; // Mg
-		(*xaq)[7] = simdata[0][9] * (*mass_w)/nAir0 / simdata[0][5]; // Ca
-		(*xaq)[8] = simdata[0][15] * (*mass_w)/nAir0 / simdata[0][5]; // Fe
-		(*xaq)[9] = simdata[0][28] * (*mass_w)/nAir0 / simdata[0][5]; // Si
-		(*xaq)[10]= simdata[0][23] * (*mass_w)/nAir0 / simdata[0][5]; // Na
-		(*xaq)[11]= simdata[0][26] * (*mass_w)/nAir0 / simdata[0][5]; // S
-		(*xaq)[12]= simdata[0][10] * (*mass_w)/nAir0 / simdata[0][5]; // Cl
 	}
 
 	// Ocean dissolution
 	if (strcmp(filename, "io/OceanDiss.txt") == 0) {
 		(*pH) = simdata[0][1];
 		(*pe) = simdata[0][2];
-		(*nAir) = simdata[0][1006]*nAir0;
-		(*P) = simdata[0][1005]*atm2bar;
-		(*V) = simdata[0][1007]/1000.0*nAir0;
+		(*nAir) = simdata[0][1005]*nAir0;
+		(*P) = simdata[0][1004]*atm2bar;
+		(*V) = simdata[0][1006]/1000.0*nAir0;
 		(*mass_w) = simdata[0][5]*nAir0;
-
 		(*xaq)[0] = simdata[0][39];             // C(4), i.e. dissolved CO2 and carbonate
 		(*xaq)[1] = simdata[0][37];             // C(-4), i.e. dissolved methane
 		(*xaq)[2] = simdata[0][66];             // O(0), i.e. dissolved O2
 		(*xaq)[3] = simdata[0][84];             // Ntg
 //		(*xaq)[4] = simdata[0][22];             // N excluding Ntg
 //		(*xaq)[5] = simdata[0][62];             // N(-3), i.e. dissolved NH3 and NH4+
-		(*xaq)[6] = simdata[0][19] * (*mass_w)/nAir0 / simdata[0][5]; // Mg
-		(*xaq)[7] = simdata[0][9] * (*mass_w)/nAir0 / simdata[0][5]; // Ca
-		(*xaq)[8] = simdata[0][15] * (*mass_w)/nAir0 / simdata[0][5]; // Fe
-		(*xaq)[9] = simdata[0][28] * (*mass_w)/nAir0 / simdata[0][5]; // Si
-		(*xaq)[10]= simdata[0][23] * (*mass_w)/nAir0 / simdata[0][5]; // Na
-		(*xaq)[11]= simdata[0][26] * (*mass_w)/nAir0 / simdata[0][5]; // S
-		(*xaq)[12]= simdata[0][10] * (*mass_w)/nAir0 / simdata[0][5]; // Cl
+		(*xaq)[6] = simdata[0][19]; 			// Mg
+		(*xaq)[7] = simdata[0][9]; 				// Ca
+		(*xaq)[8] = simdata[0][15]; 			// Fe
+		(*xaq)[9] = simdata[0][28]; 			// Si
+		(*xaq)[10]= simdata[0][23]; 			// Na
+		(*xaq)[11]= simdata[0][26]; 			// S
+		(*xaq)[12]= simdata[0][10]; 			// Cl
 
-		(*xgas)[0] = simdata[0][1013];          // CO2(g)
-		(*xgas)[1] = simdata[0][1011];          // CH4(g)
-		(*xgas)[2] = simdata[0][1021];          // O2(g)
-		(*xgas)[3] = simdata[0][1025];          // Ntg(g)
-		(*xgas)[4] = simdata[0][1015];          // H2O(g)
+		(*xgas)[0] = simdata[0][1012];          // CO2(g)
+		(*xgas)[1] = simdata[0][1010];          // CH4(g)
+		(*xgas)[2] = simdata[0][1020];          // O2(g)
+		(*xgas)[3] = simdata[0][1024];          // Ntg(g)
+		(*xgas)[4] = simdata[0][1014];          // H2O(g)
 
-		for (i=0;i<nAtmSpecies;i++) (*xgas)[i] = (*xgas)[i]/simdata[0][1006]; // Divide by total mol gas to return mixing ratio
+		for (i=0;i<nAtmSpecies;i++) (*xgas)[i] = (*xgas)[i]/simdata[0][1005]; // Divide by total mol gas to return mixing ratio
 	}
 
 	// Continental weathering
@@ -159,9 +152,28 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 		}
 	}
 
+	// Mixing river and ocean
+	if (strcmp(filename, "io/MixRiverOcean.txt") == 0) {
+		(*pH) = simdata[0][1]; // 1st index is 2, i.e., 3rd row of selected output file for mixing calculation
+		(*pe) = simdata[0][2];
+		(*xaq)[0] = simdata[0][23]; // C(4), i.e. dissolved CO2 and carbonate
+		(*xaq)[1] = simdata[0][21]; // C(-4), i.e. dissolved methane
+//		(*xaq)[2] = simdata[0][36]; // O(0), i.e. dissolved O2
+		(*xaq)[3] = simdata[0][46]; // Ntg
+//		(*xaq)[4] = 0.0;                                              // N excluding Ntg
+//		(*xaq)[5] = 0.0;                                              // N(-3), i.e. dissolved NH3 and NH4+
+		(*xaq)[6] = simdata[0][12]; // Mg
+		(*xaq)[7] = simdata[0][8] ; // Ca
+		(*xaq)[8] = simdata[0][10]; // Fe
+		(*xaq)[9] = simdata[0][17]; // Si
+		(*xaq)[10]= simdata[0][14]; // Na
+		(*xaq)[11]= simdata[0][16]; // S
+		(*xaq)[12]= simdata[0][14]; // Cl
+	}
+
 	// Seafloor weathering
 	if (strcmp(filename, "io/SeafWeather.txt") == 0) {
-		(*pH) = simdata[0][1];
+		(*pH) = simdata[0][1];  // 1st index is 1, i.e., 2nd row of selected output file for equilibrium calculation
 		(*pe) = simdata[0][2];
 		// Scale by (original water mass)/(new water mass) under assumption that hydration and dehydration (but not carbonation/decarbonation) of ocean crust are balanced
 		(*xaq)[0] = simdata[0][23] * (*mass_w)/nAir0 / simdata[0][5]; // C(4), i.e. dissolved CO2 and carbonate
@@ -250,12 +262,14 @@ const char* ConCat(const char *str1, const char *str2) {
  *--------------------------------------------------------------------*/
 
 int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
-		double *xgas, double *xaq, int forcedPP, double kintime, int kinsteps, char **tempinput) {
+		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput) {
 
 	int i = 0;
-	int solution = 0; // Switch: is the SOLUTION block being read?
+	int solution1 = 0; // Switch: is the SOLUTION block being read?
+	int solution2 = 0; // Switch: is the SOLUTION 2 block being read? (for mixing calculation)
 	int eqphases = 0; // Switch: is the EQUILIBRIUM_PHASES block being read?
 	int gasphase = 0; // Switch: is the GAS_PHASE block being read?
+	int mix = 0;	  // Switch: is the MIX block being read?
 	int sel = 0;      // Switch: is the SELECTED_OUTPUT block being read?
 
 	FILE *fin;
@@ -282,6 +296,9 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	char **aq_str = (char**) malloc(nAqSpecies*sizeof(char*));
 	for (i=0;i<nAqSpecies;i++) aq_str[i] = (char*)malloc(1024);
 
+	char (**river_str) = (char**) malloc(nvarKin*sizeof(char*));
+	for (i=0;i<nvarKin;i++) river_str[i] = (char*)malloc(1024);
+
 	itime_str[0] = '\0';
 	temp_str[0] = '\0';
 	pressure_str[0] = '\0';
@@ -296,7 +313,12 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 		gas_str2[i][0] = '\0';
 		gas_str3[i][0] = '\0';
 	}
-	for (i=0;i<nAqSpecies;i++) aq_str[i][0] = '\0';
+	for (i=0;i<nAqSpecies;i++) {
+		aq_str[i][0] = '\0';
+	}
+	for(i=0;i<nvarKin;i++) {
+		river_str[i][0] = '\0';
+	}
 
 	int line_length = 300;
 	char line[line_length]; // Individual line
@@ -316,6 +338,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	sprintf(pe_str, "%g", pe);
 	sprintf(mass_w_str, "%g", mass_w);
 
+	// Used if gases are in EQUILIBRIUM_PHASES block, which is not the case here but could be for SeafWeather
 	if (!forcedPP) {
 		for (i=0;i<nAtmSpecies;i++) {
 			if (xgas[i] > 0.0)
@@ -328,21 +351,28 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 			strcat(gas_str1[i], gas_str2[i]);
 		}
 	}
-	else {
-		for (i=0;i<nAtmSpecies;i++) {
-			if (xgas[i] > 0.0)
-				sprintf(gas_str2[i], "%g", log(xgas[i]*pressure)/log(10.0)); // Convert from mixing ratio to -log partial pressure
-			else
-				sprintf(gas_str2[i], "%g", 0.0);
-		}
+
+	// Used in OceanStart, ContWeather, and MixRiverOcean where all or some PP are forced
+	for (i=0;i<nAtmSpecies;i++) {
+		if (xgas[i] > 0.0)
+			sprintf(gas_str2[i], "%g", log(xgas[i]*pressure)/log(10.0)); // Convert from mixing ratio to -log partial pressure
+		else
+			sprintf(gas_str2[i], "%g", 0.0);
 	}
+
+	// Use in OceanDiss for GAS_PHASE block
 	for (i=0;i<nAtmSpecies;i++) sprintf(gas_str3[i], "%g", xgas[i]*pressure); // Partial pressure
 
 //	if (forcedPP) {
 //		for (i=0;i<nAqSpecies;i++) sprintf(aq_str[i],"1.0"); // Doesn't matter what xaq is since PHREEQC will set molalities from partial pressures
 //	}
 //	else {
-		for (i=0;i<nAqSpecies;i++) sprintf(aq_str[i],"%g mol/kgw", xaq[i]);
+		for (i=0;i<nAqSpecies;i++) {
+			sprintf(aq_str[i], "%g mol/kgw", xaq[i]);
+		}
+		for (i=0;i<nvarKin;i++) {
+			sprintf(river_str[i], "%g mol/kgw", xriver[i]);
+		}
 //	}
 
 	strcpy(*tempinput,TemplateFile);
@@ -359,6 +389,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	if (fout == NULL) printf("WritePHREEQCInput: Missing output file. Path: %s\n", *tempinput);
 
 	while (fgets(line, line_length, fin)) {
+
 		// Block switches
 		if (kintime) { // Continental weathering simulation only
 			if (line[0] == 'T' && line[1] == 'I' && line[2] == 'T' && line[3] == 'L') { // TITLE line with crust molar mass value
@@ -367,18 +398,33 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 				sprintf(mass_w_str, "%g", mass_w);
 			}
 		}
-		if (line[0] == 'S' && line[1] == 'O' && line[2] == 'L' && line[3] == 'U') solution = 1; // SOLUTION block
-		if (line[0] == 'E' && line[1] == 'Q' && line[2] == 'U' && line[3] == 'I') {
-			eqphases = 1; // EQUILIBRIUM_PHASES block
-			solution = 0;
+		if (line[0] == 'S' && line[1] == 'O' && line[2] == 'L' && line[9] == '1') solution1 = 1; // SOLUTION block
+		if (line[0] == 'S' && line[1] == 'O' && line[2] == 'L' && line[9] == '2') { // SOLUTION 2 block
+			solution2 = 1;
+			solution1 = 0;
+		}
+		if (line[0] == 'E' && line[1] == 'Q' && line[2] == 'U' && line[3] == 'I') { // EQUILIBRIUM_PHASES block
+			eqphases = 1;
+			solution1 = 0;
 		}
 		if (line[0] == 'G' && line[1] == 'A' && line[2] == 'S' && line[3] == '_') gasphase = 1; // GAS_PHASE block
+		if (line[0] == 'M' && line[1] == 'I' && line[2] == 'X') mix = 1;                        // MIX block
 		if (line[0] == 'S' && line[1] == 'E' && line[2] == 'L' && line[3] == 'E') sel = 1;      // SELECTED_OUTPUT block
+
 		// SOLUTION
-		if (line[1] == 'p' && line[2] == 'H')                                                  fprintf(fout, "%s charge\n", ConCat("\tpH \t \t",pH_str));
-		else if (line[1] == 't' && line[2] == 'e' && line[3] == 'm' && line[4] == 'p')         fprintf(fout, "%s\n", ConCat("\ttemp \t \t",temp_str));
+		if (line[1] == 'p' && line[2] == 'H') {
+			if      (solution1) fprintf(fout, "%s charge\n", ConCat("\tpH \t \t",pH_str));
+			else if (solution2) fprintf(fout, "%s charge\n", ConCat("\tpH \t \t",river_str[3]));
+		}
+		else if (line[1] == 't' && line[2] == 'e' && line[3] == 'm' && line[4] == 'p') {
+			if      (solution1) fprintf(fout, "%s\n", ConCat("\ttemp \t \t",temp_str));
+			else if (solution2) fprintf(fout, "%s\n", ConCat("\ttemp \t \t",river_str[5]));
+		}
 		else if (line[1] == 'p' && line[2] == 'r' && line[3] == 'e' && line[4] == 's')         fprintf(fout, "%s\n", ConCat("\tpressure \t",pressure_str));
-		else if (line[1] == 'p' && line[2] == 'e')                                             fprintf(fout, "%s\n", ConCat("\tpe \t \t",pe_str));
+		else if (line[1] == 'p' && line[2] == 'e') {
+			if      (solution1) fprintf(fout, "%s\n", ConCat("\tpe \t \t",pe_str));
+			else if (solution2) fprintf(fout, "%s\n", ConCat("\tpe \t \t",river_str[4]));
+		}
 		else if (!sel && line[1] == '-' && line[2] == 'w' && line[3] == 'a' && line[4] == 't') fprintf(fout, "%s\n", ConCat("\t-water \t \t",mass_w_str));
 		else if (!eqphases && line[1] == 'C' && line[2] == '(' && line[3] == '4' && line[4] == ')') {
 			if (forcedPP && xgas[0] > 0.0) {
@@ -386,7 +432,10 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 				strcat(aq_str[0], gas_str2[0]);
 				fprintf(fout, "%s\n", ConCat("\tC(4) \t\t", aq_str[0]));
 			}
-			else fprintf(fout, "%s\n", ConCat("\tC(4) \t\t",aq_str[0]));
+			else {
+				if      (solution1) fprintf(fout, "%s\n", ConCat("\tC(4) \t\t",aq_str[0]));
+				else if (solution2) fprintf(fout, "%s\n", ConCat("\tC(4) \t\t",river_str[9])); // TODO this is C, get C(4) instead
+			}
 		}
 		else if (!eqphases && line[1] == 'C' && line[2] == '(' && line[3] == '-' && line[4] == '4') {
 			if (forcedPP && xgas[1] > 0.0) {
@@ -394,34 +443,63 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 				strcat(aq_str[1], gas_str2[1]);
 				fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t", aq_str[1]));
 			}
-			else fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t",aq_str[1]));
+			else {
+				if (solution1) fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t",aq_str[1]));
+			}
 		}
 		else if (!eqphases && line[1] == 'O' && line[2] == '('  && line[3] == '0' && line[4] == ')') {
-			if (forcedPP && xgas[2] > 0.0) {
+			if ((forcedPP && xgas[2] > 0.0) || solution2) {
 				strcat(aq_str[2], "\tO2(g) \t");
 				strcat(aq_str[2], gas_str2[2]);
 				fprintf(fout, "%s\n", ConCat("\tO(0) \t\t", aq_str[2]));
 			}
-			else fprintf(fout, "%s\n", ConCat("\tO(0) \t\t",aq_str[2]));
+			else fprintf(fout, "%s\n", ConCat("\tO(0) \t\t", aq_str[2]));
 		}
 		else if (!eqphases && line[1] == 'N' && line[2] == 't'  && line[3] == 'g' && line[4] == '\t') {
-			if (forcedPP && xgas[3] > 0.0) {
+			if ((forcedPP && xgas[3] > 0.0) || solution2) {
 				strcat(aq_str[3], "\tNtg(g) \t");
 				strcat(aq_str[3], gas_str2[3]);
 				fprintf(fout, "%s\n", ConCat("\tNtg \t\t", aq_str[3]));
 			}
-			else fprintf(fout, "%s\n", ConCat("\tNtg \t\t",aq_str[3]));
+			else fprintf(fout, "%s\n", ConCat("\tNtg \t\t", aq_str[3]));
 		}
-		// Next set of rows only for cases that involve seafloor weathering, i.e., !forcedPP. TODO also do for ocean dissolution, i.e., all !forcedPP cases. Currently this leads to way too much atmospheric ingassing.
-		else if (!forcedPP && solution && line[1] == 'M' && line[2] == 'g') fprintf(fout, "%s\n", ConCat("\tMg \t\t", aq_str[6]));
-		else if (!forcedPP && solution && line[1] == 'C' && line[2] == 'a') fprintf(fout, "%s\n", ConCat("\tCa \t\t", aq_str[7]));
-		else if (!forcedPP && solution && line[1] == 'F' && line[2] == 'e') fprintf(fout, "%s\n", ConCat("\tFe \t\t", aq_str[8]));
-		else if (!forcedPP && solution && line[1] == 'S' && line[2] == 'i') fprintf(fout, "%s\n", ConCat("\tSi \t\t", aq_str[9]));
-		else if (!forcedPP && solution && line[1] == 'N' && line[2] == 'a') fprintf(fout, "%s\n", ConCat("\tNa \t\t", aq_str[10]));
-		else if (!forcedPP && solution && line[1] == 'S' && line[2] == '(') fprintf(fout, "%s\n", ConCat("\tS(6) \t\t", aq_str[11]));
-		else if (!forcedPP && solution && line[1] == 'C' && line[2] == 'l') fprintf(fout, "%s\n", ConCat("\tCl \t\t", aq_str[12]));
+
+		// Next set of rows for ocean dissolution, mixing, and seafloor weathering, i.e., !forcedPP
+		else if (!forcedPP && line[1] == 'M' && line[2] == 'g') {
+			if      (solution1) fprintf(fout, "%s\n", ConCat("\tMg \t\t", aq_str[6]));
+			else if (solution2) fprintf(fout, "%s\n", ConCat("\tMg \t\t", river_str[11]));
+		}
+		else if (!forcedPP && line[1] == 'C' && line[2] == 'a') {
+			if      (solution1) fprintf(fout, "%s\n", ConCat("\tCa \t\t", aq_str[7]));
+			else if (solution2) fprintf(fout, "%s\n", ConCat("\tCa \t\t", river_str[13]));
+		}
+		else if (!forcedPP && line[1] == 'F' && line[2] == 'e') {
+			if      (solution1) fprintf(fout, "%s\n", ConCat("\tFe \t\t", aq_str[8]));
+			else if (solution2) fprintf(fout, "%s\n", ConCat("\tFe \t\t", river_str[14]));
+		}
+		else if (!forcedPP && line[1] == 'S' && line[2] == 'i') {
+			if      (solution1) fprintf(fout, "%s\n", ConCat("\tSi \t\t", aq_str[9]));
+			else if (solution2) fprintf(fout, "%s\n", ConCat("\tSi \t\t", river_str[12]));
+		}
+		else if (!forcedPP && line[1] == 'N' && line[2] == 'a') {
+			if      (solution1) fprintf(fout, "%s\n", ConCat("\tNa \t\t", aq_str[10]));
+			else if (solution2) fprintf(fout, "%s\n", ConCat("\tNa \t\t", river_str[10]));
+		}
+		else if (!forcedPP && line[1] == 'S' && line[2] == '(') {
+			if      (solution1) fprintf(fout, "%s\n", ConCat("\tS(6) \t\t", aq_str[11]));
+			else if (solution2) fprintf(fout, "%s\n", ConCat("\tS(6) \t\t", river_str[10]));
+		}
+		else if (!forcedPP && line[1] == 'C' && line[2] == 'l') {
+			if      (solution1) fprintf(fout, "%s\n", ConCat("\tCl \t\t", aq_str[12]));
+			else if (solution2) fprintf(fout, "%s\n", ConCat("\tCl \t\t", river_str[16]));
+		}
+
+		// MIX
+		else if (mix && line[1] == '1') fprintf(fout, "\t1 \t %s\n", mass_w_str); // Need to reprint the "1" otherwise it is overwritten
+
 		// KINETICS
 		else if (line[0] == '-' && line[1] == 's' && line[2] == 't' && line[3] == 'e')         fprintf(fout, "%s\n", ConCat("-steps\t",steps_str1));
+
 		// GAS_PHASE
 		else if (gasphase && line[1] == 'v' && line[2] == 'o' && line[3] == 'l') fprintf(fout, "%s\n", ConCat("\tvolume \t\t",vol_str));
 		else if (gasphase && line[1] == 'C' && line[2] == 'O' && line[3] == '2' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tCO2(g) \t\t",gas_str3[0]));
@@ -429,6 +507,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 		else if (gasphase && line[1] == 'O' && line[2] == '2' && line[3] == '(' && line[4] == 'g') fprintf(fout, "%s\n", ConCat("\tO2(g) \t\t",gas_str3[2]));
 		else if (gasphase && line[1] == 'N' && line[2] == 't' && line[3] == 'g' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tNtg(g) \t\t",gas_str3[3]));
 		else if (gasphase && line[1] == 'H' && line[2] == '2' && line[3] == 'O' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tH2O(g) \t\t",gas_str3[4]));
+
 		// EQUILIBRIUM_PHASES
 		else if (eqphases && line[2] == 'C' && line[3] == 'O' && line[4] == '2' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tCO2(g) \t\t",gas_str1[0]));
 		else if (eqphases && line[2] == 'C' && line[3] == 'H' && line[4] == '4' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tCH4(g) \t\t",gas_str1[1]));
@@ -451,11 +530,17 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 		free(gas_str2[i]);
 		free(gas_str3[i]);
 	}
-	for (i=0;i<nAqSpecies;i++) free(aq_str[i]);
+	for (i=0;i<nAqSpecies;i++) {
+		free(aq_str[i]);
+	}
+	for (i=0;i<nvarKin;i++) {
+		free(river_str[i]);
+	}
 	free(gas_str1);
 	free(gas_str2);
 	free(gas_str3);
 	free(aq_str);
+	free(river_str);
 
 	return 0;
 }
