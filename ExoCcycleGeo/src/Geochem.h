@@ -152,7 +152,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 		}
 	}
 
-	// Mixing river and ocean
+	// Mixing river and ocean. Ocean mass is not updated as it is assumed constant.
 	if (strcmp(filename, "io/MixRiverOcean.txt") == 0) {
 		(*pH) = simdata[0][1]; // 1st index is 2, i.e., 3rd row of selected output file for mixing calculation
 		(*pe) = simdata[0][2];
@@ -173,7 +173,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 	// Seafloor weathering
 	if (strcmp(filename, "io/SeafWeather.txt") == 0) {
-		(*pH) = simdata[0][1];  // 1st index is 1, i.e., 2nd row of selected output file for equilibrium calculation
+		(*pH) = simdata[0][1];
 		(*pe) = simdata[0][2];
 		// Scale by (original water mass)/(new water mass) under assumption that hydration and dehydration (but not carbonation/decarbonation) of ocean crust are balanced
 		(*xaq)[0] = simdata[0][23] * (*mass_w)/nAir0 / simdata[0][5]; // C(4), i.e. dissolved CO2 and carbonate
@@ -425,6 +425,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 			if      (solution1) fprintf(fout, "%s\n", ConCat("\tpe \t \t",pe_str));
 			else if (solution2) fprintf(fout, "%s\n", ConCat("\tpe \t \t",river_str[4]));
 		}
+		// Common water mass even for mixing calculation because proportions of solutions mixed are set in MIX block. These proportions could be set here instead, the outcome is the same.
 		else if (!sel && line[1] == '-' && line[2] == 'w' && line[3] == 'a' && line[4] == 't') fprintf(fout, "%s\n", ConCat("\t-water \t \t",mass_w_str));
 		else if (!eqphases && line[1] == 'C' && line[2] == '(' && line[3] == '4' && line[4] == ')') {
 			if (forcedPP && xgas[0] > 0.0) {
@@ -444,13 +445,13 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 				fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t", aq_str[1]));
 			}
 			else {
-				if (solution1) fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t",aq_str[1]));
+				if (solution1) fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t",aq_str[1])); // TODO also set C(-4) from river for river-ocean mixing calculation
 			}
 		}
 		else if (!eqphases && line[1] == 'O' && line[2] == '('  && line[3] == '0' && line[4] == ')') {
 			if ((forcedPP && xgas[2] > 0.0) || solution2) {
 				strcat(aq_str[2], "\tO2(g) \t");
-				strcat(aq_str[2], gas_str2[2]);
+				strcat(aq_str[2], gas_str2[2]); // Doesn't matter if it's river_str (river-ocean mixing calculation) or aq_str (ocean start, continental weathering) because the value should be overwritten by gas_str at PHREEQC execution
 				fprintf(fout, "%s\n", ConCat("\tO(0) \t\t", aq_str[2]));
 			}
 			else fprintf(fout, "%s\n", ConCat("\tO(0) \t\t", aq_str[2]));
@@ -458,7 +459,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 		else if (!eqphases && line[1] == 'N' && line[2] == 't'  && line[3] == 'g' && line[4] == '\t') {
 			if ((forcedPP && xgas[3] > 0.0) || solution2) {
 				strcat(aq_str[3], "\tNtg(g) \t");
-				strcat(aq_str[3], gas_str2[3]);
+				strcat(aq_str[3], gas_str2[3]); // Doesn't matter if it's river_str (river-ocean mixing calculation) or aq_str (ocean start, continental weathering) because the value should be overwritten by gas_str at PHREEQC execution
 				fprintf(fout, "%s\n", ConCat("\tNtg \t\t", aq_str[3]));
 			}
 			else fprintf(fout, "%s\n", ConCat("\tNtg \t\t", aq_str[3]));
@@ -494,7 +495,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 			else if (solution2) fprintf(fout, "%s\n", ConCat("\tCl \t\t", river_str[16]));
 		}
 
-		// MIX
+		// MIX -- could remove this line and set proportions of solutions to be mixed with specific water masses instead.
 		else if (mix && line[1] == '1') fprintf(fout, "\t1 \t %s\n", mass_w_str); // Need to reprint the "1" otherwise it is overwritten
 
 		// KINETICS

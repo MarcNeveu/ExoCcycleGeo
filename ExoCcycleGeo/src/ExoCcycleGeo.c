@@ -4,12 +4,6 @@
  Author      : Marc Neveu
  Computes net C fluxes (in mol C m-2 s-1) at the surface-atmosphere interface
  of a terrestrial planet due to geophysical and geochemical processes.
- TODO:
- 1- Finish benchmarking and coding kinetic continental weathering
- 2- Seafloor weathering on the timescale of emplacement of new crust. km3
- created per year * fraction getting within diffusional reach of seawater, if
- slow enough, let that determine the rate of consumption by assuming reaction
- has time to go to equilibrium. Confirm with PHREEQC simulations of rates.
  ============================================================================
  */
 
@@ -246,37 +240,45 @@ int main(int argc, char *argv[]) {
 	double massH2Oriver = 0.0;         // Mass of water after residence time elapsed in PHREEQC calculation
 	double Mriver = 0.0;               // Mass of river water delivered to the ocean after a time step
 
-//	double xriver_Mg_evap = 0.0; // River abundance of Mg accounting for evaporation (mol/kg)
-//	double xriver_Ca_evap = 0.0; // River abundance of Ca accounting for evaporation (mol/kg)
-//	double xriver_Si_evap = 0.0; // River abundance of Si accounting for evaporation (mol/kg)
-//	double xriver_Na_evap = 0.0; // River abundance of Na accounting for evaporation (mol/kg)
-//	double xriver_Fe_evap = 0.0; // River abundance of Fe accounting for evaporation (mol/kg)
+//	double xriver_Mg_evap = 0.0;       // River abundance of Mg accounting for evaporation (mol/kg)
+//	double xriver_Ca_evap = 0.0;       // River abundance of Ca accounting for evaporation (mol/kg)
+//	double xriver_Si_evap = 0.0;       // River abundance of Si accounting for evaporation (mol/kg)
+//	double xriver_Na_evap = 0.0;       // River abundance of Na accounting for evaporation (mol/kg)
+//	double xriver_Fe_evap = 0.0;       // River abundance of Fe accounting for evaporation (mol/kg)
 
-	double Mg_carb_consumed = 0.0; // Amount of crustal magnesium carbonate dissolved (mol)
-	double Ca_carb_consumed = 0.0; // Amount of crustal calcium carbonate dissolved (mol)
-	double Ca_sulf_consumed = 0.0; // Amount of crustal calcium sulfate dissolved (mol)
-	double Fe_sulf_consumed = 0.0; // Amount of crustal iron sulfide dissolved (mol)
+	double Mg_carb_consumed = 0.0;     // Amount of crustal magnesium carbonate dissolved (mol)
+	double Ca_carb_consumed = 0.0;     // Amount of crustal calcium carbonate dissolved (mol)
+	double Ca_sulf_consumed = 0.0;     // Amount of crustal calcium sulfate dissolved (mol)
+	double Fe_sulf_consumed = 0.0;     // Amount of crustal iron sulfide dissolved (mol)
 
-	double FC_Mg = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Mg ions (mol/s)
-	double FC_Mg_carb = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Mg carbonate dissolution (mol/s)
-	double FC_Mg_sil = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Mg silicate dissolution (mol/s)
+	double FC_Mg = 0.0;                // Contribution to weathering flux (HCO3- trapping capacity) from Mg ions (mol/s)
+	double FC_Mg_carb = 0.0;           // Contribution to weathering flux (HCO3- trapping capacity) from Mg carbonate dissolution (mol/s)
+	double FC_Mg_sil = 0.0;            // Contribution to weathering flux (HCO3- trapping capacity) from Mg silicate dissolution (mol/s)
 
-	double FC_Ca = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Ca ions (mol/s)
-	double FC_Ca_carb = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Ca carbonate dissolution (mol/s)
-	double FC_Ca_sulf = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Ca sulfate dissolution (mol/s)
-	double FC_Ca_sil = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Ca silicate dissolution (mol/s)
+	double FC_Ca = 0.0;                // Contribution to weathering flux (HCO3- trapping capacity) from Ca ions (mol/s)
+	double FC_Ca_carb = 0.0;           // Contribution to weathering flux (HCO3- trapping capacity) from Ca carbonate dissolution (mol/s)
+	double FC_Ca_sulf = 0.0;           // Contribution to weathering flux (HCO3- trapping capacity) from Ca sulfate dissolution (mol/s)
+	double FC_Ca_sil = 0.0;            // Contribution to weathering flux (HCO3- trapping capacity) from Ca silicate dissolution (mol/s)
 
-	double FC_Fe = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Fe ions (mol/s)
-	double FC_Fe_sulf = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Fe sulfide dissolution (mol/s)
-	double FC_Fe_sil = 0.0; // Contribution to weathering flux (HCO3- trapping capacity) from Fe silicate dissolution (mol/s)
+	double FC_Fe = 0.0;                // Contribution to weathering flux (HCO3- trapping capacity) from Fe ions (mol/s)
+	double FC_Fe_sulf = 0.0;           // Contribution to weathering flux (HCO3- trapping capacity) from Fe sulfide dissolution (mol/s)
+	double FC_Fe_sil = 0.0;            // Contribution to weathering flux (HCO3- trapping capacity) from Fe silicate dissolution (mol/s)
 
 
 	// Quantities to be computed by seafloor weathering model
-	double zCrack = 6000.0;               // Depth of fracturing below seafloor (m)
+	double zCrack = 6000.0;            // Depth of fracturing below seafloor (m), default 6000 m (Vance et al. 2007)
 //	double tcirc = 0.0;                // Time scale of hydrothermal circulation (s)
-	double deltaCreac = 0.0;           // Net C leached/precipitated per kg of rock (mol kg-1)
-	double Pseaf = 0.0;
-	double WRseafW = 1.0;
+	double Pseaf = 0.0;                // Avg. seafloor pressure calculated assuming avg. ocean depth
+	double WRseafW = 1.0;              // Water to rock ratio of seafloor weathering, here multiplied by rock mass
+	int iterSeafW = 0;                 // Number of iterations (sub-timesteps) of seafloor weathering model so that river runoff * timestep < Mocean, use is optional since this is for an equilibrium calculation
+	double dtSeafW = 0.0;              // Sub-timestep for seafloor weathering model so that river runoff * timestep < Mocean, use is optional since this is an equilibrium calculation
+	double mix = 0.0;                  // Mocean/Mriver, optionally scaled by sub-timestep
+	double deltaCreac = 0.0;           // Net C leached/precipitated per kg of rock (mol kg-1) over one sub-timestep
+	double deltaCreacTot = 0.0;        // Net C leached/precipitated per kg of rock (mol kg-1) cumulated over one main time step, = deltaCreac if no sub-timesteps
+	double xaq0 = 0.0;                 // Memory of xaq[0] (mol/kg) before seafloor weathering calculation to avoid removing oxidized C twice (during PHREEQC calculation and from netFC)
+	double xaq1 = 0.0;                 // Memory of xaq[1] (mol/kg) before seafloor weathering calculation to avoid removing reduced C twice (during PHREEQC calculation and from netFC)
+	double volSeafCrust = 0.0;         // Volume of seafloor reacting with ocean water (m3)
+	double rhoSeaf = 0.0;              // Density of seafloor rock (kg/m3)
 
 	double *xaq = (double*) malloc(nAqSpecies*sizeof(double));
 	if (xaq == NULL) printf("ExoCcycleGeo: Not enough memory to create xaq[nAqSpecies]\n"); // Molalities of aqueous species (mol (kg H2O)-1)
@@ -559,29 +561,29 @@ int main(int argc, char *argv[]) {
 	title[0] = '\0';
 	if (cmdline == 1) strncat(title,path,strlen(path)-20);
 	else strncat(title,path,strlen(path)-18);
-	strcat(title,"Outputs/Output.txt");
+	strcat(title,"Outputs/ReservoirsFluxes.txt");
 	fout = fopen(title,"w");
 	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 	else {
 		fprintf(fout, "'Reservoirs in mol, fluxes in mol s-1'\n");
-		fprintf(fout, "'Time (Myr)' \t 'Tmantle (K)' \t RCmantle \t RCatm \t RCocean \t RCatm+RCoc \t RCatmoc \t FCoutgas \t FCcontw \t FCseafsubd \t 'Net C flux'\n");
-		fprintf(fout, "Init \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \n", Tmantle, RCmantle, RCatm, RCocean, RCatm+RCocean, RCatmoc, FCoutgas, FCcontW, FCseafsubd, netFC);
+		fprintf(fout, "'Time (Gyr)' \t 'Tmantle (K)' \t RCmantle \t RCatm \t RCocean \t RCatm+RCoc \t RCatmoc \t FCoutgas \t FCcontw \t FCseafsubd \t 'Net C flux' \t "
+				"'Total N g+aq'\n");
+		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+				Tmantle, RCmantle, RCatm, RCocean, RCatm+RCocean, RCatmoc, FCoutgas, FCcontW, FCseafsubd, netFC, xaq[3]*Mocean + xgas[3]*2.0*nAir);
 	}
 	fclose (fout);
 
 	title[0] = '\0';
 	if (cmdline == 1) strncat(title,path,strlen(path)-20);
 	else strncat(title,path,strlen(path)-18);
-	strcat(title,"Outputs/CompoOceanAtm.txt");
+	strcat(title,"Outputs/CompoAtmosph.txt");
 	fout = fopen(title,"w");
 	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 	else {
-		fprintf(fout, "'Atmospheric species in mixing ratio (by mol, i.e. by volume for ideal gases), aqueous species in mol/(kg H2O), total C and N in mol'\n");
-		fprintf(fout, "'Time (Myr)' \t CO2(g) \t CH4(g) \t O2(g) \t N2(g) \t H2O(g) \t 'P_surface (bar)' \t 'T_surface (K)' \t 'DeltaT GHE (K)' \t 'Ox C(aq)' \t 'Red C(aq)' \t 'Total N(aq)' \t "
-				"'Ocean pH' \t 'Ocean log f(O2) at Tsurf0' \t 'Rain pH' \t 'Total C g+aq' \t 'Total N g+aq' \t 'Mocean (kg)' \t 'Mriver (kg)' \t 'nAir (mol)'\n");
-		fprintf(fout, "Init \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-				xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, Tsurf, DeltaTghe, xaq[0], xaq[1], xaq[3],
-				pH, 4.0*(pe+pH)-logKO2H2O, rainpH, (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir, xaq[3]*Mocean + xgas[3]*2.0*nAir, Mocean, Mriver, nAir);
+		fprintf(fout, "'Atmospheric species in mixing ratio (by mol, i.e. by volume for ideal gases), total C and N in mol'\n");
+		fprintf(fout, "'Time (Gyr)' \t CO2(g) \t CH4(g) \t O2(g) \t N2(g) \t H2O(g) \t 'P_surface (bar)' \t 'T_surface (K)' \t 'DeltaT GHE (K)' \t 'nAir (mol)'\n");
+		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+				xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, Tsurf, DeltaTghe, nAir);
 	}
 	fclose (fout);
 
@@ -600,6 +602,36 @@ int main(int argc, char *argv[]) {
 	fout = fopen(title,"w");
 	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 	else fprintf(fout, "Time (Gyr) \t Tmantle (K) \t Ra \t Visc (Pa s) \t Heat flux (mW m-2) \t Lithospheric thickness (km) \t Boundary layer thickness coef \t Outgassing flux (mol C s-1) \t Convective velocity (m yr-1) \t Convective timescale (s) \t Crustal thickness (m) \t Crust generation timescale (s)\n");
+	fclose (fout);
+
+	title[0] = '\0';
+	if (cmdline == 1) strncat(title,path,strlen(path)-20);
+	else strncat(title,path,strlen(path)-18);
+	strcat(title,"Outputs/ContWeatherFluxes.txt");
+	fout = fopen(title,"w");
+	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+	else {
+		fprintf(fout, "'Continental weathering fluxes in mol s-1 = bicarbonate trapping capacity due to dissolved cations'\n");
+		fprintf(fout, "'Time (Gyr)' \t 'Total Mg' \t 'Mg from silicates' \t 'Mg from carbonates' \t 'Total Ca' \t 'Ca from silicates' \t 'Ca from carbonates' \t 'Ca from sulfates'"
+				" \t 'Total Fe' \t 'Fe from silicates' \t 'Fe from sulfides'\n");
+		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+				FC_Mg, FC_Mg_sil, FC_Mg_carb, FC_Ca, FC_Ca_sil, FC_Ca_carb, FC_Ca_sulf, FC_Fe, FC_Fe_sil, FC_Fe_sulf);
+	}
+	fclose (fout);
+
+	title[0] = '\0';
+	if (cmdline == 1) strncat(title,path,strlen(path)-20);
+	else strncat(title,path,strlen(path)-18);
+	strcat(title,"Outputs/CompoOcean.txt");
+	fout = fopen(title,"w");
+	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+	else {
+		fprintf(fout, "'Ocean concentrations in mol/(kg H2O)'\n");
+		fprintf(fout, "'Time (Gyr)' \t 'Mocean (kg)' \t 'Mriver (kg)' \t 'Ocean pH' \t 'Ocean log f(O2) at Tsurf0' \t 'Rain pH' \t 'Ox C(aq)' \t 'Red C(aq)' \t Mg(aq) \t "
+				"Ca(aq) \t Fe(aq) \t Si(aq) \t Na(aq) \t S(aq) \t Cl(aq)\n");
+		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+				Mocean, Mriver, pH, 4.0*(pe+pH)-logKO2H2O, rainpH, xaq[0], xaq[1], xaq[6], xaq[7], xaq[8], xaq[9], xaq[10], xaq[11], xaq[12]);
+	}
 	fclose (fout);
 
 	//-------------------------------------------------------------------
@@ -826,7 +858,7 @@ int main(int argc, char *argv[]) {
 //		for (i=iBDT;i<NR;i++) T[i] = Tsurf + (T_BDT-Tsurf)*(P[i]-Psurf)/(P_BDT-Psurf); // Assumes linear relationship between P and T
 
 		bndcoef = (zLith-r[iBDT]) / (pow(Ra/Ra_c,-beta)*(r_p-r[iBDT]-r_c)); // Turcotte & Schubert 2002 eq. 6.387 and Fig. 6.39; Shi et al. (2012) eq. 1
-//		if (bndcoef < 0.15 || bndcoef > 0.5) printf("ExoCcycleGeo: convective boundary layer thickness coefficient %g outside common thickness bounds 0.15 to 0.5\n", bndcoef); TODO put back
+		if (bndcoef < 0.15 || bndcoef > 0.5) printf("ExoCcycleGeo: convective boundary layer thickness coefficient %g outside common thickness bounds 0.15 to 0.5\n", bndcoef);
 
 		// 2b. Update alphaMELTS input files
 		// Output P-T profile in lithosphere+boundary layer to be fed into alphaMELTS through PTexoC.txt
@@ -1170,7 +1202,7 @@ int main(int argc, char *argv[]) {
 			WRcontW = 5000.0*runoff/runoff_0;
 
 			printf("Continental weathering... ");
-			AqueousChem(path, "io/ContWeather.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin); // TODO No need to pass WRcontW as modifiable here, as well as Mocean elsewhere?
+			AqueousChem(path, "io/ContWeather.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin);
 
 			rainpH = xriver[1][3];
 			massH2Oriver = xriver[iResTime][7];
@@ -1220,44 +1252,49 @@ int main(int argc, char *argv[]) {
 
 		if (realtime > tstart && realtime <= tend) {
 
-			// Run in sub-time steps commensurate with Mocean/runoff*4*pi*r_p^2
-			int iterSeafW = 0;
-			double dtSeafW = dtime;
-			double mix = 0.0;
+			// Could run in sub-time steps commensurate with Mocean/runoff*4*pi*r_p^2,
+			// but it shouldn't matter even if there is much more cumulative river runoff than ocean water since this is an equilibrium calculation
 			iterSeafW = floor(Mriver/Mocean);
+			dtSeafW = dtime;
 //			dtSeafW = dtime/(double)iterSeafW;
 			mix = Mocean/Mriver * dtime/dtSeafW;
 
-			printf("iterSeafW = %d, dtSeafW = %g\n", iterSeafW, dtSeafW/Yr2sec);
+			volSeafCrust = (1.0-L)/(1.0-0.29) * 6.5*2.0*PI_greek*r_p*vConv*zCrack*dtime; // MOR length = 6.5*Earth circumference, crust assumed fully cracked
+			rhoSeaf = 3258.0; // TODO calculate density based on PHREEQC input file?
 
-			double deltaCreacTot = 0.0;
+			// Memorize aqueous C abundances
+			xaq0 = xaq[0];
+			xaq1 = xaq[1];
 
 //			for (i=0;i<iterSeafW;i++) {
-
 				printf("Mixing river input into ocean...");
-				AqueousChem(path, "io/MixRiverOcean.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq); // TODO force PP of O2 or is river more oxidizing than ocean?
+				AqueousChem(path, "io/MixRiverOcean.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq);
 
 				// Equilibrate resulting solution with seafloor
 				deltaCreac = xaq[0]+xaq[1]; // Net mol/kg C leached/precipitated, initialized as oxidized+reduced C concentrations
 
-				Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth
-				WRseafW = 19.0;
+				Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth TODO scale with land coverage
+				WRseafW = 18.933 * Mocean / (volSeafCrust * rhoSeaf); // Really this is a water mass, so multiply by 18.933 kg, the mass of rock added to PHREEQC input file TODO calculate it from that file's inputs?
 
-				printf("Seafloor weathering...");
+				printf("Seafloor weathering at W/R = %g ...", Mocean / (volSeafCrust * rhoSeaf));
 				AqueousChem(path, "io/SeafWeather.txt", itime, Tsurf, &Pseaf, &Vatm, &nAir, &pH, &pe, &WRseafW, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq);
 
 				deltaCreac = xaq[0]+xaq[1]-deltaCreac;
 				deltaCreacTot += deltaCreac;
 //			}
-			FCseafsubd = (1.0-L)/(1.0-0.29) * 6.5*2.0*PI_greek*r_p*vConv*zCrack * rho[NR] * deltaCreacTot; // m3/s * kg/m3 * mol/(kg water = kg rock) = mol/s, crust assumed fully cracked, MOR length = 6.5*Earth circumference
+			// Reset aqueous C abundances as they'll be adjusted by ocean-atmosphere equilibrium at the next time step, when netFC C is added to {atmosphere+ocean}
+			xaq[0] = xaq0;
+			xaq[1] = xaq1;
+
+//			FCseafsubd = volSeafCrust/dtime * rhoSeaf * deltaCreacTot * WRseafW/18.933; // m3 rock/s * kg rock/m3 rock * mol/kg water * kg water/kg rock = mol/s, otherwise expressed below:
+			FCseafsubd = deltaCreacTot * Mocean / dtime;
 		}
 
 		//-------------------------------------------------------------------
 		// Compute net geo C fluxes
 		//-------------------------------------------------------------------
 
-//		netFC = FCoutgas + FCcontW + (1.0-farc)*FCseafsubd; // FCcontw < 0, FCseafsubd < 0
-		netFC = FCoutgas + (1.0-farc)*FCseafsubd; // FCcontw < 0, FCseafsubd < 0, ignore FCcontW
+		netFC = FCoutgas + (1.0-farc)*FCseafsubd; // FCcontw < 0, FCseafsubd < 0, ignore FCcontW since that's a flux to the ocean manifested in seafW
 		RCmantle = RCmantle - dtime*netFC; // Assuming plate = mantle (unlike Foley et al. 2015) and instantaneous mixing into the mantle once subducted (in practice could take 1 Gyr)
 		RCatmoc = RCatmoc + dtime*netFC; // Sum of atmospheric and ocean reservoirs, still needs partitioning
 
@@ -1265,24 +1302,23 @@ int main(int argc, char *argv[]) {
 		title[0] = '\0';
 		if (cmdline == 1) strncat(title,path,strlen(path)-20);
 		else strncat(title,path,strlen(path)-18);
-		strcat(title,"Outputs/Output.txt");
+		strcat(title,"Outputs/ReservoirsFluxes.txt");
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 		else {
-			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-					realtime/Gyr2sec, Tmantle, RCmantle, RCatm, RCocean, RCatm+RCocean, RCatmoc, FCoutgas, FCcontW, FCseafsubd, netFC);
+			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					realtime/Gyr2sec, Tmantle, RCmantle, RCatm, RCocean, RCatm+RCocean, RCatmoc, FCoutgas, FCcontW, FCseafsubd, netFC, xaq[3]*Mocean + xgas[3]*2.0*nAir);
 		}
 		fclose (fout);
 
 		title[0] = '\0';
 		if (cmdline == 1) strncat(title,path,strlen(path)-20);
 		else strncat(title,path,strlen(path)-18);
-		strcat(title,"Outputs/CompoOceanAtm.txt");
+		strcat(title,"Outputs/CompoAtmosph.txt");
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-				realtime/Gyr2sec, xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, Tsurf, DeltaTghe, xaq[0], xaq[1], xaq[3],
-				pH, 4.0*(pe+pH)-logKO2H2O, rainpH, (xaq[0]+xaq[1])*Mocean + (xgas[0]+xgas[1])*nAir, xaq[3]*Mocean + xgas[3]*2.0*nAir, Mocean, Mriver, nAir);
+		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+				realtime/Gyr2sec, xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, Tsurf, DeltaTghe, nAir);
 		fclose (fout);
 
 		title[0] = '\0';
@@ -1296,6 +1332,32 @@ int main(int argc, char *argv[]) {
 					nu*rho[(int)((iBDT+iCMB)/2)], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, bndcoef, FCoutgas, vConv*1.0e-6*Myr2sec, tConv, zCrust, zCrust/zNewcrust);
 		}
 		fclose (fout);
+
+		title[0] = '\0';
+		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+		else strncat(title,path,strlen(path)-18);
+		strcat(title,"Outputs/ContWeatherFluxes.txt");
+		fout = fopen(title,"a");
+		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+		else {
+			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					realtime/Gyr2sec, FC_Mg, FC_Mg_sil, FC_Mg_carb, FC_Ca, FC_Ca_sil, FC_Ca_carb, FC_Ca_sulf, FC_Fe, FC_Fe_sil, FC_Fe_sulf);
+		}
+		fclose (fout);
+
+		title[0] = '\0';
+		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+		else strncat(title,path,strlen(path)-18);
+		strcat(title,"Outputs/CompoOcean.txt");
+		fout = fopen(title,"a");
+		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+		else {
+			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					realtime/Gyr2sec, Mocean, Mriver, pH, 4.0*(pe+pH)-logKO2H2O, rainpH, xaq[0], xaq[1], xaq[6], xaq[7], xaq[8], xaq[9], xaq[10], xaq[11], xaq[12]);
+		}
+		fclose (fout);
+
+
 	} // End time loop
 
 	printf("\nExiting ExoCcycleGeo...\n");
