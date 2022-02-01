@@ -270,7 +270,7 @@ int main(int argc, char *argv[]) {
 //	double tcirc = 0.0;                // Time scale of hydrothermal circulation (s)
 	double Pseaf = 0.0;                // Avg. seafloor pressure calculated assuming avg. ocean depth
 	double WRseafW = 1.0;              // Water to rock ratio of seafloor weathering, here multiplied by rock mass
-	int iterSeafW = 0;                 // Number of iterations (sub-timesteps) of seafloor weathering model so that river runoff * timestep < Mocean, use is optional since this is for an equilibrium calculation
+//	int iterSeafW = 0;                 // Number of iterations (sub-timesteps) of seafloor weathering model so that river runoff * timestep < Mocean, use is optional since this is for an equilibrium calculation
 	double dtSeafW = 0.0;              // Sub-timestep for seafloor weathering model so that river runoff * timestep < Mocean, use is optional since this is an equilibrium calculation
 	double mix = 0.0;                  // Mocean/Mriver, optionally scaled by sub-timestep
 	double deltaCreac = 0.0;           // Net C leached/precipitated per kg of rock (mol kg-1) over one sub-timestep
@@ -278,7 +278,6 @@ int main(int argc, char *argv[]) {
 	double xaq0 = 0.0;                 // Memory of xaq[0] (mol/kg) before seafloor weathering calculation to avoid removing oxidized C twice (during PHREEQC calculation and from netFC)
 	double xaq1 = 0.0;                 // Memory of xaq[1] (mol/kg) before seafloor weathering calculation to avoid removing reduced C twice (during PHREEQC calculation and from netFC)
 	double volSeafCrust = 0.0;         // Volume of seafloor reacting with ocean water (m3)
-	double rhoSeaf = 0.0;              // Density of seafloor rock (kg/m3)
 
 	double *xaq = (double*) malloc(nAqSpecies*sizeof(double));
 	if (xaq == NULL) printf("ExoCcycleGeo: Not enough memory to create xaq[nAqSpecies]\n"); // Molalities of aqueous species (mol (kg H2O)-1)
@@ -627,10 +626,10 @@ int main(int argc, char *argv[]) {
 	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 	else {
 		fprintf(fout, "'Ocean concentrations in mol/(kg H2O)'\n");
-		fprintf(fout, "'Time (Gyr)' \t 'Mocean (kg)' \t 'Mriver (kg)' \t 'Ocean pH' \t 'Ocean log f(O2) at Tsurf0' \t 'Rain pH' \t 'Ox C(aq)' \t 'Red C(aq)' \t Mg(aq) \t "
+		fprintf(fout, "'Time (Gyr)' \t 'Mocean (kg)' \t 'Mriver (kg)' \t 'Seafloor weathering volume (m3)' \t 'Ocean pH' \t 'Ocean log f(O2) at Tsurf0' \t 'Rain pH' \t 'Ox C(aq)' \t 'Red C(aq)' \t Mg(aq) \t "
 				"Ca(aq) \t Fe(aq) \t Si(aq) \t Na(aq) \t S(aq) \t Cl(aq)\n");
-		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-				Mocean, Mriver, pH, 4.0*(pe+pH)-logKO2H2O, rainpH, xaq[0], xaq[1], xaq[6], xaq[7], xaq[8], xaq[9], xaq[10], xaq[11], xaq[12]);
+		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+				Mocean, Mriver, volSeafCrust, pH, 4.0*(pe+pH)-logKO2H2O, rainpH, xaq[0], xaq[1], xaq[6], xaq[7], xaq[8], xaq[9], xaq[10], xaq[11], xaq[12]);
 	}
 	fclose (fout);
 
@@ -1254,13 +1253,12 @@ int main(int argc, char *argv[]) {
 
 			// Could run in sub-time steps commensurate with Mocean/runoff*4*pi*r_p^2,
 			// but it shouldn't matter even if there is much more cumulative river runoff than ocean water since this is an equilibrium calculation
-			iterSeafW = floor(Mriver/Mocean);
+//			iterSeafW = floor(Mriver/Mocean);
 			dtSeafW = dtime;
 //			dtSeafW = dtime/(double)iterSeafW;
 			mix = Mocean/Mriver * dtime/dtSeafW;
 
 			volSeafCrust = (1.0-L)/(1.0-0.29) * 6.5*2.0*PI_greek*r_p*vConv*zCrack*dtime; // MOR length = 6.5*Earth circumference, crust assumed fully cracked
-			rhoSeaf = 3258.0; // TODO calculate density based on PHREEQC input file?
 
 			// Memorize aqueous C abundances
 			xaq0 = xaq[0];
@@ -1274,9 +1272,9 @@ int main(int argc, char *argv[]) {
 				deltaCreac = xaq[0]+xaq[1]; // Net mol/kg C leached/precipitated, initialized as oxidized+reduced C concentrations
 
 				Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth TODO scale with land coverage
-				WRseafW = 18.933 * Mocean / (volSeafCrust * rhoSeaf); // Really this is a water mass, so multiply by 18.933 kg, the mass of rock added to PHREEQC input file TODO calculate it from that file's inputs?
+				WRseafW = Mocean / volSeafCrust; // Will be multiplied in WritePHREEQCInput() by (mass rock input to PHREEQC / seafloor crust density) = volume rock input to PHREEQC
 
-				printf("Seafloor weathering at W/R = %g ...", Mocean / (volSeafCrust * rhoSeaf));
+//				printf("Seafloor weathering at W/R = %g ...", Mocean / (volSeafCrust * rhoSeaf));
 				AqueousChem(path, "io/SeafWeather.txt", itime, Tsurf, &Pseaf, &Vatm, &nAir, &pH, &pe, &WRseafW, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq);
 
 				deltaCreac = xaq[0]+xaq[1]-deltaCreac;
@@ -1352,8 +1350,8 @@ int main(int argc, char *argv[]) {
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 		else {
-			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-					realtime/Gyr2sec, Mocean, Mriver, pH, 4.0*(pe+pH)-logKO2H2O, rainpH, xaq[0], xaq[1], xaq[6], xaq[7], xaq[8], xaq[9], xaq[10], xaq[11], xaq[12]);
+			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					realtime/Gyr2sec, Mocean, Mriver, volSeafCrust, pH, 4.0*(pe+pH)-logKO2H2O, rainpH, xaq[0], xaq[1], xaq[6], xaq[7], xaq[8], xaq[9], xaq[10], xaq[11], xaq[12]);
 		}
 		fclose (fout);
 

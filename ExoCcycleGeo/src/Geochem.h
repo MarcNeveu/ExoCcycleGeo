@@ -19,7 +19,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 int ExtractWrite(int instance, double*** data, int line, int nvar);
 const char* ConCat (const char *str1, const char *str2);
 int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
-		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput);
+		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput, int readRockVol);
 int cleanup (char path[1024]);
 double molmass_atm (double *xgas);
 int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, double ***sys_tbl);
@@ -43,6 +43,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	int phreeqc = 0;
 	int i = 0;
 	int j = 0;
+	int readRockVol = 0;                                         // Switch to read rock volume from TITLE row of PHREEQC input file in WritePHREEQCInput
 
 	char *dbase = (char*)malloc(1024);                           // Path to thermodynamic database
 	char *infile = (char*)malloc(1024);                          // Path to initial (template) input file
@@ -72,8 +73,9 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	strcat(infile, filename);
 
 	if (kintime || strcmp(filename, "io/MixRiverOcean.txt") == 0  || strcmp(filename, "io/SeafWeather.txt") == 0) *mass_w *= nAir0; // Don't scale water mass for weathering, which does not require equilibrating ocean and atmosphere i.e. handling large numbers
+	if (strcmp(filename, "io/SeafWeather.txt") == 0) readRockVol = 1;
 
-	WritePHREEQCInput(infile, itime, T-Kelvin, *P, *V/nAir0, *pH, *pe, *mass_w/nAir0, *xgas, *xaq, (*xriver)[iResTime], forcedPP, kintime, kinsteps, &tempinput);
+	WritePHREEQCInput(infile, itime, T-Kelvin, *P, *V/nAir0, *pH, *pe, *mass_w/nAir0, *xgas, *xaq, (*xriver)[iResTime], forcedPP, kintime, kinsteps, &tempinput, readRockVol);
 
 	phreeqc = CreateIPhreeqc(); // Run PHREEQC
 	if (LoadDatabase(phreeqc,dbase) != 0) OutputErrorString(phreeqc);
@@ -262,7 +264,7 @@ const char* ConCat(const char *str1, const char *str2) {
  *--------------------------------------------------------------------*/
 
 int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
-		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput) {
+		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput, int readRockVol) {
 
 	int i = 0;
 	int solution1 = 0; // Switch: is the SOLUTION block being read?
@@ -283,6 +285,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	char mass_w_str[32];
 	char steps_str1[64]; char steps_str2[64];
 	char molMassCrust[10];
+	char rockVol[10];
 
 	char **gas_str1 = (char**)malloc(nAtmSpecies*sizeof(char*));
 	for (i=0;i<nAtmSpecies;i++) gas_str1[i] = (char*)malloc(1024);
@@ -395,6 +398,13 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 			if (line[0] == 'T' && line[1] == 'I' && line[2] == 'T' && line[3] == 'L') { // TITLE line with crust molar mass value
 				for (i=0;i<10;i++) molMassCrust[i] = line[i+64];
 				mass_w *= strtod((const char*)molMassCrust, NULL)/1000.0; // Multiply W:R by crust molar mass to get mass of water in kg
+				sprintf(mass_w_str, "%g", mass_w);
+			}
+		}
+		if (readRockVol) { // Read mass and density from TITLE line
+			if (line[0] == 'T' && line[1] == 'I' && line[2] == 'T' && line[3] == 'L') { // TITLE line with crust molar mass value
+				for (i=0;i<10;i++) rockVol[i] = line[i+40];
+				mass_w *= strtod((const char*)rockVol, NULL); // Multiply W:R by input rock volume to get mass of water in kg
 				sprintf(mass_w_str, "%g", mass_w);
 			}
 		}

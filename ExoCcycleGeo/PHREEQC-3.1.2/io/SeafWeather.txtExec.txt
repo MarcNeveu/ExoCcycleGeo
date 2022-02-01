@@ -1,27 +1,27 @@
 #DATABASE /Users/marc/Documents/Research/2017-2019_NPMP/Git/ExoCcycleGeo/ExoCcycleGeo/PHREEQC-3.1.2/core11_idealgas.dat 
 
-TITLE Seafloor weathering
+TITLE Seafloor weathering, input volume 5.81e-3 m3 (mass 18.93 kg, density 3258 kg/m3) <-- 1st number is ExoCcycleGeo input
 
 SOLUTION 1 Ocean water
 
-	pH 	 	3.64709 charge
+	pH 	 	5.14157 charge
 	temp 	 	14.85
-	pressure 	252.945
-	pe 	 	17.7157
-	-water 	 	19
+	pressure 	252.979
+	pe 	 	-0.199283
+	-water 	 	19.2001
 	units		mol/kgw
-	Ca 		0.000136483 mol/kgw
-	Mg 		5.64055e-05 mol/kgw
-	Na 		0.000291509 mol/kgw
+	Ca 		0.000115658 mol/kgw
+	Mg 		4.83072e-05 mol/kgw
+	Na 		5.10087e-05 mol/kgw
 	K		0
-	Fe 		1.07648e-09 mol/kgw
-	Si 		0.000144863 mol/kgw
-	Cl 		0.000291509 mol/kgw
-	C(4) 		0.312972 mol/kgw
-	S(6) 		5.12968e-05 mol/kgw
-	Ntg 		0.000622867 mol/kgw
+	Fe 		1.02769e-05 mol/kgw
+	Si 		5.88805e-05 mol/kgw
+	Cl 		5.10087e-05 mol/kgw
+	C(4) 		0.00532854 mol/kgw
+	S(6) 		5.10087e-05 mol/kgw
+	Ntg 		0.000302485 mol/kgw
 	N(-3)		0
-	O(0) 		0.000579244 mol/kgw
+	O(0) 		-3.11569e-11 mol/kgw
 
 EQUILIBRIUM_PHASES 1 Fresh seafloor crust
 
