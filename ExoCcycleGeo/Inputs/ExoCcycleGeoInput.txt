@@ -21,18 +21,18 @@ ExoCcycleGeo v20.x Input File
 |-----------------------------------------------|--------------|
 | Surface ||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |-----------------------------------------------|--------------|
-| Mass of surface ocean (kg, def. 1.4e21)       | 1.4e21       |
-| Areal land fraction (default 0.29)            | 0.29         |
-| Initial temperature (K, default 288)          | 288          |
-| Initial pressure (bar)                        | 1            |
-| Runoff rate (m/day, default 0.67e-3)          | 0.67e-3      |
-| Water residence time, continents (yr, def. 10)| 10           |
+| Mass of surface ocean (kg, mod Earth 1.4e21)  | 1.4e21       |
+| Areal land fraction (modern Earth 0.29)       | 0.29         |
+| Initial temperature (K, modern Earth 288)     | 288          |
+| Initial pressure (bar)                        | 0.5          |
+| Runoff rate (m/day, modern Earth 0.67e-3)     | 0.67e-3      |
+| Water residence time, continents (yr, mdrn 10)| 10           |
 |-----------------------------------------------|--------------|
-| Initial Atmosphere |||||||||||||||||||||||||||||||||||||||||||
+| Initial Atmosphere Mixing Ratios |||||||||||||||||||||||||||||
 |-----------------------------------------------|--------------|
-| CO2 (default 280e-6)                          | 280e-6       |
-| CH4                                           | 1e-10        |
-| O2  (default 0.2)                             | 0.2          |
-| N2  (default 0.79)                            | 0.79         |
+| CO2 (pre-industrial Earth 280e-6)             | 280e-6       | 0.2
+| CH4 (modern 1e-6)                             | 1e-6         | 3e-3
+| O2  (modern Earth 0.2)                        | 0.2          | 1e-7
+| N2  (modern Earth 0.79)                       | 0.79         |
 | H2O                                           | 0.01         |
 |--------------------------------------------------------------|

@@ -19,7 +19,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 int ExtractWrite(int instance, double*** data, int line, int nvar);
 const char* ConCat (const char *str1, const char *str2);
 int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
-		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput, int readRockVol);
+		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput, double *rockVol);
 int cleanup (char path[1024]);
 double molmass_atm (double *xgas);
 int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, double ***sys_tbl);
@@ -43,7 +43,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	int phreeqc = 0;
 	int i = 0;
 	int j = 0;
-	int readRockVol = 0;                                         // Switch to read rock volume from TITLE row of PHREEQC input file in WritePHREEQCInput
+	double rockVol = 0.0;                                        // Switch to read rock volume from TITLE row of PHREEQC input file in WritePHREEQCInput(), if 1, overwritten in WritePHREEQCInput() by rock volume
 
 	char *dbase = (char*)malloc(1024);                           // Path to thermodynamic database
 	char *infile = (char*)malloc(1024);                          // Path to initial (template) input file
@@ -73,9 +73,9 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	strcat(infile, filename);
 
 	if (kintime || strcmp(filename, "io/MixRiverOcean.txt") == 0  || strcmp(filename, "io/SeafWeather.txt") == 0) *mass_w *= nAir0; // Don't scale water mass for weathering, which does not require equilibrating ocean and atmosphere i.e. handling large numbers
-	if (strcmp(filename, "io/SeafWeather.txt") == 0) readRockVol = 1;
+	if (strcmp(filename, "io/SeafWeather.txt") == 0) rockVol = 1.0;
 
-	WritePHREEQCInput(infile, itime, T-Kelvin, *P, *V/nAir0, *pH, *pe, *mass_w/nAir0, *xgas, *xaq, (*xriver)[iResTime], forcedPP, kintime, kinsteps, &tempinput, readRockVol);
+	WritePHREEQCInput(infile, itime, T-Kelvin, *P, *V/nAir0, *pH, *pe, *mass_w/nAir0, *xgas, *xaq, (*xriver)[iResTime], forcedPP, kintime, kinsteps, &tempinput, &rockVol);
 
 	phreeqc = CreateIPhreeqc(); // Run PHREEQC
 	if (LoadDatabase(phreeqc,dbase) != 0) OutputErrorString(phreeqc);
@@ -178,19 +178,20 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 		(*pH) = simdata[0][1];
 		(*pe) = simdata[0][2];
 		// Scale by (original water mass)/(new water mass) under assumption that hydration and dehydration (but not carbonation/decarbonation) of ocean crust are balanced
-		(*xaq)[0] = simdata[0][23] * (*mass_w)/nAir0 / simdata[0][5]; // C(4), i.e. dissolved CO2 and carbonate
-		(*xaq)[1] = simdata[0][21] * (*mass_w)/nAir0 / simdata[0][5]; // C(-4), i.e. dissolved methane
-//		(*xaq)[2] = simdata[0][36] * (*mass_w)/nAir0 / simdata[0][5]; // O(0), i.e. dissolved O2
-		(*xaq)[3] = simdata[0][46] * (*mass_w)/nAir0 / simdata[0][5]; // Ntg
+		printf("Water mass scaling before/after: %g\n", (*mass_w)*rockVol/nAir0 / simdata[0][5]);
+		(*xaq)[0] = simdata[0][23] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // C(4), i.e. dissolved CO2 and carbonate
+		(*xaq)[1] = simdata[0][21] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // C(-4), i.e. dissolved methane
+//		(*xaq)[2] = simdata[0][36] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // O(0), i.e. dissolved O2
+		(*xaq)[3] = simdata[0][46] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // Ntg
 //		(*xaq)[4] = 0.0;                                              // N excluding Ntg
 //		(*xaq)[5] = 0.0;                                              // N(-3), i.e. dissolved NH3 and NH4+
-		(*xaq)[6] = simdata[0][12] * (*mass_w)/nAir0 / simdata[0][5]; // Mg
-		(*xaq)[7] = simdata[0][8]  * (*mass_w)/nAir0 / simdata[0][5]; // Ca
-		(*xaq)[8] = simdata[0][10] * (*mass_w)/nAir0 / simdata[0][5]; // Fe
-		(*xaq)[9] = simdata[0][17] * (*mass_w)/nAir0 / simdata[0][5]; // Si
-		(*xaq)[10]= simdata[0][14] * (*mass_w)/nAir0 / simdata[0][5]; // Na
-		(*xaq)[11]= simdata[0][16] * (*mass_w)/nAir0 / simdata[0][5]; // S
-		(*xaq)[12]= simdata[0][14] * (*mass_w)/nAir0 / simdata[0][5]; // Cl
+		(*xaq)[6] = simdata[0][12] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // Mg
+		(*xaq)[7] = simdata[0][8]  * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // Ca
+		(*xaq)[8] = simdata[0][10] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // Fe
+		(*xaq)[9] = simdata[0][17] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // Si
+		(*xaq)[10]= simdata[0][14] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // Na
+		(*xaq)[11]= simdata[0][16] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // S
+		(*xaq)[12]= simdata[0][14] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // Cl
 		// Alternatively, track moles of carbonate precipitated
 //		(*xaq)[215] = simdata[0][215];          // Aragonite CaCO3
 	}
@@ -264,7 +265,7 @@ const char* ConCat(const char *str1, const char *str2) {
  *--------------------------------------------------------------------*/
 
 int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
-		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput, int readRockVol) {
+		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput, double *rockVol) {
 
 	int i = 0;
 	int solution1 = 0; // Switch: is the SOLUTION block being read?
@@ -284,8 +285,8 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	char pe_str[32];
 	char mass_w_str[32];
 	char steps_str1[64]; char steps_str2[64];
-	char molMassCrust[10];
-	char rockVol[10];
+	char molMassCrust_str[10];
+	char rockVol_str[10];
 
 	char **gas_str1 = (char**)malloc(nAtmSpecies*sizeof(char*));
 	for (i=0;i<nAtmSpecies;i++) gas_str1[i] = (char*)malloc(1024);
@@ -396,15 +397,17 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 		// Block switches
 		if (kintime) { // Continental weathering simulation only
 			if (line[0] == 'T' && line[1] == 'I' && line[2] == 'T' && line[3] == 'L') { // TITLE line with crust molar mass value
-				for (i=0;i<10;i++) molMassCrust[i] = line[i+64];
-				mass_w *= strtod((const char*)molMassCrust, NULL)/1000.0; // Multiply W:R by crust molar mass to get mass of water in kg
+				for (i=0;i<10;i++) molMassCrust_str[i] = line[i+64];
+				mass_w *= strtod((const char*)molMassCrust_str, NULL)/1000.0; // Multiply W:R by crust molar mass to get mass of water in kg
 				sprintf(mass_w_str, "%g", mass_w);
 			}
 		}
-		if (readRockVol) { // Read mass and density from TITLE line
+		if (*rockVol > 0.0) { // Read mass and density from TITLE line
 			if (line[0] == 'T' && line[1] == 'I' && line[2] == 'T' && line[3] == 'L') { // TITLE line with crust molar mass value
-				for (i=0;i<10;i++) rockVol[i] = line[i+40];
-				mass_w *= strtod((const char*)rockVol, NULL); // Multiply W:R by input rock volume to get mass of water in kg
+				for (i=0;i<10;i++) rockVol_str[i] = line[i+40];
+				(*rockVol) *= strtod((const char*)rockVol_str, NULL); // Multiply W:R by input rock volume to get mass of water in kg
+				mass_w *= (*rockVol);
+//				printf("Seafloor weathering at W:R %g\n", mass_w/18.933);
 				sprintf(mass_w_str, "%g", mass_w);
 			}
 		}

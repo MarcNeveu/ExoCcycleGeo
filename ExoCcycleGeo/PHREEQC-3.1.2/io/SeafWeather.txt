@@ -1,6 +1,6 @@
 #DATABASE /Users/marc/Documents/Research/2017-2019_NPMP/Git/ExoCcycleGeo/ExoCcycleGeo/PHREEQC-3.1.2/core11_idealgas.dat 
 
-TITLE Seafloor weathering
+TITLE Seafloor weathering, input volume 5.81e-3 m3 (mass 18.93 kg, density 3258 kg/m3) <-- 1st number is ExoCcycleGeo input
 
 SOLUTION 1 Ocean water
 
