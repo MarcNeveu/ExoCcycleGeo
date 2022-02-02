@@ -1263,6 +1263,7 @@ int main(int argc, char *argv[]) {
 			// Memorize aqueous C abundances
 			xaq0 = xaq[0];
 			xaq1 = xaq[1];
+			deltaCreacTot = 0.0;
 
 //			for (i=0;i<iterSeafW;i++) {
 				printf("Mixing river input into ocean...");
