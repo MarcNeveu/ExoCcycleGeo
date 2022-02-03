@@ -116,7 +116,8 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 		(*mass_w) = simdata[0][5]*nAir0;
 		(*xaq)[0] = simdata[0][39];             // C(4), i.e. dissolved CO2 and carbonate
 		(*xaq)[1] = simdata[0][37];             // C(-4), i.e. dissolved methane
-		(*xaq)[2] = simdata[0][66];             // O(0), i.e. dissolved O2
+		(*xaq)[2] = simdata[0][66];             // O(0)
+		if ((*xaq)[2] < 1.0e-15) (*xaq)[2] = 0.0; // PHREEQC can bookkeep negative O(0) in reducing conditions; don't translate this to negative molalities
 		(*xaq)[3] = simdata[0][84];             // Ntg
 //		(*xaq)[4] = simdata[0][22];             // N excluding Ntg
 //		(*xaq)[5] = simdata[0][62];             // N(-3), i.e. dissolved NH3 and NH4+
@@ -160,7 +161,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 		(*pe) = simdata[0][2];
 		(*xaq)[0] = simdata[0][23]; // C(4), i.e. dissolved CO2 and carbonate
 		(*xaq)[1] = simdata[0][21]; // C(-4), i.e. dissolved methane
-//		(*xaq)[2] = simdata[0][36]; // O(0), i.e. dissolved O2
+//		(*xaq)[2] = simdata[0][36]; // O(0)
 		(*xaq)[3] = simdata[0][46]; // Ntg
 //		(*xaq)[4] = 0.0;                                              // N excluding Ntg
 //		(*xaq)[5] = 0.0;                                              // N(-3), i.e. dissolved NH3 and NH4+
@@ -176,12 +177,12 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	// Seafloor weathering
 	if (strcmp(filename, "io/SeafWeather.txt") == 0) {
 		(*pH) = simdata[0][1];
-		(*pe) = simdata[0][2];
+//		(*pe) = simdata[0][2]; // Do not account for redox changes associated with water:rock interaction at the seafloor, assuming that hydration/dehydration are balanced (but not carbonation/decarbonation) TODO what about pyrite formation?
 		// Scale by (original water mass)/(new water mass) under assumption that hydration and dehydration (but not carbonation/decarbonation) of ocean crust are balanced
 		printf("Water mass scaling before/after: %g\n", (*mass_w)*rockVol/nAir0 / simdata[0][5]);
 		(*xaq)[0] = simdata[0][23] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // C(4), i.e. dissolved CO2 and carbonate
 		(*xaq)[1] = simdata[0][21] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // C(-4), i.e. dissolved methane
-//		(*xaq)[2] = simdata[0][36] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // O(0), i.e. dissolved O2
+		(*xaq)[2] = simdata[0][36] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // O(0)
 		(*xaq)[3] = simdata[0][46] * (*mass_w)*rockVol/nAir0 / simdata[0][5]; // Ntg
 //		(*xaq)[4] = 0.0;                                              // N excluding Ntg
 //		(*xaq)[5] = 0.0;                                              // N(-3), i.e. dissolved NH3 and NH4+
@@ -400,6 +401,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 				for (i=0;i<10;i++) molMassCrust_str[i] = line[i+64];
 				mass_w *= strtod((const char*)molMassCrust_str, NULL)/1000.0; // Multiply W:R by crust molar mass to get mass of water in kg
 				sprintf(mass_w_str, "%g", mass_w);
+				if (mass_w == 0.0) printf("Need to add molar mass of rock in TITLE line of PHREEQC ContWeather input, see template.\n");
 			}
 		}
 		if (*rockVol > 0.0) { // Read mass and density from TITLE line
@@ -407,6 +409,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 				for (i=0;i<10;i++) rockVol_str[i] = line[i+40];
 				(*rockVol) *= strtod((const char*)rockVol_str, NULL); // Multiply W:R by input rock volume to get mass of water in kg
 				mass_w *= (*rockVol);
+				if (mass_w == 0.0) printf("Need to add volume of rock in TITLE line of PHREEQC SeafWeather input, see template.\n");
 //				printf("Seafloor weathering at W:R %g\n", mass_w/18.933);
 				sprintf(mass_w_str, "%g", mass_w);
 			}
