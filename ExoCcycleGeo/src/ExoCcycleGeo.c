@@ -137,10 +137,10 @@ int main(int argc, char *argv[]) {
 
 	// Atmosphere parameters
 	double nAir = 0.0;                 // Number of mol in atmosphere (mol)
-//	double S = 0.0;                    // Stellar flux at planet (W m-2)
-//	double S0 = 0.0;                   // Initial stellar flux at planet (W m-2)
-//	double albedo = 0.0;               // Average surface albedo (dimensionless)
-//	double Teff = 0.0;                 // Effective temperature (K)
+	double S = 0.0;                    // Stellar flux at planet (W m-2)
+	double S0 = 0.0;                   // Initial stellar flux at planet (W m-2)
+	double albedo = 0.0;               // Average surface albedo (dimensionless)
+	double Teff = 0.0;                 // Effective temperature (K)
 	double DeltaTghe = 0.0;            // Temperature increase over effective temperature due to greenhouse effect (K)
 	double psi = 0.0;                  // log10(pCO2) (bar)
 	double Vatm1 = 0.0;                // Initial atmospheric volume (m3), determined at second time step to avoid skew of starting values
@@ -523,14 +523,11 @@ int main(int argc, char *argv[]) {
 	//-------------------------------------------------------------------
 
 	// Radiative transfer
-//	S0 = 1368.0;
-//	albedo = 0.3;
+	S0 = 1368.0;
+	albedo = 0.3;
 
     // Ocean
 	pH = 8.22;
-//    xaq[0] = 27.0/12.0/1000.0;         // 27 ppm C in today's oceans (scaled from 141 ppm Alk*M(C)/M(HCO3), M being molecular mass)
-//    xaq[1] = 0.0/12.0/1000.0;
-//    xaq[3] = 0.0/14.0/1000.0;          // ppm N in ocean
 
 	//-------------------------------------------------------------------
 	// Initialize reservoirs
@@ -648,21 +645,15 @@ int main(int argc, char *argv[]) {
 		realtime = (double)itime*dtime;                // Start at birth of planetary system
 //		realtime = (double)itime*dtime + 4.55*Gyr2sec; // Start at present day
 
-//		netFC = 0.0; // !! Debug
-
-		// Print relative change in Ntot to ensure N is conserved. Also print net C flux relative to outgassing flux; if small the C cycle should be balanced
-//		printf("Iteration %d/%d, Time: %g Myr, Tsurf: %g K, pCO2: %g bar, Delta_Ntot/Ntot: %.2f pct, NetFC/outgas: %.2f pct\n",
-//				 itime, ntime, (double)itime*dtime/Myr2sec, Tsurf, xgas[0]*Psurf,
-//				 (1.0-(xgas[3]*2.0*nAir + xaq[3]*Mocean)/TotalN0)*100.0, netFC/FCoutgas*100.0);
-
 		//-------------------------------------------------------------------
 		// Update surface temperature (unnecessary once coupled to Atmos)
 		//-------------------------------------------------------------------
 
 		// Parameterization of Caldeira & Kasting (1992) equation (4), valid between psi=-8 to -2 and T=0 to 100C
-//		S = S0/(1.0-0.38*(realtime/Gyr2sec/4.55-1.0));
+		S = S0/(1.0-0.38*(realtime/Gyr2sec/4.55-1.0));
 //		S = S0;
-//		Teff = pow((1.0-albedo)*S/(4.0*sigStefBoltz),0.25);
+		Teff = pow((1.0-albedo)*S/(4.0*sigStefBoltz),0.25);
+
 		psi = log(xgas[0]*Psurf)/log(10.0);
 		if (psi <= -2) DeltaTghe = 815.17 + 4.895e7/Tsurf/Tsurf - 3.9787e5/Tsurf - 6.7084/psi/psi + 73.221/psi - 30882.0/Tsurf/psi;
 		else           DeltaTghe = 815.17 + 4.895e7/Tsurf/Tsurf - 3.9787e5/Tsurf - 6.7084/4.0     - 73.221/2.0 + 30882.0/Tsurf/2.0
@@ -678,7 +669,7 @@ int main(int argc, char *argv[]) {
 //		}
 //		else DeltaTghe = 0.0; // Pale orange dot, anti-GHE haze
 
-//		Tsurf = Teff + DeltaTghe;
+		Tsurf = Teff + DeltaTghe;
 
 		if (Tsurf < Tfreeze+0.01) printf("ExoCcycleGeo: Surface temperature = %g K < 0.01 C. DeltaTghe=%g K.\n", Tsurf, DeltaTghe);
 
@@ -692,7 +683,7 @@ int main(int argc, char *argv[]) {
 		}
 		Vatm = Vatm1*Tsurf/Tsurf1; // After 2nd time step, keep Vatm constant
 
-		// Redox of outgassing
+		// Redox of outgassing (see e.g. Gaillard and Scaillet 2014 EPSL or Scaillet and Gaillard 2011 Nature comment)
 		if (redox <= 4) {
 			xgas[0] = (xgas[0]*nAir + 1.0*dtime*netFC)/(nAir + dtime*netFC); // CO2 dominates over CH4, assume 100% added gas is CO2 and let equilibration with ocean speciate accurately
 			xgas[1] = xgas[1]*nAir/(nAir + dtime*netFC);                     // Dilute CH4
@@ -1278,7 +1269,7 @@ int main(int argc, char *argv[]) {
 				Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth TODO scale with land coverage
 				WRseafW = Mocean / volSeafCrust; // Will be multiplied in WritePHREEQCInput() by (mass rock input to PHREEQC / seafloor crust density) = volume rock input to PHREEQC
 
-//				printf("Seafloor weathering at W/R = %g ...", Mocean / (volSeafCrust * rhoSeaf));
+				printf("Seafloor weathering at W/R by vol. = %g ...", Mocean / 1000.0 / (volSeafCrust));
 				AqueousChem(path, "io/SeafWeather.txt", itime, Tsurf, &Pseaf, &Vatm, &nAir, &pH, &pe, &WRseafW, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq);
 
 				deltaCreac = xaq[0]+xaq[1]-deltaCreac;
