@@ -4,24 +4,24 @@ TITLE Seafloor weathering, input volume 5.81e-3 m3 (mass 18.93 kg, density 3258 
 
 SOLUTION 1 Ocean water
 
-	pH 	 	3.46067 charge
+	pH 	 	4.02154 charge
 	temp 	 	14.85
-	pressure 	252.976
-	pe 	 	17.9034
-	-water 	 	20.8394
+	pressure 	252.978
+	pe 	 	1.151
+	-water 	 	22.373
 	units		mol/kgw
-	Ca 		0.000142508 mol/kgw
-	Mg 		5.64156e-05 mol/kgw
-	Na 		0.000269074 mol/kgw
+	Ca 		8.39992e-05 mol/kgw
+	Mg 		0.000833866 mol/kgw
+	Na 		0.000243756 mol/kgw
 	K		0
-	Fe 		2.70493e-09 mol/kgw
-	Si 		0.000181271 mol/kgw
-	Cl 		0.000269074 mol/kgw
-	C(4) 		0.607434 mol/kgw
-	S(6) 		5.13594e-05 mol/kgw
-	Ntg 		0.000610318 mol/kgw
+	Fe 		0.000270102 mol/kgw
+	Si 		0.000680119 mol/kgw
+	Cl 		0.000243756 mol/kgw
+	C(4) 		0.584889 mol/kgw
+	S(6) 		4.25468e-05 mol/kgw
+	Ntg 		0.00061577 mol/kgw
 	N(-3)		0
-	O(0) 		0.000582433 mol/kgw
+	O(0) 		0 mol/kgw
 
 EQUILIBRIUM_PHASES 1 Fresh seafloor crust
 

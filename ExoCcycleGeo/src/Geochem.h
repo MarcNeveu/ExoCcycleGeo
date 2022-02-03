@@ -176,7 +176,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 	// Seafloor weathering
 	if (strcmp(filename, "io/SeafWeather.txt") == 0) {
-		(*pH) = simdata[0][1];
+//		(*pH) = simdata[0][1]; // Closed-system pH, does not correspond to pH of ocean equilibrated with atmosphere
 //		(*pe) = simdata[0][2]; // Do not account for redox changes associated with water:rock interaction at the seafloor, assuming that hydration/dehydration are balanced (but not carbonation/decarbonation) TODO what about pyrite formation?
 		// Scale by (original water mass)/(new water mass) under assumption that hydration and dehydration (but not carbonation/decarbonation) of ocean crust are balanced
 		printf("Water mass scaling before/after: %g\n", (*mass_w)*rockVol/nAir0 / simdata[0][5]);

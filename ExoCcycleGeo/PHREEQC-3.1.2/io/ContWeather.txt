@@ -1,6 +1,6 @@
-DATABASE /Users/mneveu/Downloads/PhreeqcExoC/core11_idealgas.dat 
+# DATABASE /Users/mneveu/Downloads/PhreeqcExoC/core11_idealgas.dat 
 
-TITLE Kinetics of continental crust weathering, avg. molar mass 117.8 g/mol <-- this number is ExoCcycleGeo input
+TITLE Kinetics of continental crust weathering, avg. molar mass 141.9 g/mol <-- this number is ExoCcycleGeo input
 
 PHASES
 
@@ -65,8 +65,8 @@ KINETICS # Initial abundances scaled to 1 mol air
 
 Quartz
 	-formula	SiO2			1
-	-m		4.7e-1 # moles                   <------
-	-m0		4.7e-1 # m=m0 (fresh surface)
+	-m		0
+	-m0		0
 	-tol		1e-8
 SiO2(am) # Precipitation only, see PK04 for dissolution rates
 	-formula	SiO2			1
@@ -78,23 +78,23 @@ SiO2(am) # Precipitation only, see PK04 for dissolution rates
 
 Albite
 	-formula	NaAlSi3O8		1
-	-m		1.2e-1 # moles                   <------
-	-m0		1.2e-1
+	-m		1.9e-2 # moles                   <------
+	-m0		1.9e-2
 	-tol		1e-8
 Anorthite # Part of input, other part in Bytownite
 	-formula	CaAl2(SiO4)2		1
-	-m		5.8e-2 # moles                   <------
-	-m0		5.8e-2 # 6.0 if Bytownite used
+	-m		5.28e-2 # moles                   <------
+	-m0		5.28e-2 # 6.0 if Bytownite used
 	-tol		1e-8
 Bytownite # Other part of Anorthite input
 	-formula	CaAl2(SiO4)2		1
-	-m		0.8e-2 # moles                   <------
-	-m0		0.8e-2
+	-m		0.72e-2 # moles                   <------
+	-m0		0.72e-2
 	-tol		1e-8
 K-Feldspar
 	-formula	KAlSi3O8		1
-	-m		3.9e-2 # moles                   <------
-	-m0		3.9e-2
+	-m		0
+	-m0		0
 	-tol		1e-8
 
 # --- Feldspathoids ---
@@ -109,13 +109,13 @@ Nepheline
 
 Forsterite
 	-formula	Mg2SiO4			1
-	-m		3.0e-3 # moles                   <------
-	-m0		3.0e-3
+	-m		6.9e-1 # moles                   <------
+	-m0		6.9e-1
 	-tol		1e-8
 Fayalite
 	-formula	Fe2SiO4			1
-	-m		3.0e-3 # moles                   <------
-	-m0		3.0e-3
+	-m		9.6e-2 # moles                   <------
+	-m0		9.6e-2
 	-tol		1e-8
 
 # --- Garnet ---
@@ -166,8 +166,8 @@ Diopside
 	-tol		1e-8
 Enstatite
 	-formula	MgSiO3			1
-	-m		0
-	-m0		0
+	-m		3.5e-1 # moles                   <------
+	-m0		3.5e-1
 	-tol		1e-8
 Jadeite
 	-formula	NaAl(SiO3)2		1
@@ -176,16 +176,16 @@ Jadeite
 	-tol		1e-8
 Wollastonite
 	-formula	CaSiO3			1
-	-m		0
-	-m0		0
+	-m		4.0e-2 # moles                   <------
+	-m0		4.0e-2
 	-tol		1e-8
 
 # --- Amphiboles ---
 
 Anthophyllite
 	-formula	Mg7Si8O22(OH)2		1
-	-m		1.7e-3 # moles                   <------
-	-m0		1.7e-3
+	-m		0
+	-m0		0
 	-tol		1e-8
 Riebeckite
 	-formula	Na2Fe5Si8O22(OH)2	1
@@ -194,8 +194,8 @@ Riebeckite
 	-tol		1e-8
 Tremolite
 	-formula	Ca2Mg5Si8O22(OH)2	1
-	-m		3.4e-3 # moles                   <------
-	-m0		3.4e-3
+	-m		0
+	-m0		0
 	-tol		1e-8
 
 # --- Micas ---
@@ -212,13 +212,13 @@ Paragonite
 	-tol		1e-8
 Phlogopite
 	-formula	KAlMg3Si3O10(OH)2	1
-	-m		1.4e-2 # moles                   <------
-	-m0		1.4e-2
+	-m		0
+	-m0		0
 	-tol		1e-8
 Annite # Kinetics are those of phlogopite
 	-formula	KFe3AlSi3O10(OH)2	1
-	-m		7.7e-3 # moles                   <------
-	-m0		7.7e-3
+	-m		0
+	-m0		0
 	-tol		1e-8
 Pyrophyllite
 	-formula	Al2Si4O10(OH)2		1
@@ -263,8 +263,8 @@ Clinochlore-14A
 	-tol		1e-8
 Daphnite-14A # Kinetics are those of clinochlore
 	-formula	Fe5AlAlSi3O10(OH)8	1
-	-m		1.1e-2 # moles                   <------
-	-m0		1.1e-2
+	-m		0
+	-m0		0
 	-tol		1e-8
 Talc
 	-formula	Mg3Si4O10(OH)2		1
@@ -317,13 +317,13 @@ Diaspore
 
 Calcite
 	-formula	CaCO3			1
-	-m		3.5e-2 # moles                   <------
-	-m0		3.5e-2
+	-m		0
+	-m0		0
 	-tol		1e-8
 Dolomite-dis
 	-formula	CaMg(CO3)2		1
-	-m		1.0e-2 # moles                   <------
-	-m0		1.0e-2
+	-m		0
+	-m0		0
 	-tol		1e-8
 Dolomite-ord
 	-formula	CaMg(CO3)2		1
@@ -340,8 +340,8 @@ Magnesite
 
 Gypsum
 	-formula	CaSO4:2H2O		1
-	-m		6.2e-3 # moles                   <------
-	-m0		6.2e-3
+	-m		0
+	-m0		0
 	-tol		1e-8
 Anhydrite
 	-formula	CaSO4		1
@@ -350,8 +350,8 @@ Anhydrite
 	-tol		1e-8
 Pyrite
 	-formula	FeS2		1
-	-m		1.3e-3 # moles                   <------
-	-m0		1.3e-3
+	-m		2.7e-3 # moles                   <------
+	-m0		2.7e-3
 	-tol		1e-8
 Pyrrhotite
 	-formula	FeS		1
@@ -375,14 +375,14 @@ SOLUTION 1 Rainwater
 	pH 	 	7.0 charge
 	temp 	 	14.85
 	pressure 	1
-	-water		544 # kg, W:R=5000 (Martin & Meybeck 1979 Table V footnote 3, before 65% evaporation; Berner et al. 1983)
+	-water		890 # kg, W:R=5000 (Martin & Meybeck 1979 Table V footnote 3, before 65% evaporation; Berner et al. 1983)
 	-units		mol/kgw
-	C(4)		1.0 CO2(g) -3.55
-	C(-4)		1.0 CH4(g) -20
-	Ntg		1.0 Ntg(g) -0.108
-	N(-3)		1.0 NH3(g) -20
-	O(0)		1.0 O2(g) -0.7
-	S		95.0e-6 as SO4-2
+	C(4)		1.0 CO2(g) -0.7    # Archean Earth composition, Catling &  Zahnle 2020
+	C(-4)		1.0 CH4(g) -20     # Archean Earth composition, Catling &  Zahnle 2020
+	Ntg		1.0 Ntg(g) -0.108  # Archean Earth composition, Catling &  Zahnle 2020
+#	N(-3)		1.0 NH3(g) -20     # Archean Earth composition, Catling &  Zahnle 2020
+	O(0)		1.0 O2(g) -20      # Archean Earth composition, Catling &  Zahnle 2020
+	S		250.0e-6 as SO4-2  # Scaled from computed volcanic outgassing in Archean vs. abiotic modern (Berner et al. 1983)
 
 SELECTED_OUTPUT
 
