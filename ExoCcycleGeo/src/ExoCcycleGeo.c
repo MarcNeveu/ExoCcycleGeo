@@ -51,10 +51,12 @@ int main(int argc, char *argv[]) {
     // User-specified planet surface parameters
 	double Mocean = 0.0;               // Mass of ocean (kg, default: Earth=1.4e21)
 	double L = 0.0;                    // Areal fraction of planet surface covered by land
+	double Lnow = 0.0;                 // Present-day areal fraction covered by land
 	double Tsurf0 = 0.0;               // Initial surface temperature (K)
 	double Psurf = 0.0;                // Surface pressure (bar)
 	double runoff = 0.0;               // Atmospheric runoff (m s-1), default runoff_0 = 0.665e-3 m day-1 (Broeker & Peng 1982 instead have 0.7 m per year left after evaporation)
-	double tContResidence = 0.0;       // Residence time of water on continents (s)
+	double tResLand = 0.0;       // Residence time of water on continents (s)
+	double tResLandNow = 0.0;		   // Present-day residence time of water on continents (s)
 
     // User-specified planet atmosphere parameters
 	double *xgas = (double*) malloc(nAtmSpecies*sizeof(double));
@@ -129,6 +131,7 @@ int main(int argc, char *argv[]) {
 
 	// Geochem parameters
 	double pH = 0.0;                   // pH of the surface ocean (default 8.22)
+	double pHout = 0.0;				   // pH output (calculated from ocean-atmosphere equilibrium)
 	double rainpH = 0.0;               // pH of rainwater
 	double pe = 0.0;                   // pe (-log activity e-) corresponding to logfO2
 	double logfO2 = 0.0;               // log O2 fugacity
@@ -333,11 +336,11 @@ int main(int argc, char *argv[]) {
     magmaCmassfrac = input[i]; i++;    // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; Hartley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
     // Surface inputs
 	Mocean = input[i]; i++;            // Mass of ocean (kg, default: Earth=1.4e21)
-	L = input[i]; i++;                 // Areal fraction of planet surface covered by land
+	Lnow = input[i]; i++;                 // Areal fraction of planet surface covered by land
 	Tsurf0 = input[i]; i++;            // Initial surface temperature (K)
 	Psurf = input[i]; i++;             // Surface pressure (bar)
 	runoff = input[i]/86400.0; i++;    // Atmospheric runoff (m s-1), default runoff_0 = 0.665e-3 m day-1 (Broeker & Peng 1982 instead have 0.7 m per year left after evaporation)
-	tContResidence = input[i]*Yr2sec; i++; // Residence time of rain- and river water on continents (s)
+	tResLandNow = input[i]*Yr2sec; i++; // Residence time of rain- and river water on continents (s)
 	// Atmospheric inputs
 	xgas[0] = input[i]; i++;           // CO2 mixing ratio
     xgas[1] = input[i]; i++;           // CH4 mixing ratio
@@ -371,11 +374,11 @@ int main(int argc, char *argv[]) {
 	printf("| Surface ||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
 	printf("|-----------------------------------------------|--------------|\n");
 	printf("| Mass of surface ocean (kg, def. 1.4e21)       | %g \n", Mocean);
-	printf("| Areal land fraction (default 0.29)            | %g \n", L);
+	printf("| Areal land fraction (default 0.29)            | %g \n", Lnow);
 	printf("| Initial temperature (K, default 288)          | %g \n", Tsurf0);
 	printf("| Initial pressure (bar)                        | %g \n", Psurf);
 	printf("| Runoff rate (m/day, default 0.67e-3)          | %g \n", runoff*86400.0);
-	printf("| Water residence time, continents (yr, def. 10)| %g \n", tContResidence/Yr2sec);
+	printf("| Water residence time, continents (yr, def. 10)| %g \n", tResLandNow/Yr2sec);
 	printf("|-----------------------------------------------|--------------|\n");
 	printf("| Initial Atmosphere |||||||||||||||||||||||||||||||||||||||||||\n");
 	printf("|-----------------------------------------------|--------------|\n");
@@ -609,10 +612,10 @@ int main(int argc, char *argv[]) {
 	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 	else {
 		fprintf(fout, "'Continental weathering fluxes in mol s-1 = bicarbonate trapping capacity due to dissolved cations'; river abundances in mol kg-1\n");
-		fprintf(fout, "'Time (Gyr)' \t 'Total Mg' \t 'Mg from silicates' \t 'Mg from carbonates' \t 'Total Ca' \t 'Ca from silicates' \t 'Ca from carbonates' \t 'Ca from sulfates'"
+		fprintf(fout, "'Time (Gyr)' \t 'Land areal fraction' \t 'Residence time of water on land' \t 'Total Mg' \t 'Mg from silicates' \t 'Mg from carbonates' \t 'Total Ca' \t 'Ca from silicates' \t 'Ca from carbonates' \t 'Ca from sulfates'"
 				" \t 'Total Fe' \t 'Fe from silicates' \t 'Fe from sulfides' \t 'Total C flux' \t 'River pH' \t HCO3-(aq) \t CO3-2(aq) \t CO2(aq) \t Na+(aq) \t Mg+2(aq) \t SiO2(aq) \t Ca+2(aq) \t Fe+2(aq)\n");
-		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-				FC_Mg, FC_Mg_sil, FC_Mg_carb, FC_Ca, FC_Ca_sil, FC_Ca_carb, FC_Ca_sulf, FC_Fe, FC_Fe_sil, FC_Fe_sulf, FC_Mg+FC_Ca+FC_Fe,
+		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+				L, tResLand, FC_Mg, FC_Mg_sil, FC_Mg_carb, FC_Ca, FC_Ca_sil, FC_Ca_carb, FC_Ca_sulf, FC_Fe, FC_Fe_sil, FC_Fe_sulf, FC_Mg+FC_Ca+FC_Fe,
 				xriver[iResTime][3], xriver[iResTime][17], xriver[iResTime][18], xriver[iResTime][19], xriver[iResTime][20], xriver[iResTime][21], xriver[iResTime][22], xriver[iResTime][23], xriver[iResTime][24]);
 
 	}
@@ -626,10 +629,10 @@ int main(int argc, char *argv[]) {
 	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 	else {
 		fprintf(fout, "'Ocean concentrations in mol/(kg H2O)'\n");
-		fprintf(fout, "'Time (Gyr)' \t 'Mocean (kg)' \t 'Mriver (kg)' \t 'Seafloor weathering volume (m3)' \t 'Ocean pH' \t 'Ocean log f(O2) at Tsurf0' \t 'Rain pH' \t 'Ox C(aq)' \t 'Red C(aq)' \t Mg(aq) \t "
+		fprintf(fout, "'Time (Gyr)' \t 'Mocean (kg)' \t 'Mriver (kg)' \t 'Seafloor weathering volume (m3)' \t 'Ocean pH' \t 'Seawater-seafloor equil pH' \t 'Ocean log f(O2) at Tsurf0' \t 'Rain pH' \t 'Ox C(aq)' \t 'Red C(aq)' \t Mg(aq) \t "
 				"Ca(aq) \t Fe(aq) \t Si(aq) \t Na(aq) \t S(aq) \t Cl(aq)\n");
-		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-				Mocean, Mriver, volSeafCrust, pH, 4.0*(pe+pH)-logKO2H2O, rainpH, xaq[0], xaq[1], xaq[6], xaq[7], xaq[8], xaq[9], xaq[10], xaq[11], xaq[12]);
+		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+				Mocean, Mriver, volSeafCrust, pHout, pH, 4.0*(pe+pH)-logKO2H2O, rainpH, xaq[0], xaq[1], xaq[6], xaq[7], xaq[8], xaq[9], xaq[10], xaq[11], xaq[12]);
 	}
 	fclose (fout);
 
@@ -720,6 +723,7 @@ int main(int argc, char *argv[]) {
 
 			RCatm = (xgas[0]+xgas[1])*nAir;
 			RCocean = (xaq[0]+xaq[1])*Mocean;
+			pHout = pH;
 
 			cleanup(path); // Remove PHREEQC selected output file
 		}
@@ -1132,7 +1136,9 @@ int main(int argc, char *argv[]) {
 		else zNewcrust = 0.0;
 		zCrust = zCrust + zNewcrust*dtime;
 
-		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iBDT]-r[iCMB]); // mol C s-1
+//		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iBDT]-r[iCMB]); // mol C s-1
+		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iBDT]-r[iCMB])*0.4; // mol C s-1, 40% melt reaches the surface
+
 
 //      // Alternative: Kite et al. (2009) eq. 25 They didn't scale with mass: [sum melt fraction (depth)] * [mass (depth)] / [total mass between surf and Psolidus]. Also their typo: P0>Pf=P_BDT.
 //		double Rmelt = 0.0;             // Rate of melt generation (m-2 s-1)
@@ -1184,9 +1190,12 @@ int main(int argc, char *argv[]) {
 		if (Tsurf > Tfreeze && realtime > tstart && realtime <= tend) {
 			// Analytical calculation from Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
 //			FCcontW = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7);
+			L = Lnow*realtime/(4.56*Gyr2sec);
+			tResLand = tResLandNow*realtime/(4.56*Gyr2sec);
+//			tResLand = tResLandNow;
 
-		    kintime = 1.01*tContResidence; // Total time of kinetic simulation
-		    iResTime = floor(tContResidence / kintime * (double)kinsteps); // Index in xriver corresponding to output at riverResTime;
+		    kintime = 1.01*tResLand; // Total time of kinetic simulation
+		    iResTime = floor(tResLand / kintime * (double)kinsteps); // Index in xriver corresponding to output at riverResTime;
 
 			for (i=0;i<kinsteps;i++) {
 				for (j=0;j<nvarKin;j++) xriver[i][j] = 0.0;
@@ -1333,8 +1342,8 @@ int main(int argc, char *argv[]) {
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 		else {
-			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-					realtime/Gyr2sec, FC_Mg, FC_Mg_sil, FC_Mg_carb, FC_Ca, FC_Ca_sil, FC_Ca_carb, FC_Ca_sulf, FC_Fe, FC_Fe_sil, FC_Fe_sulf, FC_Mg+FC_Ca+FC_Fe,
+			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					realtime/Gyr2sec, L, tResLand/Yr2sec, FC_Mg, FC_Mg_sil, FC_Mg_carb, FC_Ca, FC_Ca_sil, FC_Ca_carb, FC_Ca_sulf, FC_Fe, FC_Fe_sil, FC_Fe_sulf, FC_Mg+FC_Ca+FC_Fe,
 					xriver[iResTime][3], xriver[iResTime][17], xriver[iResTime][18], xriver[iResTime][19], xriver[iResTime][20], xriver[iResTime][21], xriver[iResTime][22], xriver[iResTime][23], xriver[iResTime][24]);
 		}
 		fclose (fout);
@@ -1346,8 +1355,8 @@ int main(int argc, char *argv[]) {
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 		else {
-			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-					realtime/Gyr2sec, Mocean, Mriver, volSeafCrust, pH, 4.0*(pe+pH)-logKO2H2O, rainpH, xaq[0], xaq[1], xaq[6], xaq[7], xaq[8], xaq[9], xaq[10], xaq[11], xaq[12]);
+			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					realtime/Gyr2sec, Mocean, Mriver, volSeafCrust, pHout, pH, 4.0*(pe+pH)-logKO2H2O, rainpH, xaq[0], xaq[1], xaq[6], xaq[7], xaq[8], xaq[9], xaq[10], xaq[11], xaq[12]);
 		}
 		fclose (fout);
 

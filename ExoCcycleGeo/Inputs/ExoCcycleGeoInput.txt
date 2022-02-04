@@ -4,7 +4,7 @@ ExoCcycleGeo v20.x Input File
 | Grid |||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |-----------------------------------------------|--------------|
 | Simulation time step (Myr, default 10)        | 10           |
-| Simulation start time (Gyr, default 0.6)      | 0.6          |
+| Simulation start time (Gyr, default 0.6)      | 0.60         |
 | Simulation end   time (Gyr, default 5)        | 5            |
 |-----------------------------------------------|--------------|
 | Planet Interior ||||||||||||||||||||||||||||||||||||||||||||||
@@ -23,8 +23,8 @@ ExoCcycleGeo v20.x Input File
 |-----------------------------------------------|--------------|
 | Mass of surface ocean (kg, mod Earth 1.4e21)  | 1.4e21       |
 | Areal land fraction (modern Earth 0.29)       | 0.29         |
-| Initial temperature (K, modern Earth 288)     | 288          |
-| Initial pressure (bar)                        | 1            | 0.5
+| Initial temperature (K, modern Earth 288)     | 288          | Archean
+| Initial pressure (bar)                        | 0.5          | 0.5
 | Runoff rate (m/day, modern Earth 0.67e-3)     | 0.67e-3      |
 | Water residence time, continents (yr, mdrn 10)| 10           |
 |-----------------------------------------------|--------------|

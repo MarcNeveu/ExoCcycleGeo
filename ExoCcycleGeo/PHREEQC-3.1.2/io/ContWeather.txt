@@ -63,11 +63,11 @@ KINETICS # Initial abundances scaled to 1 mol air
 
 # --- SiO2 polymorphs ---
 
-Quartz
-	-formula	SiO2			1
-	-m		0
-	-m0		0
-	-tol		1e-8
+#Quartz
+#	-formula	SiO2			1
+#	-m		0
+#	-m0		0
+#	-tol		1e-8
 SiO2(am) # Precipitation only, see PK04 for dissolution rates
 	-formula	SiO2			1
 	-m		0

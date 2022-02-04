@@ -176,7 +176,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 	// Seafloor weathering
 	if (strcmp(filename, "io/SeafWeather.txt") == 0) {
-//		(*pH) = simdata[0][1]; // Closed-system pH, does not correspond to pH of ocean equilibrated with atmosphere
+		(*pH) = simdata[0][1]; // Closed-system pH, does not correspond to pH of ocean equilibrated with atmosphere
 //		(*pe) = simdata[0][2]; // Do not account for redox changes associated with water:rock interaction at the seafloor, assuming that hydration/dehydration are balanced (but not carbonation/decarbonation) TODO what about pyrite formation?
 		// Scale by (original water mass)/(new water mass) under assumption that hydration and dehydration (but not carbonation/decarbonation) of ocean crust are balanced
 		printf("Water mass scaling before/after: %g\n", (*mass_w)*rockVol/nAir0 / simdata[0][5]);
@@ -429,7 +429,14 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 
 		// SOLUTION
 		if (line[1] == 'p' && line[2] == 'H') {
-			if      (solution1) fprintf(fout, "%s charge\n", ConCat("\tpH \t \t",pH_str));
+			if      (solution1) {
+//				if (*rockVol) {
+////					fprintf(fout, "%s\n", ConCat("\tpH \t \t",pH_str)); // This special case of no adjustment of pH based on charge balance for seafloor weathering makes no difference in outcomes, but it makes clear that the ocean pH depends on equilibrium with the atmosphere rather than with the seafloor
+//					fprintf(fout, "\tpH \t \t12\n"); // Uncomment to vary ocean pH
+//				}
+//				else fprintf(fout, "%s charge\n", ConCat("\tpH \t \t",pH_str));
+				fprintf(fout, "%s charge\n", ConCat("\tpH \t \t",pH_str));
+			}
 			else if (solution2) fprintf(fout, "%s charge\n", ConCat("\tpH \t \t",river_str[3]));
 		}
 		else if (line[1] == 't' && line[2] == 'e' && line[3] == 'm' && line[4] == 'p') {
