@@ -1,4 +1,4 @@
-Title: Allan et al. 1989 (see Ghiorso 1997)
+Title: Sanloup as cited by Taylor et al. (2014)
 Title: Temperature input in Celsius, output in Kelvin
 Title: Pressure in bar
 Title: P-T are overwritten by those in the environment variable file
@@ -12,18 +12,18 @@ Title: Use table file to generate MELTS inputs along the P,T profile from ExoCcy
 Title: One row per P,T[,fO2] condition, column headers: Temperature, Pressure, logfO2
 Title: fO2 could deal with redox changes upon ascent a la Gaillard and Scaillet 2007 
 Title: May need to remove corresponding values in the env file.
-Initial Composition: SiO2 48.68
-Initial Composition: TiO2 1.01
-Initial Composition: Al2O3 17.64
-Initial Composition: Fe2O3 0.89
-Initial Composition: Cr2O3 0.03
-Initial Composition: FeO 7.59
-Initial Composition: MgO 9.10
-Initial Composition: CaO 12.45
-Initial Composition: Na2O 2.65
-Initial Composition: K2O 0.03
-Initial Composition: P2O5 0.08
-Initial Composition: H2O 0.20
+Initial Composition: SiO2 48.64
+Initial Composition: TiO2 0.1
+Initial Composition: Al2O3 3.60
+Initial Composition: Fe2O3 0
+Initial Composition: Cr2O3 0
+Initial Composition: FeO 17.50
+Initial Composition: MgO 26.99
+Initial Composition: CaO 1.98
+Initial Composition: Na2O 1.19
+Initial Composition: K2O 0
+Initial Composition: P2O5 0
+Initial Composition: H2O 0
 Initial Temperature: 1747.74 !T[iLith] from ExoCcycleGeo
 Final Temperature: 1576.85
 Increment Temperature: 3.00

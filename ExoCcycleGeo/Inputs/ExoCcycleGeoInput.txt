@@ -3,9 +3,9 @@ ExoCcycleGeo v20.x Input File
 |--------------------------------------------------------------|
 | Grid |||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |-----------------------------------------------|--------------|
-| Simulation time step (Myr, default 10)        | 10           |
-| Simulation start time (Gyr, default 0.6)      | 0.60         |
-| Simulation end   time (Gyr, default 5)        | 5            |
+| Simulation time step (Myr, default 0.1)       | 0.1           |
+| Simulation start time (Gyr, default 0.6)      | 0.6          |
+| Simulation end   time (Gyr, default 5)        | 4.57         |
 |-----------------------------------------------|--------------|
 | Planet Interior ||||||||||||||||||||||||||||||||||||||||||||||
 |-----------------------------------------------|--------------|

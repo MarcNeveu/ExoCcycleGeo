@@ -121,6 +121,7 @@ int main(int argc, char *argv[]) {
 	double RCatm = 0.0;                // Atmospheric C reservoir (mol)
 	double RCocean = 0.0;              // Ocean C reservoir (mol)
 	double RCatmoc = RCatm + RCocean;  // Combined atmospheric and ocean C reservoir (mol)
+	double RCorg = 0.0;			   	   // Organic carbon (biomass)
 
 	// Fluxes
 	double FCoutgas = 0.0;             // C flux from outgassing (subaerial+submarine) (mol s-1)
@@ -269,6 +270,7 @@ int main(int argc, char *argv[]) {
 
 
 	// Quantities to be computed by seafloor weathering model
+	double LplateBnd = 0.0;            // Length of tectonic plate boundaries, today 6.5*Earth circumference (m)
 	double zCrack = 6000.0;            // Depth of fracturing below seafloor (m), default 6000 m (Vance et al. 2007)
 //	double tcirc = 0.0;                // Time scale of hydrothermal circulation (s)
 	double Pseaf = 0.0;                // Avg. seafloor pressure calculated assuming avg. ocean depth
@@ -549,7 +551,7 @@ int main(int argc, char *argv[]) {
 		if (xgas[i] > 0.0 && xaq[i] == 0.0) xaq[i] = 1.0; // xaq must be >0 otherwise PHREEQC ignores it, set to 1 mol/kgw (initial guess).
 	}
 
-	AqueousChem(path, "io/OceanStart.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 1, 0.0, 1, nvarEq);
+	AqueousChem(path, "io/OceanStart.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 1, 0.0, 1, nvarEq, 0.0, 0.0);
 
 	RCocean = (xaq[0]+xaq[1])*Mocean;
 	RCatmoc = RCatm + RCocean;
@@ -566,9 +568,9 @@ int main(int argc, char *argv[]) {
 	else {
 		fprintf(fout, "'Reservoirs in mol, fluxes in mol s-1'\n");
 		fprintf(fout, "'Time (Gyr)' \t 'Tmantle (K)' \t RCmantle \t RCatm \t RCocean \t RCatm+RCoc \t RCatmoc \t FCoutgas \t FCcontw \t FCseafsubd \t 'Net C flux' \t "
-				"'Total N g+aq'\n");
-		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-				Tmantle, RCmantle, RCatm, RCocean, RCatm+RCocean, RCatmoc, FCoutgas, FCcontW, FCseafsubd, netFC, xaq[3]*Mocean + xgas[3]*2.0*nAir);
+				"'Total N g+aq' \t RCorg\n");
+		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+				Tmantle, RCmantle, RCatm, RCocean, RCatm+RCocean, RCatmoc, FCoutgas, FCcontW, FCseafsubd, netFC, xaq[3]*Mocean + xgas[3]*2.0*nAir, RCorg);
 	}
 	fclose (fout);
 
@@ -714,7 +716,7 @@ int main(int argc, char *argv[]) {
 		if (Tsurf > Tfreeze) {
 			printf("\nTime: %g Gyr. Equilibrating ocean and atmosphere... ", realtime/Myr2sec/1000.0);
 
-			AqueousChem(path, "io/OceanDiss.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq);
+			AqueousChem(path, "io/OceanDiss.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0);
 
 			if (Psurf < 0.01) {
 				printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
@@ -829,7 +831,8 @@ int main(int argc, char *argv[]) {
 
 		// Convective velocity
 //		vConv = 2.0*(Nu-1.0) * k / (rho[(int)((iBDT+iCMB)/2)]*Cp*(r[iBDT]-r_c)) * (Tmantle-Tsurf) / (Tmantle-Tref); // Kite et al. 2009 equation 24
-		vConv = 0.354*kappa/(r[iBDT]-r[iCMB])*sqrt(Ra); // Eq. (6.379) of Turcotte & Schubert (2002), p. 514
+		vConv = 0.0 * 0.271*kappa/(r[iBDT]-r[iCMB])*pow(Ra,2.0/3.0) // Eq. (6.369) of Turcotte & Schubert (2002), p. 511, fluid heated from below, which is true in part for Earth's mantle, see Romanowicz et al. 2002; Lay et al. 2008
+		      + 1.0 * 0.354*kappa/(r[iBDT]-r[iCMB])*sqrt(Ra); // Eq. (6.379) of Turcotte & Schubert (2002), p. 514, fluid heated from within
 		driveStress = nu * rho[(int)((iBDT+iCMB)/2)] * vConv*vConv / (5.38*kappa);
 		tConv = (r[iBDT]-r[iCMB])/vConv; // Update convection timescale
 
@@ -1136,9 +1139,9 @@ int main(int argc, char *argv[]) {
 		else zNewcrust = 0.0;
 		zCrust = zCrust + zNewcrust*dtime;
 
-//		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iBDT]-r[iCMB]); // mol C s-1
-		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iBDT]-r[iCMB])*0.4; // mol C s-1, 40% melt reaches the surface
-
+		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iBDT]-r[iCMB]); // mol C s-1
+//		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iBDT]-r[iCMB])*0.4; // mol C s-1, 40% melt reaches the surface
+//		if (realtime < 1.0*Gyr2sec) FCoutgas = FCoutgas * (realtime/(0.4*Gyr2sec)-1.5); // Ramp up outgassing from 0.6 to 1.0 Gyr to avoid step function
 
 //      // Alternative: Kite et al. (2009) eq. 25 They didn't scale with mass: [sum melt fraction (depth)] * [mass (depth)] / [total mass between surf and Psolidus]. Also their typo: P0>Pf=P_BDT.
 //		double Rmelt = 0.0;             // Rate of melt generation (m-2 s-1)
@@ -1204,7 +1207,7 @@ int main(int argc, char *argv[]) {
 			WRcontW = 5000.0*runoff/runoff_0;
 
 			printf("Continental weathering... ");
-			AqueousChem(path, "io/ContWeather.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin);
+			AqueousChem(path, "io/ContWeather.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin, 0.0, 0.0);
 
 			rainpH = xriver[1][3]; // xriver[0][3], the initial rain speciation, is returned as = 0, so this is as close as it gets (smallest reaction time)
 			massH2Oriver = xriver[iResTime][7];
@@ -1261,7 +1264,16 @@ int main(int argc, char *argv[]) {
 //			dtSeafW = dtime/(double)iterSeafW;
 			mix = Mocean/Mriver * dtime/dtSeafW;
 
-			volSeafCrust = (1.0-L)/(1.0-0.29) * 6.5*2.0*PI_greek*r_p*vConv*zCrack*dtime; // MOR length = 6.5*Earth circumference, crust assumed fully cracked
+			LplateBnd = 6.5*2.0*PI_greek*r_p;
+//			LplateBnd = pow(Ra/2.3e6,1.0/3.0) * 6.5*2.0*PI_greek*r_p;
+			// 2.3e6 is canonical Ra for Earth today. Scaling with Ra^1/3 is consistent with scaling with Nu.
+			// Today indicative size of 7 major plates is 70e6 km2, corresponding to diameter 2*sqrt(70e6/(4*pi)) = 4720 km > mantle depth, even though (isoviscous) convection cell should have aspect ratio of 1 (Bercovici et al. 2015).
+			// For Earth inputs it is = mantle depth (2900 km) for Ra = 1e7, i.e., 2 billion years ago (oldest evidence of plate tectonics 2-3 Ga; Brown et al. 2020)
+
+			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*vConv*zCrack*dtime; // MOR length = 6.5*Earth circumference, crust assumed fully cracked
+
+			Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth TODO scale with land coverage
+			WRseafW = Mocean / volSeafCrust; // Will be multiplied in AqueousChem() by (mass rock input to PHREEQC / seafloor crust density) = volume rock input to PHREEQC
 
 			// Memorize aqueous C abundances
 			xaq0 = xaq[0];
@@ -1269,19 +1281,11 @@ int main(int argc, char *argv[]) {
 			deltaCreacTot = 0.0;
 
 //			for (i=0;i<iterSeafW;i++) {
-				printf("Mixing river input into ocean...");
-				AqueousChem(path, "io/MixRiverOcean.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq);
+				printf("Mixing river input into ocean...\n");
+				printf("Ocean will react with seafloor crust at W/R by vol. = %g\n", Mocean / 1000.0 / volSeafCrust);
+				AqueousChem(path, "io/MixRiverOcean.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq, Pseaf, WRseafW);
 
-				// Equilibrate resulting solution with seafloor
-				deltaCreac = xaq[0]+xaq[1]; // Net mol/kg C leached/precipitated, initialized as oxidized+reduced C concentrations
-
-				Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth TODO scale with land coverage
-				WRseafW = Mocean / volSeafCrust; // Will be multiplied in WritePHREEQCInput() by (mass rock input to PHREEQC / seafloor crust density) = volume rock input to PHREEQC
-
-				printf("Seafloor weathering at W/R by vol. = %g ...", Mocean / 1000.0 / (volSeafCrust));
-				AqueousChem(path, "io/SeafWeather.txt", itime, Tsurf, &Pseaf, &Vatm, &nAir, &pH, &pe, &WRseafW, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq);
-
-				deltaCreac = xaq[0]+xaq[1]-deltaCreac;
+				deltaCreac = xaq[0]+xaq[1]-xaq0-xaq1;
 				deltaCreacTot += deltaCreac;
 //			}
 			// Reset aqueous C abundances as they'll be adjusted by ocean-atmosphere equilibrium at the next time step, when netFC C is added to {atmosphere+ocean}
@@ -1295,9 +1299,16 @@ int main(int argc, char *argv[]) {
 		//-------------------------------------------------------------------
 		// Compute net geo C fluxes
 		//-------------------------------------------------------------------
-
+		farc = 0.25;
 		netFC = FCoutgas + (1.0-farc)*FCseafsubd; // FCcontw < 0, FCseafsubd < 0, ignore FCcontW since that's a flux to the ocean manifested in seafW
 		RCmantle = RCmantle - dtime*netFC; // Assuming plate = mantle (unlike Foley et al. 2015) and instantaneous mixing into the mantle once subducted (in practice could take 1 Gyr)
+
+		// Life. On Earth today, org C sequesters today 1e5 x more carbon than atmosphere. Org C has had same level since Archean, maybe was 2x lower back then (Martin et al. 2008 Fig. 2B)
+//		if (realtime > tstart && realtime <= tend && RCorg < 1.0e21) { // Reservoir size is of order 1e21 mol today (Hayes and Waldbauer 2006 Table 2)
+//			RCorg += 0.8*dtime*netFC;
+//			netFC = 0.2*netFC;
+//		}
+
 		RCatmoc = RCatmoc + dtime*netFC; // Sum of atmospheric and ocean reservoirs, still needs partitioning
 
 		// Write outputs
@@ -1308,8 +1319,8 @@ int main(int argc, char *argv[]) {
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 		else {
-			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-					realtime/Gyr2sec, Tmantle, RCmantle, RCatm, RCocean, RCatm+RCocean, RCatmoc, FCoutgas, FCcontW, FCseafsubd, netFC, xaq[3]*Mocean + xgas[3]*2.0*nAir);
+			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					realtime/Gyr2sec, Tmantle, RCmantle, RCatm, RCocean, RCatm+RCocean, RCatmoc, FCoutgas, FCcontW, FCseafsubd, netFC, xaq[3]*Mocean + xgas[3]*2.0*nAir, RCorg);
 		}
 		fclose (fout);
 

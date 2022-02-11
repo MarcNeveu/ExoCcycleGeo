@@ -1,2305 +1,2292 @@
 Title: Sanloup as cited by Taylor et al. (2014)
 
-Pressure 99995.30 Temperature 2064.99 
-Partition 100.019625 
-Bulk 100.019625 
-Liquid 2.883984 
-Solid 97.135640 
-olivine_0 26.613662 
-garnet_0 14.168674 
-orthopyroxene_0 56.353305 
-Pressure 99697.60 Temperature 2064.49 
-Partition 100.019721 
-Bulk 100.019721 
-Liquid 2.891303 
-Solid 97.128417 
-olivine_0 26.619029 
-garnet_0 14.161206 
-orthopyroxene_0 56.348183 
-Pressure 99399.90 Temperature 2063.98 
-Partition 100.019818 
-Bulk 100.019818 
-Liquid 2.898663 
-Solid 97.121155 
-olivine_0 26.624383 
-garnet_0 14.153648 
-orthopyroxene_0 56.343124 
-Pressure 99102.20 Temperature 2063.47 
-Partition 100.019917 
-Bulk 100.019917 
-Liquid 2.906130 
-Solid 97.113787 
-olivine_0 26.629613 
-garnet_0 14.146019 
-orthopyroxene_0 56.338155 
-Pressure 98804.60 Temperature 2062.96 
-Partition 100.020017 
-Bulk 100.020017 
-Liquid 2.913705 
-Solid 97.106312 
-olivine_0 26.634711 
-garnet_0 14.138320 
-orthopyroxene_0 56.333281 
-Pressure 98506.90 Temperature 2062.46 
-Partition 100.020119 
-Bulk 100.020119 
-Liquid 2.921465 
-Solid 97.098653 
-olivine_0 26.639561 
-garnet_0 14.130563 
-orthopyroxene_0 56.328530 
-Pressure 98209.30 Temperature 2061.95 
-Partition 100.020221 
-Bulk 100.020221 
-Liquid 2.929279 
-Solid 97.090942 
-olivine_0 26.644368 
-garnet_0 14.122716 
-orthopyroxene_0 56.323858 
-Pressure 97911.70 Temperature 2061.44 
-Partition 100.020325 
-Bulk 100.020325 
-Liquid 2.937219 
-Solid 97.083106 
-olivine_0 26.649018 
-garnet_0 14.114795 
-orthopyroxene_0 56.319293 
-Pressure 97614.10 Temperature 2060.93 
-Partition 100.020431 
-Bulk 100.020431 
-Liquid 2.945291 
-Solid 97.075139 
-olivine_0 26.653501 
-garnet_0 14.106799 
-orthopyroxene_0 56.314839 
-Pressure 97316.50 Temperature 2060.43 
-Partition 100.020537 
-Bulk 100.020537 
-Liquid 2.953568 
-Solid 97.066969 
-olivine_0 26.657698 
-garnet_0 14.098745 
-orthopyroxene_0 56.310526 
-Pressure 97018.90 Temperature 2059.92 
-Partition 100.020645 
-Bulk 100.020645 
-Liquid 2.961922 
-Solid 97.058723 
-olivine_0 26.661818 
-garnet_0 14.090596 
-orthopyroxene_0 56.306310 
-Pressure 96721.40 Temperature 2059.41 
-Partition 100.020755 
-Bulk 100.020755 
-Liquid 2.970422 
-Solid 97.050333 
-olivine_0 26.665741 
-garnet_0 14.082372 
-orthopyroxene_0 56.302220 
-Pressure 96423.80 Temperature 2058.90 
-Partition 100.020866 
-Bulk 100.020866 
-Liquid 2.979083 
-Solid 97.041783 
-olivine_0 26.669456 
-garnet_0 14.074068 
-orthopyroxene_0 56.298259 
-Pressure 96126.30 Temperature 2058.39 
-Partition 100.020979 
-Bulk 100.020979 
-Liquid 2.987902 
-Solid 97.033076 
-olivine_0 26.672952 
-garnet_0 14.065688 
-orthopyroxene_0 56.294436 
-Pressure 95828.80 Temperature 2057.89 
-Partition 100.021093 
-Bulk 100.021093 
-Liquid 2.996962 
-Solid 97.024131 
-olivine_0 26.676105 
-garnet_0 14.057245 
-orthopyroxene_0 56.290780 
-Pressure 95531.30 Temperature 2057.38 
-Partition 100.021209 
-Bulk 100.021209 
-Liquid 3.006131 
-Solid 97.015078 
-olivine_0 26.679128 
-garnet_0 14.048705 
-orthopyroxene_0 56.287245 
-Pressure 95233.80 Temperature 2056.87 
-Partition 100.021326 
-Bulk 100.021326 
-Liquid 3.015484 
-Solid 97.005842 
-olivine_0 26.681895 
-garnet_0 14.040084 
-orthopyroxene_0 56.283863 
-Pressure 94936.30 Temperature 2056.36 
-Partition 100.021445 
-Bulk 100.021445 
-Liquid 3.025032 
-Solid 96.996414 
-olivine_0 26.684394 
-garnet_0 14.031382 
-orthopyroxene_0 56.280638 
-Pressure 94638.90 Temperature 2055.85 
-Partition 100.021566 
-Bulk 100.021566 
-Liquid 3.034777 
-Solid 96.986789 
-olivine_0 26.686611 
-garnet_0 14.022600 
-orthopyroxene_0 56.277579 
-Pressure 94341.50 Temperature 2055.35 
-Partition 100.021688 
-Bulk 100.021688 
-Liquid 3.044807 
-Solid 96.976882 
-olivine_0 26.688413 
-garnet_0 14.013750 
-orthopyroxene_0 56.274718 
-Pressure 94044.10 Temperature 2054.84 
-Partition 100.021813 
-Bulk 100.021813 
-Liquid 3.054984 
-Solid 96.966829 
-olivine_0 26.690021 
-garnet_0 14.004802 
-orthopyroxene_0 56.272007 
-Pressure 93746.70 Temperature 2054.33 
-Partition 100.021939 
-Bulk 100.021939 
-Liquid 3.065391 
-Solid 96.956548 
-olivine_0 26.691301 
-garnet_0 13.995768 
-orthopyroxene_0 56.269478 
-Pressure 93449.30 Temperature 2053.82 
-Partition 100.022067 
-Bulk 100.022067 
-Liquid 3.076039 
-Solid 96.946028 
-olivine_0 26.692238 
-garnet_0 13.986650 
-orthopyroxene_0 56.267140 
-Pressure 93151.90 Temperature 2053.31 
-Partition 100.022197 
-Bulk 100.022197 
-Liquid 3.086937 
-Solid 96.935260 
-olivine_0 26.692814 
-garnet_0 13.977446 
-orthopyroxene_0 56.265000 
-Pressure 92854.60 Temperature 2052.81 
-Partition 100.022328 
-Bulk 100.022328 
-Liquid 3.098170 
-Solid 96.924158 
-olivine_0 26.692891 
-garnet_0 13.968173 
-orthopyroxene_0 56.263094 
-Pressure 92557.20 Temperature 2052.30 
-Partition 100.022462 
-Bulk 100.022462 
-Liquid 3.109605 
-Solid 96.912857 
-olivine_0 26.692692 
-garnet_0 13.958796 
-orthopyroxene_0 56.261370 
-Pressure 92259.90 Temperature 2051.79 
-Partition 100.022598 
-Bulk 100.022598 
-Liquid 3.121320 
-Solid 96.901278 
-olivine_0 26.692080 
-garnet_0 13.949333 
-orthopyroxene_0 56.259865 
-Pressure 91962.60 Temperature 2051.28 
-Partition 100.022735 
-Bulk 100.022735 
-Liquid 3.133333 
-Solid 96.889402 
-olivine_0 26.691033 
-garnet_0 13.939782 
-orthopyroxene_0 56.258587 
-Pressure 91665.30 Temperature 2050.77 
-Partition 100.022875 
-Bulk 100.022875 
-Liquid 3.145658 
-Solid 96.877218 
-olivine_0 26.689532 
-garnet_0 13.930141 
-orthopyroxene_0 56.257545 
-Pressure 91368.00 Temperature 2050.26 
-Partition 100.023017 
-Bulk 100.023017 
-Liquid 3.158307 
-Solid 96.864710 
-olivine_0 26.687553 
-garnet_0 13.920411 
-orthopyroxene_0 56.256746 
-Pressure 91070.80 Temperature 2049.75 
-Partition 100.023161 
-Bulk 100.023161 
-Liquid 3.171291 
-Solid 96.851870 
-olivine_0 26.685079 
-garnet_0 13.910593 
-orthopyroxene_0 56.256198 
-Pressure 90773.50 Temperature 2049.25 
-Partition 100.023307 
-Bulk 100.023307 
-Liquid 3.184719 
-Solid 96.838588 
-olivine_0 26.681949 
-garnet_0 13.900695 
-orthopyroxene_0 56.255944 
-Pressure 90476.30 Temperature 2048.74 
-Partition 100.023455 
-Bulk 100.023455 
-Liquid 3.198428 
-Solid 96.825028 
-olivine_0 26.678408 
-garnet_0 13.890694 
-orthopyroxene_0 56.255926 
-Pressure 90179.10 Temperature 2048.23 
-Partition 100.023606 
-Bulk 100.023606 
-Liquid 3.212522 
-Solid 96.811084 
-olivine_0 26.674297 
-garnet_0 13.880600 
-orthopyroxene_0 56.256186 
-Pressure 89881.90 Temperature 2047.72 
-Partition 100.023758 
-Bulk 100.023758 
-Liquid 3.227019 
-Solid 96.796739 
-olivine_0 26.669592 
-garnet_0 13.870414 
-orthopyroxene_0 56.256733 
-Pressure 89584.70 Temperature 2047.21 
-Partition 100.023913 
-Bulk 100.023913 
-Liquid 3.241937 
-Solid 96.781976 
-olivine_0 26.664265 
-garnet_0 13.860134 
-orthopyroxene_0 56.257577 
-Pressure 89287.60 Temperature 2046.70 
-Partition 100.024070 
-Bulk 100.024070 
-Liquid 3.257287 
-Solid 96.766784 
-olivine_0 26.658295 
-garnet_0 13.849762 
-orthopyroxene_0 56.258726 
-Pressure 88990.40 Temperature 2046.19 
-Partition 100.024230 
-Bulk 100.024230 
-Liquid 3.273100 
-Solid 96.751130 
-olivine_0 26.651645 
-garnet_0 13.839293 
-orthopyroxene_0 56.260192 
-Pressure 88693.30 Temperature 2045.68 
-Partition 100.024392 
-Bulk 100.024392 
-Liquid 3.289384 
-Solid 96.735008 
-olivine_0 26.644294 
-garnet_0 13.828731 
-orthopyroxene_0 56.261982 
-Pressure 88396.20 Temperature 2045.18 
-Partition 100.024556 
-Bulk 100.024556 
-Liquid 3.306261 
-Solid 96.718294 
-olivine_0 26.636063 
-garnet_0 13.818086 
-orthopyroxene_0 56.264146 
-Pressure 88099.10 Temperature 2044.67 
-Partition 100.024722 
-Bulk 100.024722 
-Liquid 3.323562 
-Solid 96.701160 
-olivine_0 26.627211 
-garnet_0 13.807332 
-orthopyroxene_0 56.266617 
-Pressure 87802.00 Temperature 2044.16 
-Partition 100.024891 
-Bulk 100.024891 
-Liquid 3.341402 
-Solid 96.683488 
-olivine_0 26.617564 
-garnet_0 13.796481 
-orthopyroxene_0 56.269444 
-Pressure 87505.00 Temperature 2043.65 
-Partition 100.025062 
-Bulk 100.025062 
-Liquid 3.359797 
-Solid 96.665265 
-olivine_0 26.607095 
-garnet_0 13.785535 
-orthopyroxene_0 56.272634 
-Pressure 87207.90 Temperature 2043.14 
-Partition 100.025235 
-Bulk 100.025235 
-Liquid 3.378785 
-Solid 96.646450 
-olivine_0 26.595760 
-garnet_0 13.774488 
-orthopyroxene_0 56.276201 
-Pressure 86910.90 Temperature 2042.63 
-Partition 100.025410 
-Bulk 100.025410 
-Liquid 3.398373 
-Solid 96.627037 
-olivine_0 26.583539 
-garnet_0 13.763347 
-orthopyroxene_0 56.280151 
-Pressure 86613.90 Temperature 2042.12 
-Partition 100.025588 
-Bulk 100.025588 
-Liquid 3.418595 
-Solid 96.606993 
-olivine_0 26.570391 
-garnet_0 13.752106 
-orthopyroxene_0 56.284496 
-Pressure 86316.80 Temperature 2041.61 
-Partition 100.025768 
-Bulk 100.025768 
-Liquid 3.439484 
-Solid 96.586284 
-olivine_0 26.556275 
-garnet_0 13.740762 
-orthopyroxene_0 56.289247 
-Pressure 86019.90 Temperature 2041.10 
-Partition 100.025950 
-Bulk 100.025950 
-Liquid 3.461039 
-Solid 96.564911 
-olivine_0 26.541180 
-garnet_0 13.729325 
-orthopyroxene_0 56.294406 
-Pressure 85722.90 Temperature 2040.59 
-Partition 100.026134 
-Bulk 100.026134 
-Liquid 3.483312 
-Solid 96.542822 
-olivine_0 26.525048 
-garnet_0 13.717785 
-orthopyroxene_0 56.299990 
-Pressure 85425.90 Temperature 2040.08 
-Partition 100.026321 
-Bulk 100.026321 
-Liquid 3.506322 
-Solid 96.519999 
-olivine_0 26.507851 
-garnet_0 13.706144 
-orthopyroxene_0 56.306004 
-Pressure 85129.00 Temperature 2039.57 
-Partition 100.026509 
-Bulk 100.026509 
-Liquid 3.530085 
-Solid 96.496424 
-olivine_0 26.489565 
-garnet_0 13.694405 
-orthopyroxene_0 56.312453 
-Pressure 84832.10 Temperature 2039.06 
-Partition 100.026699 
-Bulk 100.026699 
-Liquid 3.554639 
-Solid 96.472061 
-olivine_0 26.470147 
-garnet_0 13.682566 
-orthopyroxene_0 56.319348 
-Pressure 84535.20 Temperature 2038.55 
-Partition 100.026891 
-Bulk 100.026891 
-Liquid 3.580010 
-Solid 96.446881 
-olivine_0 26.449562 
-garnet_0 13.670625 
-orthopyroxene_0 56.326695 
-Pressure 84238.30 Temperature 2038.04 
-Partition 100.027085 
-Bulk 100.027085 
-Liquid 3.606227 
-Solid 96.420858 
-olivine_0 26.427777 
-garnet_0 13.658582 
-orthopyroxene_0 56.334499 
-Pressure 83941.40 Temperature 2037.53 
-Partition 100.027281 
-Bulk 100.027281 
-Liquid 3.633319 
-Solid 96.393962 
-olivine_0 26.404759 
-garnet_0 13.646437 
-orthopyroxene_0 56.342767 
-Pressure 83644.50 Temperature 2037.02 
-Partition 100.027478 
-Bulk 100.027478 
-Liquid 3.661312 
-Solid 96.366166 
-olivine_0 26.380476 
-garnet_0 13.634190 
-orthopyroxene_0 56.351501 
-Pressure 83347.70 Temperature 2036.52 
-Partition 100.027677 
-Bulk 100.027677 
-Liquid 3.690360 
-Solid 96.337317 
-olivine_0 26.354712 
-garnet_0 13.621852 
-orthopyroxene_0 56.360753 
-Pressure 83050.90 Temperature 2036.01 
-Partition 100.027877 
-Bulk 100.027877 
-Liquid 3.720233 
-Solid 96.307644 
-olivine_0 26.327816 
-garnet_0 13.609403 
-orthopyroxene_0 56.370425 
-Pressure 82754.10 Temperature 2035.50 
-Partition 100.028079 
-Bulk 100.028079 
-Liquid 3.751091 
-Solid 96.276987 
-olivine_0 26.299568 
-garnet_0 13.596851 
-orthopyroxene_0 56.380569 
-Pressure 82457.30 Temperature 2034.99 
-Partition 100.028281 
-Bulk 100.028281 
-Liquid 3.782963 
-Solid 96.245318 
-olivine_0 26.269939 
-garnet_0 13.584195 
-orthopyroxene_0 56.391185 
-Pressure 82160.50 Temperature 2034.48 
-Partition 100.028485 
-Bulk 100.028485 
-Liquid 3.815875 
-Solid 96.212609 
-olivine_0 26.238905 
-garnet_0 13.571435 
-orthopyroxene_0 56.402269 
-Pressure 81863.70 Temperature 2033.97 
-Partition 100.028689 
-Bulk 100.028689 
-Liquid 3.849856 
-Solid 96.178833 
-olivine_0 26.206442 
-garnet_0 13.558572 
-orthopyroxene_0 56.413820 
-Pressure 81567.00 Temperature 2033.46 
-Partition 100.028894 
-Bulk 100.028894 
-Liquid 3.884916 
-Solid 96.143978 
-olivine_0 26.172544 
-garnet_0 13.545608 
-orthopyroxene_0 56.425826 
-Pressure 81270.20 Temperature 2032.95 
-Partition 100.029100 
-Bulk 100.029100 
-Liquid 3.921111 
-Solid 96.107989 
-olivine_0 26.137161 
-garnet_0 13.532536 
-orthopyroxene_0 56.438292 
-Pressure 80973.50 Temperature 2032.43 
-Partition 100.029305 
-Bulk 100.029305 
-Liquid 3.958272 
-Solid 96.071033 
-olivine_0 26.100538 
-garnet_0 13.519355 
-orthopyroxene_0 56.451140 
-Pressure 80676.80 Temperature 2031.92 
-Partition 100.029512 
-Bulk 100.029512 
-Liquid 3.996764 
-Solid 96.032747 
-olivine_0 26.062187 
-garnet_0 13.506077 
-orthopyroxene_0 56.464483 
-Pressure 80380.10 Temperature 2031.41 
-Partition 100.029718 
-Bulk 100.029718 
-Liquid 4.036451 
-Solid 95.993267 
-olivine_0 26.022321 
-garnet_0 13.492693 
-orthopyroxene_0 56.478252 
-Pressure 80083.50 Temperature 2030.90 
-Partition 100.029924 
-Bulk 100.029924 
-Liquid 4.077341 
-Solid 95.952584 
-olivine_0 25.980948 
-garnet_0 13.479206 
-orthopyroxene_0 56.492430 
-Pressure 79786.80 Temperature 2030.39 
-Partition 100.030131 
-Bulk 100.030131 
-Liquid 4.119489 
-Solid 95.910642 
-olivine_0 25.938020 
-garnet_0 13.465609 
-orthopyroxene_0 56.507013 
-Pressure 79490.20 Temperature 2029.88 
-Partition 100.030337 
-Bulk 100.030337 
-Liquid 4.162885 
-Solid 95.867451 
-olivine_0 25.893569 
-garnet_0 13.451907 
-orthopyroxene_0 56.521975 
-Pressure 79193.60 Temperature 2029.37 
-Partition 100.030542 
-Bulk 100.030542 
-Liquid 4.207569 
-Solid 95.822973 
-olivine_0 25.847569 
-garnet_0 13.438098 
-orthopyroxene_0 56.537307 
-Pressure 78897.00 Temperature 2028.86 
-Partition 100.030747 
-Bulk 100.030747 
-Liquid 4.253563 
-Solid 95.777185 
-olivine_0 25.800017 
-garnet_0 13.424178 
-orthopyroxene_0 56.552989 
-Pressure 78600.40 Temperature 2028.35 
-Partition 100.030952 
-Bulk 100.030952 
-Liquid 4.300888 
-Solid 95.730063 
-olivine_0 25.750911 
-garnet_0 13.410148 
-orthopyroxene_0 56.569005 
-Pressure 78303.80 Temperature 2027.84 
-Partition 100.031155 
-Bulk 100.031155 
-Liquid 4.349568 
-Solid 95.681587 
-olivine_0 25.700248 
-garnet_0 13.396005 
-orthopyroxene_0 56.585334 
-Pressure 78007.20 Temperature 2027.33 
-Partition 100.031358 
-Bulk 100.031358 
-Liquid 4.399624 
-Solid 95.631734 
-olivine_0 25.648029 
-garnet_0 13.381749 
-orthopyroxene_0 56.601956 
-Pressure 77710.70 Temperature 2026.82 
-Partition 100.031560 
-Bulk 100.031560 
-Liquid 4.451057 
-Solid 95.580504 
-olivine_0 25.594277 
-garnet_0 13.367383 
-orthopyroxene_0 56.618844 
-Pressure 77414.20 Temperature 2026.31 
-Partition 100.031761 
-Bulk 100.031761 
-Liquid 4.503908 
-Solid 95.527853 
-olivine_0 25.538972 
-garnet_0 13.352899 
-orthopyroxene_0 56.635982 
-Pressure 77117.70 Temperature 2025.80 
-Partition 100.031961 
-Bulk 100.031961 
-Liquid 4.558200 
-Solid 95.473761 
-olivine_0 25.482115 
-garnet_0 13.338297 
-orthopyroxene_0 56.653349 
-Pressure 76821.20 Temperature 2025.29 
-Partition 100.032160 
-Bulk 100.032160 
-Liquid 4.613956 
-Solid 95.418204 
-olivine_0 25.423709 
-garnet_0 13.323574 
-orthopyroxene_0 56.670921 
-Pressure 76524.70 Temperature 2024.78 
-Partition 100.032358 
-Bulk 100.032358 
-Liquid 4.671199 
-Solid 95.361159 
-olivine_0 25.363755 
-garnet_0 13.308727 
-orthopyroxene_0 56.688677 
-Pressure 76228.30 Temperature 2024.27 
-Partition 100.032555 
-Bulk 100.032555 
-Liquid 4.729928 
-Solid 95.302627 
-olivine_0 25.302282 
-garnet_0 13.293759 
-orthopyroxene_0 56.706586 
-Pressure 75931.80 Temperature 2023.75 
-Partition 100.032751 
-Bulk 100.032751 
-Liquid 4.789975 
-Solid 95.242776 
-olivine_0 25.239546 
-garnet_0 13.278653 
-orthopyroxene_0 56.724577 
-Pressure 75635.40 Temperature 2023.24 
-Partition 100.032945 
-Bulk 100.032945 
-Liquid 4.851792 
-Solid 95.181153 
-olivine_0 25.174992 
-garnet_0 13.263424 
-orthopyroxene_0 56.742737 
-Pressure 75339.00 Temperature 2022.73 
-Partition 100.033139 
-Bulk 100.033139 
-Liquid 4.915194 
-Solid 95.117945 
-olivine_0 25.108897 
-garnet_0 13.248059 
-orthopyroxene_0 56.760989 
-Pressure 75042.60 Temperature 2022.22 
-Partition 100.033331 
-Bulk 100.033331 
-Liquid 4.980208 
-Solid 95.053123 
-olivine_0 25.041259 
-garnet_0 13.232554 
-orthopyroxene_0 56.779309 
-Pressure 74746.20 Temperature 2021.71 
-Partition 100.033523 
-Bulk 100.033523 
-Liquid 5.046863 
-Solid 94.986660 
-olivine_0 24.972078 
-garnet_0 13.216906 
-orthopyroxene_0 56.797676 
-Pressure 74449.80 Temperature 2021.20 
-Partition 100.033713 
-Bulk 100.033713 
-Liquid 5.115188 
-Solid 94.918525 
-olivine_0 24.901349 
-garnet_0 13.201110 
-orthopyroxene_0 56.816066 
-Pressure 74153.50 Temperature 2020.69 
-Partition 100.033903 
-Bulk 100.033903 
-Liquid 5.185186 
-Solid 94.848717 
-olivine_0 24.829098 
-garnet_0 13.185167 
-orthopyroxene_0 56.834452 
-Pressure 73857.10 Temperature 2020.18 
-Partition 100.034092 
-Bulk 100.034092 
-Liquid 5.256945 
-Solid 94.777146 
-olivine_0 24.755260 
-garnet_0 13.169062 
-orthopyroxene_0 56.852825 
-Pressure 73560.80 Temperature 2019.67 
-Partition 100.034279 
-Bulk 100.034279 
-Liquid 5.330442 
-Solid 94.703837 
-olivine_0 24.679888 
-garnet_0 13.152799 
-orthopyroxene_0 56.871150 
-Pressure 73264.50 Temperature 2019.15 
-Partition 100.034466 
-Bulk 100.034466 
-Liquid 5.405449 
-Solid 94.629018 
-olivine_0 24.603291 
-garnet_0 13.136367 
-orthopyroxene_0 56.889360 
-Pressure 72968.30 Temperature 2018.64 
-Partition 100.034653 
-Bulk 100.034653 
-Liquid 5.482550 
-Solid 94.552103 
-olivine_0 24.524797 
-garnet_0 13.119768 
-orthopyroxene_0 56.907538 
-Pressure 72672.00 Temperature 2018.13 
-Partition 100.034839 
-Bulk 100.034839 
-Liquid 5.561561 
-Solid 94.473278 
-olivine_0 24.444673 
-garnet_0 13.102983 
-orthopyroxene_0 56.925622 
-Pressure 72375.70 Temperature 2017.62 
-Partition 100.035025 
-Bulk 100.035025 
-Liquid 5.642491 
-Solid 94.392533 
-olivine_0 24.362935 
-garnet_0 13.086011 
-orthopyroxene_0 56.943587 
-Pressure 72079.50 Temperature 2017.11 
-Partition 100.035210 
-Bulk 100.035210 
-Liquid 5.725352 
-Solid 94.309859 
-olivine_0 24.279601 
-garnet_0 13.068850 
-orthopyroxene_0 56.961407 
-Pressure 71783.30 Temperature 2016.60 
-Partition 100.035395 
-Bulk 100.035395 
-Liquid 5.810219 
-Solid 94.225177 
-olivine_0 24.194617 
-garnet_0 13.051488 
-orthopyroxene_0 56.979071 
-Pressure 71487.10 Temperature 2016.08 
-Partition 100.035580 
-Bulk 100.035580 
-Liquid 5.896806 
-Solid 94.138774 
-olivine_0 24.108341 
-garnet_0 13.033919 
-orthopyroxene_0 56.996514 
-Pressure 71190.90 Temperature 2015.57 
-Partition 100.035765 
-Bulk 100.035765 
-Liquid 5.985823 
-Solid 94.049942 
-olivine_0 24.019995 
-garnet_0 13.016131 
-orthopyroxene_0 57.013815 
-Pressure 70894.70 Temperature 2015.06 
-Partition 100.035950 
-Bulk 100.035950 
-Liquid 6.076997 
-Solid 93.958954 
-olivine_0 23.929928 
-garnet_0 12.998117 
-orthopyroxene_0 57.030909 
-Pressure 70598.60 Temperature 2014.55 
-Partition 100.036136 
-Bulk 100.036136 
-Liquid 6.170342 
-Solid 93.865794 
-olivine_0 23.838147 
-garnet_0 12.979875 
-orthopyroxene_0 57.047772 
-Pressure 70302.40 Temperature 2014.04 
-Partition 100.036322 
-Bulk 100.036322 
-Liquid 6.265991 
-Solid 93.770331 
-olivine_0 23.744548 
-garnet_0 12.961381 
-orthopyroxene_0 57.064402 
-Pressure 70006.30 Temperature 2013.53 
-Partition 100.036509 
-Bulk 100.036509 
-Liquid 6.363925 
-Solid 93.672584 
-olivine_0 23.649172 
-garnet_0 12.942640 
-orthopyroxene_0 57.080772 
-Pressure 69710.20 Temperature 2013.01 
-Partition 100.036696 
-Bulk 100.036696 
-Liquid 6.463860 
-Solid 93.572836 
-olivine_0 23.552362 
-garnet_0 12.923638 
-orthopyroxene_0 57.096836 
-Pressure 69414.10 Temperature 2012.50 
-Partition 100.036884 
-Bulk 100.036884 
-Liquid 6.566619 
-Solid 93.470265 
-olivine_0 23.453255 
-garnet_0 12.904356 
-orthopyroxene_0 57.112654 
-Pressure 69118.00 Temperature 2011.99 
-Partition 100.037073 
-Bulk 100.037073 
-Liquid 6.671893 
-Solid 93.365180 
-olivine_0 23.352219 
-garnet_0 12.884788 
-orthopyroxene_0 57.128174 
-Pressure 68822.00 Temperature 2011.48 
-Partition 100.037263 
-Bulk 100.037263 
-Liquid 6.779707 
-Solid 93.257556 
-olivine_0 23.249253 
-garnet_0 12.864926 
-orthopyroxene_0 57.143376 
-Pressure 68525.90 Temperature 2010.96 
-Partition 100.037455 
-Bulk 100.037455 
-Liquid 6.889798 
-Solid 93.147656 
-olivine_0 23.144671 
-garnet_0 12.844754 
-orthopyroxene_0 57.158231 
-Pressure 68229.90 Temperature 2010.45 
-Partition 100.037648 
-Bulk 100.037648 
-Liquid 7.002985 
-Solid 93.034663 
-olivine_0 23.037633 
-garnet_0 12.824258 
-orthopyroxene_0 57.172772 
-Pressure 67933.90 Temperature 2009.94 
-Partition 100.037842 
-Bulk 100.037842 
-Liquid 7.118976 
-Solid 92.918866 
-olivine_0 22.928481 
-garnet_0 12.803423 
-orthopyroxene_0 57.186962 
-Pressure 67637.90 Temperature 2009.43 
-Partition 100.038039 
-Bulk 100.038039 
-Liquid 7.237852 
-Solid 92.800187 
-olivine_0 22.817163 
-garnet_0 12.782236 
-orthopyroxene_0 57.200788 
-Pressure 67341.90 Temperature 2008.92 
-Partition 100.038237 
-Bulk 100.038237 
-Liquid 7.359693 
-Solid 92.678545 
-olivine_0 22.703624 
-garnet_0 12.760682 
-orthopyroxene_0 57.214238 
-Pressure 67046.00 Temperature 2008.40 
-Partition 100.038438 
-Bulk 100.038438 
-Liquid 7.484055 
-Solid 92.554382 
-olivine_0 22.588338 
-garnet_0 12.738763 
-orthopyroxene_0 57.227281 
-Pressure 66750.00 Temperature 2007.89 
-Partition 100.038641 
-Bulk 100.038641 
-Liquid 7.612071 
-Solid 92.426570 
-olivine_0 22.470195 
-garnet_0 12.716428 
-orthopyroxene_0 57.239947 
-Pressure 66454.10 Temperature 2007.38 
-Partition 100.038846 
-Bulk 100.038846 
-Liquid 7.743259 
-Solid 92.295587 
-olivine_0 22.349703 
-garnet_0 12.693684 
-orthopyroxene_0 57.252199 
-Pressure 66158.20 Temperature 2006.87 
-Partition 100.039054 
-Bulk 100.039054 
-Liquid 7.877763 
-Solid 92.161291 
-olivine_0 22.226754 
-garnet_0 12.670507 
-orthopyroxene_0 57.264030 
-Pressure 65862.30 Temperature 2006.35 
-Partition 100.039264 
-Bulk 100.039264 
-Liquid 8.015146 
-Solid 92.024118 
-olivine_0 22.101801 
-garnet_0 12.646892 
-orthopyroxene_0 57.275425 
-Pressure 65566.40 Temperature 2005.84 
-Partition 100.039478 
-Bulk 100.039478 
-Liquid 8.156550 
-Solid 91.882928 
-olivine_0 21.973749 
-garnet_0 12.622793 
-orthopyroxene_0 57.286386 
-Pressure 65270.50 Temperature 2005.33 
-Partition 100.039695 
-Bulk 100.039695 
-Liquid 8.301557 
-Solid 91.738138 
-olivine_0 21.843039 
-garnet_0 12.598202 
-orthopyroxene_0 57.296897 
-Pressure 64974.70 Temperature 2004.81 
-Partition 100.039914 
-Bulk 100.039914 
-Liquid 8.449630 
-Solid 91.590285 
-olivine_0 21.710211 
-garnet_0 12.573125 
-orthopyroxene_0 57.306949 
-Pressure 64678.90 Temperature 2004.30 
-Partition 100.040138 
-Bulk 100.040138 
-Liquid 8.602062 
-Solid 91.438076 
-olivine_0 21.574047 
-garnet_0 12.547498 
-orthopyroxene_0 57.316532 
-Pressure 64383.10 Temperature 2003.79 
-Partition 100.040366 
-Bulk 100.040366 
-Liquid 8.758395 
-Solid 91.281970 
-olivine_0 21.435018 
-garnet_0 12.521314 
-orthopyroxene_0 57.325639 
-Pressure 64087.30 Temperature 2003.28 
-Partition 100.040597 
-Bulk 100.040597 
-Liquid 8.918733 
-Solid 91.121864 
-olivine_0 21.293052 
-garnet_0 12.494549 
-orthopyroxene_0 57.334263 
-Pressure 63791.50 Temperature 2002.76 
-Partition 100.040832 
-Bulk 100.040832 
-Liquid 9.082536 
-Solid 90.958296 
-olivine_0 21.148678 
-garnet_0 12.467202 
-orthopyroxene_0 57.342416 
-Pressure 63495.70 Temperature 2002.25 
-Partition 100.041071 
-Bulk 100.041071 
-Liquid 9.251173 
-Solid 90.789898 
-olivine_0 21.000635 
-garnet_0 12.439203 
-orthopyroxene_0 57.350060 
-Pressure 63200.00 Temperature 2001.74 
-Partition 100.041315 
-Bulk 100.041315 
-Liquid 9.424053 
-Solid 90.617262 
-olivine_0 20.849503 
-garnet_0 12.410556 
-orthopyroxene_0 57.357204 
-Pressure 62904.20 Temperature 2001.22 
-Partition 100.041564 
-Bulk 100.041564 
-Liquid 9.600721 
-Solid 90.440843 
-olivine_0 20.695728 
-garnet_0 12.381240 
-orthopyroxene_0 57.363875 
-Pressure 62608.50 Temperature 2000.71 
-Partition 100.041817 
-Bulk 100.041817 
-Liquid 9.782508 
-Solid 90.259309 
-olivine_0 20.538099 
-garnet_0 12.351194 
-orthopyroxene_0 57.370016 
-Pressure 62312.80 Temperature 2000.20 
-Partition 100.042076 
-Bulk 100.042076 
-Liquid 9.968906 
-Solid 90.073170 
-olivine_0 20.377112 
-garnet_0 12.320405 
-orthopyroxene_0 57.375653 
-Pressure 62017.10 Temperature 1999.68 
-Partition 100.042339 
-Bulk 100.042339 
-Liquid 10.159253 
-Solid 89.883086 
-olivine_0 20.213390 
-garnet_0 12.288871 
-orthopyroxene_0 57.380825 
-Pressure 61721.50 Temperature 1999.17 
-Partition 100.042608 
-Bulk 100.042608 
-Liquid 10.355055 
-Solid 89.687553 
-olivine_0 20.045582 
-garnet_0 12.256511 
-orthopyroxene_0 57.385460 
-Pressure 61425.80 Temperature 1998.66 
-Partition 100.042882 
-Bulk 100.042882 
-Liquid 10.555824 
-Solid 89.487059 
-olivine_0 19.874162 
-garnet_0 12.223297 
-orthopyroxene_0 57.389600 
-Pressure 61130.20 Temperature 1998.14 
-Partition 100.043162 
-Bulk 100.043162 
-Liquid 10.760654 
-Solid 89.282507 
-olivine_0 19.699952 
-garnet_0 12.189256 
-orthopyroxene_0 57.393299 
-Pressure 60834.50 Temperature 1997.63 
-Partition 100.043448 
-Bulk 100.043448 
-Liquid 10.971418 
-Solid 89.072030 
-olivine_0 19.521305 
-garnet_0 12.154255 
-orthopyroxene_0 57.396471 
-Pressure 60538.90 Temperature 1997.12 
-Partition 100.043740 
-Bulk 100.043740 
-Liquid 11.187211 
-Solid 88.856529 
-olivine_0 19.339041 
-garnet_0 12.118317 
-orthopyroxene_0 57.399172 
-Pressure 60243.40 Temperature 1996.60 
-Partition 100.044038 
-Bulk 100.044038 
-Liquid 11.407196 
-Solid 88.636842 
-olivine_0 19.153915 
-garnet_0 12.081447 
-orthopyroxene_0 57.401479 
-Pressure 59947.80 Temperature 1996.09 
-Partition 100.044343 
-Bulk 100.044343 
-Liquid 11.633373 
-Solid 88.410970 
-olivine_0 18.964187 
-garnet_0 12.043496 
-orthopyroxene_0 57.403288 
-Pressure 59652.20 Temperature 1995.58 
-Partition 100.044654 
-Bulk 100.044654 
-Liquid 11.864826 
-Solid 88.179828 
-olivine_0 18.770678 
-garnet_0 12.004475 
-orthopyroxene_0 57.404676 
-Pressure 59356.70 Temperature 1995.06 
-Partition 100.044972 
-Bulk 100.044972 
-Liquid 12.100521 
-Solid 87.944450 
-olivine_0 18.574302 
-garnet_0 11.964409 
-orthopyroxene_0 57.405740 
-Pressure 59061.20 Temperature 1994.55 
-Partition 100.045297 
-Bulk 100.045297 
-Liquid 12.342490 
-Solid 87.702807 
-olivine_0 18.373304 
-garnet_0 11.923141 
-orthopyroxene_0 57.406362 
-Pressure 58765.70 Temperature 1994.03 
+Pressure 99995.30 Temperature 2088.27 
+Partition 100.019117 
+Bulk 100.019117 
+Liquid 3.041151 
+Solid 96.977966 
+olivine_0 26.362456 
+garnet_0 14.202744 
+orthopyroxene_0 56.412766 
+Pressure 99697.60 Temperature 2087.76 
+Partition 100.019223 
+Bulk 100.019223 
+Liquid 3.049601 
+Solid 96.969623 
+olivine_0 26.366557 
+garnet_0 14.195024 
+orthopyroxene_0 56.408042 
+Pressure 99399.90 Temperature 2087.25 
+Partition 100.019331 
+Bulk 100.019331 
+Liquid 3.058185 
+Solid 96.961146 
+olivine_0 26.370501 
+garnet_0 14.187228 
+orthopyroxene_0 56.403417 
+Pressure 99102.20 Temperature 2086.73 
+Partition 100.019440 
+Bulk 100.019440 
+Liquid 3.066833 
+Solid 96.952607 
+olivine_0 26.374393 
+garnet_0 14.179346 
+orthopyroxene_0 56.398868 
+Pressure 98804.60 Temperature 2086.22 
+Partition 100.019551 
+Bulk 100.019551 
+Liquid 3.075698 
+Solid 96.943853 
+olivine_0 26.377996 
+garnet_0 14.171400 
+orthopyroxene_0 56.394456 
+Pressure 98506.90 Temperature 2085.71 
+Partition 100.019663 
+Bulk 100.019663 
+Liquid 3.084720 
+Solid 96.934944 
+olivine_0 26.381412 
+garnet_0 14.163375 
+orthopyroxene_0 56.390157 
+Pressure 98209.30 Temperature 2085.19 
+Partition 100.019777 
+Bulk 100.019777 
+Liquid 3.093819 
+Solid 96.925958 
+olivine_0 26.384746 
+garnet_0 14.155263 
+orthopyroxene_0 56.385949 
+Pressure 97911.70 Temperature 2084.68 
+Partition 100.019892 
+Bulk 100.019892 
+Liquid 3.103161 
+Solid 96.916731 
+olivine_0 26.387754 
+garnet_0 14.147084 
+orthopyroxene_0 56.381892 
+Pressure 97614.10 Temperature 2084.17 
+Partition 100.020009 
+Bulk 100.020009 
+Liquid 3.112678 
+Solid 96.907331 
+olivine_0 26.390541 
+garnet_0 14.138825 
+orthopyroxene_0 56.377965 
+Pressure 97316.50 Temperature 2083.65 
+Partition 100.020128 
+Bulk 100.020128 
+Liquid 3.122297 
+Solid 96.897831 
+olivine_0 26.393213 
+garnet_0 14.130475 
+orthopyroxene_0 56.374143 
+Pressure 97018.90 Temperature 2083.14 
+Partition 100.020248 
+Bulk 100.020248 
+Liquid 3.132184 
+Solid 96.888064 
+olivine_0 26.395518 
+garnet_0 14.122055 
+orthopyroxene_0 56.370491 
+Pressure 96721.40 Temperature 2082.63 
+Partition 100.020370 
+Bulk 100.020370 
+Liquid 3.142266 
+Solid 96.878104 
+olivine_0 26.397564 
+garnet_0 14.113555 
+orthopyroxene_0 56.366985 
+Pressure 96423.80 Temperature 2082.11 
+Partition 100.020493 
+Bulk 100.020493 
+Liquid 3.152478 
+Solid 96.868016 
+olivine_0 26.399454 
+garnet_0 14.104961 
+orthopyroxene_0 56.363601 
+Pressure 96126.30 Temperature 2081.60 
+Partition 100.020619 
+Bulk 100.020619 
+Liquid 3.162983 
+Solid 96.857636 
+olivine_0 26.400935 
+garnet_0 14.096296 
+orthopyroxene_0 56.360406 
+Pressure 95828.80 Temperature 2081.09 
+Partition 100.020746 
+Bulk 100.020746 
+Liquid 3.173715 
+Solid 96.847032 
+olivine_0 26.402109 
+garnet_0 14.087547 
+orthopyroxene_0 56.357375 
+Pressure 95531.30 Temperature 2080.57 
+Partition 100.020876 
+Bulk 100.020876 
+Liquid 3.184599 
+Solid 96.836276 
+olivine_0 26.403087 
+garnet_0 14.078704 
+orthopyroxene_0 56.354485 
+Pressure 95233.80 Temperature 2080.06 
+Partition 100.021007 
+Bulk 100.021007 
+Liquid 3.195815 
+Solid 96.825192 
+olivine_0 26.403601 
+garnet_0 14.069786 
+orthopyroxene_0 56.351804 
+Pressure 94936.30 Temperature 2079.55 
+Partition 100.021140 
+Bulk 100.021140 
+Liquid 3.207290 
+Solid 96.813850 
+olivine_0 26.403760 
+garnet_0 14.060782 
+orthopyroxene_0 56.349308 
+Pressure 94638.90 Temperature 2079.03 
+Partition 100.021275 
+Bulk 100.021275 
+Liquid 3.218943 
+Solid 96.802332 
+olivine_0 26.403675 
+garnet_0 14.051684 
+orthopyroxene_0 56.346973 
+Pressure 94341.50 Temperature 2078.52 
+Partition 100.021412 
+Bulk 100.021412 
+Liquid 3.230965 
+Solid 96.790447 
+olivine_0 26.403069 
+garnet_0 14.042508 
+orthopyroxene_0 56.344869 
+Pressure 94044.10 Temperature 2078.00 
+Partition 100.021552 
+Bulk 100.021552 
+Liquid 3.243194 
+Solid 96.778357 
+olivine_0 26.402181 
+garnet_0 14.033236 
+orthopyroxene_0 56.342941 
+Pressure 93746.70 Temperature 2077.49 
+Partition 100.021693 
+Bulk 100.021693 
+Liquid 3.255820 
+Solid 96.765873 
+olivine_0 26.400731 
+garnet_0 14.023883 
+orthopyroxene_0 56.341259 
+Pressure 93449.30 Temperature 2076.98 
+Partition 100.021836 
+Bulk 100.021836 
+Liquid 3.268769 
+Solid 96.753068 
+olivine_0 26.398825 
+garnet_0 14.014441 
+orthopyroxene_0 56.339801 
+Pressure 93151.90 Temperature 2076.46 
+Partition 100.021982 
+Bulk 100.021982 
+Liquid 3.281963 
+Solid 96.740019 
+olivine_0 26.396579 
+garnet_0 14.004900 
+orthopyroxene_0 56.338540 
+Pressure 92854.60 Temperature 2075.95 
+Partition 100.022130 
+Bulk 100.022130 
+Liquid 3.295595 
+Solid 96.726535 
+olivine_0 26.393702 
+garnet_0 13.995281 
+orthopyroxene_0 56.337553 
+Pressure 92557.20 Temperature 2075.43 
+Partition 100.022280 
+Bulk 100.022280 
+Liquid 3.309506 
+Solid 96.712774 
+olivine_0 26.390437 
+garnet_0 13.985558 
+orthopyroxene_0 56.336780 
+Pressure 92259.90 Temperature 2074.92 
+Partition 100.022433 
+Bulk 100.022433 
+Liquid 3.323890 
+Solid 96.698543 
+olivine_0 26.386491 
+garnet_0 13.975754 
+orthopyroxene_0 56.336297 
+Pressure 91962.60 Temperature 2074.41 
+Partition 100.022588 
+Bulk 100.022588 
+Liquid 3.338676 
+Solid 96.683911 
+olivine_0 26.381972 
+garnet_0 13.965858 
+orthopyroxene_0 56.336081 
+Pressure 91665.30 Temperature 2073.89 
+Partition 100.022745 
+Bulk 100.022745 
+Liquid 3.353783 
+Solid 96.668962 
+olivine_0 26.376997 
+garnet_0 13.955860 
+orthopyroxene_0 56.336105 
+Pressure 91368.00 Temperature 2073.38 
+Partition 100.022904 
+Bulk 100.022904 
+Liquid 3.369426 
+Solid 96.653478 
+olivine_0 26.371254 
+garnet_0 13.945776 
+orthopyroxene_0 56.336448 
+Pressure 91070.80 Temperature 2072.86 
+Partition 100.023066 
+Bulk 100.023066 
+Liquid 3.385417 
+Solid 96.637649 
+olivine_0 26.365009 
+garnet_0 13.935593 
+orthopyroxene_0 56.337048 
+Pressure 90773.50 Temperature 2072.35 
+Partition 100.023230 
+Bulk 100.023230 
+Liquid 3.401993 
+Solid 96.621237 
+olivine_0 26.357930 
+garnet_0 13.925319 
+orthopyroxene_0 56.337989 
+Pressure 90476.30 Temperature 2071.84 
+Partition 100.023397 
+Bulk 100.023397 
+Liquid 3.419061 
+Solid 96.604336 
+olivine_0 26.350142 
+garnet_0 13.914952 
+orthopyroxene_0 56.339242 
+Pressure 90179.10 Temperature 2071.32 
+Partition 100.023566 
+Bulk 100.023566 
+Liquid 3.436540 
+Solid 96.587026 
+olivine_0 26.341765 
+garnet_0 13.904481 
+orthopyroxene_0 56.340780 
+Pressure 89881.90 Temperature 2070.81 
+Partition 100.023738 
+Bulk 100.023738 
+Liquid 3.454667 
+Solid 96.569071 
+olivine_0 26.332461 
+garnet_0 13.893921 
+orthopyroxene_0 56.342689 
+Pressure 89584.70 Temperature 2070.29 
+Partition 100.023912 
+Bulk 100.023912 
+Liquid 3.473247 
+Solid 96.550665 
+olivine_0 26.322508 
+garnet_0 13.883256 
+orthopyroxene_0 56.344900 
+Pressure 89287.60 Temperature 2069.78 
+Partition 100.024089 
+Bulk 100.024089 
+Liquid 3.492517 
+Solid 96.531572 
+olivine_0 26.311567 
+garnet_0 13.872504 
+orthopyroxene_0 56.347502 
+Pressure 88990.40 Temperature 2069.26 
+Partition 100.024268 
+Bulk 100.024268 
+Liquid 3.512291 
+Solid 96.511976 
+olivine_0 26.299908 
+garnet_0 13.861642 
+orthopyroxene_0 56.350426 
+Pressure 88693.30 Temperature 2068.75 
+Partition 100.024449 
+Bulk 100.024449 
+Liquid 3.532808 
+Solid 96.491641 
+olivine_0 26.287189 
+garnet_0 13.850692 
+orthopyroxene_0 56.353761 
+Pressure 88396.20 Temperature 2068.23 
+Partition 100.024633 
+Bulk 100.024633 
+Liquid 3.553867 
+Solid 96.470765 
+olivine_0 26.273697 
+garnet_0 13.839635 
+orthopyroxene_0 56.357433 
+Pressure 88099.10 Temperature 2067.72 
+Partition 100.024819 
+Bulk 100.024819 
+Liquid 3.575733 
+Solid 96.449086 
+olivine_0 26.259063 
+garnet_0 13.828485 
+orthopyroxene_0 56.361538 
+Pressure 87802.00 Temperature 2067.20 
+Partition 100.025007 
+Bulk 100.025007 
+Liquid 3.598190 
+Solid 96.426818 
+olivine_0 26.243592 
+garnet_0 13.817228 
+orthopyroxene_0 56.365997 
+Pressure 87505.00 Temperature 2066.69 
+Partition 100.025198 
+Bulk 100.025198 
+Liquid 3.621501 
+Solid 96.403697 
+olivine_0 26.226912 
+garnet_0 13.805880 
+orthopyroxene_0 56.370905 
+Pressure 87207.90 Temperature 2066.17 
+Partition 100.025391 
+Bulk 100.025391 
+Liquid 3.645464 
+Solid 96.379927 
+olivine_0 26.209322 
+garnet_0 13.794421 
+orthopyroxene_0 56.376184 
+Pressure 86910.90 Temperature 2065.66 
+Partition 100.025587 
+Bulk 100.025587 
+Liquid 3.670341 
+Solid 96.355245 
+olivine_0 26.190448 
+garnet_0 13.782870 
+orthopyroxene_0 56.381927 
+Pressure 86613.90 Temperature 2065.14 
+Partition 100.025784 
+Bulk 100.025784 
+Liquid 3.695911 
+Solid 96.329872 
+olivine_0 26.170609 
+garnet_0 13.771211 
+orthopyroxene_0 56.388051 
+Pressure 86316.80 Temperature 2064.63 
+Partition 100.025983 
+Bulk 100.025983 
+Liquid 3.722480 
+Solid 96.303504 
+olivine_0 26.149391 
+garnet_0 13.759452 
+orthopyroxene_0 56.394660 
+Pressure 86019.90 Temperature 2064.11 
+Partition 100.026185 
+Bulk 100.026185 
+Liquid 3.749770 
+Solid 96.276415 
+olivine_0 26.127169 
+garnet_0 13.747593 
+orthopyroxene_0 56.401653 
+Pressure 85722.90 Temperature 2063.60 
+Partition 100.026388 
+Bulk 100.026388 
+Liquid 3.778122 
+Solid 96.248266 
+olivine_0 26.103494 
+garnet_0 13.735631 
+orthopyroxene_0 56.409141 
+Pressure 85425.90 Temperature 2063.08 
+Partition 100.026593 
+Bulk 100.026593 
+Liquid 3.807271 
+Solid 96.219322 
+olivine_0 26.078736 
+garnet_0 13.723562 
+orthopyroxene_0 56.417025 
+Pressure 85129.00 Temperature 2062.57 
+Partition 100.026800 
+Bulk 100.026800 
+Liquid 3.837521 
+Solid 96.189279 
+olivine_0 26.052478 
+garnet_0 13.711398 
+orthopyroxene_0 56.425403 
+Pressure 84832.10 Temperature 2062.05 
+Partition 100.027008 
+Bulk 100.027008 
+Liquid 3.868619 
+Solid 96.158389 
+olivine_0 26.025085 
+garnet_0 13.699125 
+orthopyroxene_0 56.434179 
+Pressure 84535.20 Temperature 2061.54 
+Partition 100.027218 
+Bulk 100.027218 
+Liquid 3.900894 
+Solid 96.126323 
+olivine_0 25.996117 
+garnet_0 13.686753 
+orthopyroxene_0 56.443453 
+Pressure 84238.30 Temperature 2061.02 
+Partition 100.027428 
+Bulk 100.027428 
+Liquid 3.934068 
+Solid 96.093360 
+olivine_0 25.965966 
+garnet_0 13.674273 
+orthopyroxene_0 56.453121 
+Pressure 83941.40 Temperature 2060.51 
+Partition 100.027641 
+Bulk 100.027641 
+Liquid 3.968482 
+Solid 96.059159 
+olivine_0 25.934182 
+garnet_0 13.661692 
+orthopyroxene_0 56.463285 
+Pressure 83644.50 Temperature 2059.99 
+Partition 100.027853 
+Bulk 100.027853 
+Liquid 4.003843 
+Solid 96.024011 
+olivine_0 25.901176 
+garnet_0 13.649002 
+orthopyroxene_0 56.473832 
+Pressure 83347.70 Temperature 2059.48 
+Partition 100.028067 
+Bulk 100.028067 
+Liquid 4.040490 
+Solid 95.987577 
+olivine_0 25.866500 
+garnet_0 13.636216 
+orthopyroxene_0 56.484861 
+Pressure 83050.90 Temperature 2058.96 
+Partition 100.028282 
+Bulk 100.028282 
+Liquid 4.078130 
+Solid 95.950152 
+olivine_0 25.830574 
+garnet_0 13.623320 
+orthopyroxene_0 56.496258 
+Pressure 82754.10 Temperature 2058.45 
+Partition 100.028497 
+Bulk 100.028497 
+Liquid 4.117132 
+Solid 95.911365 
+olivine_0 25.792918 
+garnet_0 13.610322 
+orthopyroxene_0 56.508125 
+Pressure 82457.30 Temperature 2057.93 
+Partition 100.028713 
+Bulk 100.028713 
+Liquid 4.157170 
+Solid 95.871542 
+olivine_0 25.753988 
+garnet_0 13.597215 
+orthopyroxene_0 56.520339 
+Pressure 82160.50 Temperature 2057.41 
+Partition 100.028928 
+Bulk 100.028928 
+Liquid 4.198444 
+Solid 95.830485 
+olivine_0 25.713539 
+garnet_0 13.584002 
+orthopyroxene_0 56.532943 
+Pressure 81863.70 Temperature 2056.90 
+Partition 100.029144 
+Bulk 100.029144 
+Liquid 4.241166 
+Solid 95.787978 
+olivine_0 25.671310 
+garnet_0 13.570685 
+orthopyroxene_0 56.545983 
+Pressure 81567.00 Temperature 2056.38 
+Partition 100.029360 
+Bulk 100.029360 
+Liquid 4.284969 
+Solid 95.744391 
+olivine_0 25.627807 
+garnet_0 13.557262 
+orthopyroxene_0 56.559322 
+Pressure 81270.20 Temperature 2055.87 
+Partition 100.029576 
+Bulk 100.029576 
+Liquid 4.330296 
+Solid 95.699280 
+olivine_0 25.582480 
+garnet_0 13.543729 
+orthopyroxene_0 56.573071 
+Pressure 80973.50 Temperature 2055.35 
+Partition 100.029791 
+Bulk 100.029791 
+Liquid 4.376742 
+Solid 95.653049 
+olivine_0 25.535876 
+garnet_0 13.530089 
+orthopyroxene_0 56.587085 
+Pressure 80676.80 Temperature 2054.84 
+Partition 100.030006 
+Bulk 100.030006 
+Liquid 4.424748 
+Solid 95.605258 
+olivine_0 25.487449 
+garnet_0 13.516341 
+orthopyroxene_0 56.601468 
+Pressure 80380.10 Temperature 2054.32 
+Partition 100.030221 
+Bulk 100.030221 
+Liquid 4.473930 
+Solid 95.556290 
+olivine_0 25.437726 
+garnet_0 13.502481 
+orthopyroxene_0 56.616083 
+Pressure 80083.50 Temperature 2053.80 
+Partition 100.030434 
+Bulk 100.030434 
+Liquid 4.524492 
+Solid 95.505942 
+olivine_0 25.386465 
+garnet_0 13.488514 
+orthopyroxene_0 56.630963 
+Pressure 79786.80 Temperature 2053.29 
+Partition 100.030648 
+Bulk 100.030648 
+Liquid 4.576720 
+Solid 95.453928 
+olivine_0 25.333339 
+garnet_0 13.474431 
+orthopyroxene_0 56.646158 
+Pressure 79490.20 Temperature 2052.77 
+Partition 100.030860 
+Bulk 100.030860 
+Liquid 4.630159 
+Solid 95.400701 
+olivine_0 25.278949 
+garnet_0 13.460237 
+orthopyroxene_0 56.661515 
+Pressure 79193.60 Temperature 2052.25 
+Partition 100.031071 
+Bulk 100.031071 
+Liquid 4.685069 
+Solid 95.346002 
+olivine_0 25.222997 
+garnet_0 13.445927 
+orthopyroxene_0 56.677078 
+Pressure 78897.00 Temperature 2051.74 
+Partition 100.031282 
+Bulk 100.031282 
+Liquid 4.741711 
+Solid 95.289571 
+olivine_0 25.165188 
+garnet_0 13.431500 
+orthopyroxene_0 56.692882 
+Pressure 78600.40 Temperature 2051.22 
+Partition 100.031491 
+Bulk 100.031491 
+Liquid 4.799646 
+Solid 95.231845 
+olivine_0 25.106103 
+garnet_0 13.416953 
+orthopyroxene_0 56.708789 
+Pressure 78303.80 Temperature 2050.71 
+Partition 100.031700 
+Bulk 100.031700 
+Liquid 4.859374 
+Solid 95.172326 
+olivine_0 25.045151 
+garnet_0 13.402285 
+orthopyroxene_0 56.724890 
+Pressure 78007.20 Temperature 2050.19 
+Partition 100.031907 
+Bulk 100.031907 
+Liquid 4.920439 
+Solid 95.111468 
+olivine_0 24.982929 
+garnet_0 13.387492 
+orthopyroxene_0 56.741047 
+Pressure 77710.70 Temperature 2049.67 
+Partition 100.032113 
+Bulk 100.032113 
+Liquid 4.983082 
+Solid 95.049032 
+olivine_0 24.919165 
+garnet_0 13.372577 
+orthopyroxene_0 56.757289 
+Pressure 77414.20 Temperature 2049.16 
+Partition 100.032319 
+Bulk 100.032319 
+Liquid 5.047619 
+Solid 94.984700 
+olivine_0 24.853512 
+garnet_0 13.357533 
+orthopyroxene_0 56.773655 
+Pressure 77117.70 Temperature 2048.64 
+Partition 100.032523 
+Bulk 100.032523 
+Liquid 5.113565 
+Solid 94.918958 
+olivine_0 24.786593 
+garnet_0 13.342356 
+orthopyroxene_0 56.790009 
+Pressure 76821.20 Temperature 2048.12 
+Partition 100.032726 
+Bulk 100.032726 
+Liquid 5.181206 
+Solid 94.851520 
+olivine_0 24.718090 
+garnet_0 13.327044 
+orthopyroxene_0 56.806386 
+Pressure 76524.70 Temperature 2047.61 
+Partition 100.032928 
+Bulk 100.032928 
+Liquid 5.250856 
+Solid 94.782072 
+olivine_0 24.647666 
+garnet_0 13.311590 
+orthopyroxene_0 56.822815 
+Pressure 76228.30 Temperature 2047.09 
+Partition 100.033130 
+Bulk 100.033130 
+Liquid 5.321971 
+Solid 94.711159 
+olivine_0 24.575997 
+garnet_0 13.296000 
+orthopyroxene_0 56.839162 
+Pressure 75931.80 Temperature 2046.57 
+Partition 100.033330 
+Bulk 100.033330 
+Liquid 5.394917 
+Solid 94.638413 
+olivine_0 24.502685 
+garnet_0 13.280258 
+orthopyroxene_0 56.855470 
+Pressure 75635.40 Temperature 2046.06 
+Partition 100.033530 
+Bulk 100.033530 
+Liquid 5.469973 
+Solid 94.563557 
+olivine_0 24.427435 
+garnet_0 13.264366 
+orthopyroxene_0 56.871756 
+Pressure 75339.00 Temperature 2045.54 
+Partition 100.033728 
+Bulk 100.033728 
+Liquid 5.546620 
+Solid 94.487108 
+olivine_0 24.350884 
+garnet_0 13.248320 
+orthopyroxene_0 56.887904 
+Pressure 75042.60 Temperature 2045.02 
+Partition 100.033926 
+Bulk 100.033926 
+Liquid 5.625194 
+Solid 94.408732 
+olivine_0 24.272676 
+garnet_0 13.232112 
+orthopyroxene_0 56.903945 
+Pressure 74746.20 Temperature 2044.51 
+Partition 100.034124 
+Bulk 100.034124 
+Liquid 5.706057 
+Solid 94.328067 
+olivine_0 24.192431 
+garnet_0 13.215733 
+orthopyroxene_0 56.919903 
+Pressure 74449.80 Temperature 2043.99 
+Partition 100.034321 
+Bulk 100.034321 
+Liquid 5.788629 
+Solid 94.245691 
+olivine_0 24.110841 
+garnet_0 13.199185 
+orthopyroxene_0 56.935666 
+Pressure 74153.50 Temperature 2043.47 
+Partition 100.034517 
+Bulk 100.034517 
+Liquid 5.873238 
+Solid 94.161279 
+olivine_0 24.027561 
+garnet_0 13.182464 
+orthopyroxene_0 56.951254 
+Pressure 73857.10 Temperature 2042.96 
+Partition 100.034713 
+Bulk 100.034713 
+Liquid 5.960343 
+Solid 94.074371 
+olivine_0 23.942120 
+garnet_0 13.165547 
+orthopyroxene_0 56.966704 
+Pressure 73560.80 Temperature 2042.44 
+Partition 100.034909 
+Bulk 100.034909 
+Liquid 6.049258 
+Solid 93.985651 
+olivine_0 23.855306 
+garnet_0 13.148447 
+orthopyroxene_0 56.981899 
+Pressure 73264.50 Temperature 2041.92 
+Partition 100.035105 
+Bulk 100.035105 
+Liquid 6.140408 
+Solid 93.894697 
+olivine_0 23.766679 
+garnet_0 13.131149 
+orthopyroxene_0 56.996869 
+Pressure 72968.30 Temperature 2041.40 
+Partition 100.035301 
+Bulk 100.035301 
+Liquid 6.233816 
+Solid 93.801485 
+olivine_0 23.676244 
+garnet_0 13.113649 
+orthopyroxene_0 57.011592 
+Pressure 72672.00 Temperature 2040.89 
+Partition 100.035497 
+Bulk 100.035497 
+Liquid 6.329993 
+Solid 93.705504 
+olivine_0 23.583487 
+garnet_0 13.095922 
+orthopyroxene_0 57.026095 
+Pressure 72375.70 Temperature 2040.37 
+Partition 100.035693 
+Bulk 100.035693 
+Liquid 6.428232 
+Solid 93.607461 
+olivine_0 23.489200 
+garnet_0 13.077978 
+orthopyroxene_0 57.040283 
+Pressure 72079.50 Temperature 2039.85 
+Partition 100.035890 
+Bulk 100.035890 
+Liquid 6.528925 
+Solid 93.506965 
+olivine_0 23.392986 
+garnet_0 13.059808 
+orthopyroxene_0 57.054172 
+Pressure 71783.30 Temperature 2039.34 
+Partition 100.036087 
+Bulk 100.036087 
+Liquid 6.632583 
+Solid 93.403504 
+olivine_0 23.294339 
+garnet_0 13.041388 
+orthopyroxene_0 57.067777 
+Pressure 71487.10 Temperature 2038.82 
+Partition 100.036285 
+Bulk 100.036285 
+Liquid 6.738492 
+Solid 93.297793 
+olivine_0 23.194045 
+garnet_0 13.022724 
+orthopyroxene_0 57.081023 
+Pressure 71190.90 Temperature 2038.30 
+Partition 100.036484 
+Bulk 100.036484 
+Liquid 6.847121 
+Solid 93.189363 
+olivine_0 23.091639 
+garnet_0 13.003799 
+orthopyroxene_0 57.093925 
+Pressure 70894.70 Temperature 2037.78 
+Partition 100.036683 
+Bulk 100.036683 
+Liquid 6.958550 
+Solid 93.078133 
+olivine_0 22.987067 
+garnet_0 12.984602 
+orthopyroxene_0 57.106465 
+Pressure 70598.60 Temperature 2037.27 
+Partition 100.036885 
+Bulk 100.036885 
+Liquid 7.073260 
+Solid 92.963625 
+olivine_0 22.879865 
+garnet_0 12.965117 
+orthopyroxene_0 57.118642 
+Pressure 70302.40 Temperature 2036.75 
+Partition 100.037087 
+Bulk 100.037087 
+Liquid 7.190559 
+Solid 92.846528 
+olivine_0 22.770779 
+garnet_0 12.945339 
+orthopyroxene_0 57.130409 
+Pressure 70006.30 Temperature 2036.23 
+Partition 100.037290 
+Bulk 100.037290 
+Liquid 7.310875 
+Solid 92.726416 
+olivine_0 22.659392 
+garnet_0 12.925261 
+orthopyroxene_0 57.141763 
+Pressure 69710.20 Temperature 2035.71 
+Partition 100.037495 
+Bulk 100.037495 
+Liquid 7.434347 
+Solid 92.603148 
+olivine_0 22.545595 
+garnet_0 12.904861 
+orthopyroxene_0 57.152692 
+Pressure 69414.10 Temperature 2035.20 
+Partition 100.037703 
+Bulk 100.037703 
+Liquid 7.561564 
+Solid 92.476139 
+olivine_0 22.428834 
+garnet_0 12.884114 
+orthopyroxene_0 57.163191 
+Pressure 69118.00 Temperature 2034.68 
+Partition 100.037912 
+Bulk 100.037912 
+Liquid 7.691661 
+Solid 92.346251 
+olivine_0 22.309999 
+garnet_0 12.863029 
+orthopyroxene_0 57.173222 
+Pressure 68822.00 Temperature 2034.16 
+Partition 100.038122 
+Bulk 100.038122 
+Liquid 7.825163 
+Solid 92.212960 
+olivine_0 22.188591 
+garnet_0 12.841588 
+orthopyroxene_0 57.182781 
+Pressure 68525.90 Temperature 2033.64 
+Partition 100.038336 
+Bulk 100.038336 
+Liquid 7.962286 
+Solid 92.076050 
+olivine_0 22.064433 
+garnet_0 12.819760 
+orthopyroxene_0 57.191858 
+Pressure 68229.90 Temperature 2033.12 
+Partition 100.038551 
+Bulk 100.038551 
+Liquid 8.103028 
+Solid 91.935523 
+olivine_0 21.937548 
+garnet_0 12.797543 
+orthopyroxene_0 57.200432 
+Pressure 67933.90 Temperature 2032.61 
+Partition 100.038770 
+Bulk 100.038770 
+Liquid 8.248117 
+Solid 91.790653 
+olivine_0 21.807269 
+garnet_0 12.774896 
+orthopyroxene_0 57.208488 
+Pressure 67637.90 Temperature 2032.09 
+Partition 100.038991 
+Bulk 100.038991 
+Liquid 8.396565 
+Solid 91.642426 
+olivine_0 21.674574 
+garnet_0 12.751833 
+orthopyroxene_0 57.216019 
+Pressure 67341.90 Temperature 2031.57 
+Partition 100.039216 
+Bulk 100.039216 
+Liquid 8.549035 
+Solid 91.490180 
+olivine_0 21.538852 
+garnet_0 12.728319 
+orthopyroxene_0 57.223009 
+Pressure 67046.00 Temperature 2031.05 
+Partition 100.039443 
+Bulk 100.039443 
+Liquid 8.705583 
+Solid 91.333860 
+olivine_0 21.400073 
+garnet_0 12.704344 
+orthopyroxene_0 57.229443 
+Pressure 66750.00 Temperature 2030.53 
+Partition 100.039674 
+Bulk 100.039674 
+Liquid 8.866457 
+Solid 91.173216 
+olivine_0 21.258035 
+garnet_0 12.679870 
+orthopyroxene_0 57.235312 
+Pressure 66454.10 Temperature 2030.02 
+Partition 100.039908 
+Bulk 100.039908 
+Liquid 9.032295 
+Solid 91.007613 
+olivine_0 21.112164 
+garnet_0 12.654870 
+orthopyroxene_0 57.240579 
+Pressure 66158.20 Temperature 2029.50 
+Partition 100.040146 
+Bulk 100.040146 
+Liquid 9.202019 
+Solid 90.838127 
+olivine_0 20.963496 
+garnet_0 12.629355 
+orthopyroxene_0 57.245276 
+Pressure 65862.30 Temperature 2028.98 
+Partition 100.040388 
+Bulk 100.040388 
+Liquid 9.376379 
+Solid 90.664009 
+olivine_0 20.811355 
+garnet_0 12.603283 
+orthopyroxene_0 57.249372 
+Pressure 65566.40 Temperature 2028.46 
+Partition 100.040634 
+Bulk 100.040634 
+Liquid 9.555503 
+Solid 90.485131 
+olivine_0 20.655646 
+garnet_0 12.576627 
+orthopyroxene_0 57.252858 
+Pressure 65270.50 Temperature 2027.94 
+Partition 100.040885 
+Bulk 100.040885 
+Liquid 9.739516 
+Solid 90.301369 
+olivine_0 20.496280 
+garnet_0 12.549363 
+orthopyroxene_0 57.255725 
+Pressure 64974.70 Temperature 2027.42 
+Partition 100.041139 
+Bulk 100.041139 
+Liquid 9.928466 
+Solid 90.112673 
+olivine_0 20.333233 
+garnet_0 12.521473 
+orthopyroxene_0 57.257967 
+Pressure 64678.90 Temperature 2026.90 
+Partition 100.041399 
+Bulk 100.041399 
+Liquid 10.122551 
+Solid 89.918848 
+olivine_0 20.166350 
+garnet_0 12.492921 
+orthopyroxene_0 57.259578 
+Pressure 64383.10 Temperature 2026.39 
+Partition 100.041664 
+Bulk 100.041664 
+Liquid 10.322678 
+Solid 89.718986 
+olivine_0 19.994837 
+garnet_0 12.463645 
+orthopyroxene_0 57.260504 
+Pressure 64087.30 Temperature 2025.87 
+Partition 100.041933 
+Bulk 100.041933 
+Liquid 10.527415 
+Solid 89.514518 
+olivine_0 19.820006 
+garnet_0 12.433677 
+orthopyroxene_0 57.260835 
+Pressure 63791.50 Temperature 2025.35 
+Partition 100.042208 
+Bulk 100.042208 
+Liquid 10.737640 
+Solid 89.304568 
+olivine_0 19.641085 
+garnet_0 12.402956 
+orthopyroxene_0 57.260527 
+Pressure 63495.70 Temperature 2024.83 
+Partition 100.042489 
+Bulk 100.042489 
+Liquid 10.953461 
+Solid 89.089027 
+olivine_0 19.457998 
+garnet_0 12.371449 
+orthopyroxene_0 57.259580 
+Pressure 63200.00 Temperature 2024.31 
+Partition 100.042774 
+Bulk 100.042774 
+Liquid 11.174890 
+Solid 88.867885 
+olivine_0 19.270750 
+garnet_0 12.339134 
+orthopyroxene_0 57.258001 
+Pressure 62904.20 Temperature 2023.79 
+Partition 100.043066 
+Bulk 100.043066 
+Liquid 11.402200 
+Solid 88.640866 
+olivine_0 19.079122 
+garnet_0 12.305954 
+orthopyroxene_0 57.255790 
+Pressure 62608.50 Temperature 2023.27 
+Partition 100.043364 
+Bulk 100.043364 
+Liquid 11.635293 
+Solid 88.408071 
+olivine_0 18.883213 
+garnet_0 12.271895 
+orthopyroxene_0 57.252962 
+Pressure 62312.80 Temperature 2022.75 
+Partition 100.043667 
+Bulk 100.043667 
+Liquid 11.874335 
+Solid 88.169332 
+olivine_0 18.682896 
+garnet_0 12.236910 
+orthopyroxene_0 57.249526 
+Pressure 62017.10 Temperature 2022.24 
+Partition 100.043978 
+Bulk 100.043978 
+Liquid 12.120383 
+Solid 87.923595 
+olivine_0 18.477266 
+garnet_0 12.200913 
+orthopyroxene_0 57.245415 
+Pressure 61721.50 Temperature 2021.72 
+Partition 100.044295 
+Bulk 100.044295 
+Liquid 12.371428 
+Solid 87.672867 
+olivine_0 18.268085 
+garnet_0 12.163970 
+orthopyroxene_0 57.240812 
+Pressure 61425.80 Temperature 2021.20 
+Partition 100.044618 
+Bulk 100.044618 
+Liquid 12.628676 
+Solid 87.415942 
+olivine_0 18.054319 
+garnet_0 12.125969 
+orthopyroxene_0 57.235654 
+Pressure 61130.20 Temperature 2020.68 
+Partition 100.044948 
+Bulk 100.044948 
+Liquid 12.891939 
+Solid 87.153008 
+olivine_0 17.836139 
+garnet_0 12.086895 
+orthopyroxene_0 57.229974 
+Pressure 60834.50 Temperature 2020.16 
+Partition 100.045284 
+Bulk 100.045284 
+Liquid 13.161437 
+Solid 86.883847 
+olivine_0 17.613373 
+garnet_0 12.046678 
+orthopyroxene_0 57.223796 
+Pressure 60538.90 Temperature 2019.64 
 Partition 100.045628 
 Bulk 100.045628 
-Liquid 12.588772 
-Solid 87.456855 
-olivine_0 18.169401 
-garnet_0 11.880731 
-orthopyroxene_0 57.406723 
-Pressure 58470.20 Temperature 1993.52 
-Partition 100.045967 
-Bulk 100.045967 
-Liquid 12.841386 
-Solid 87.204581 
-olivine_0 17.960860 
-garnet_0 11.837025 
-orthopyroxene_0 57.406696 
-Pressure 58174.70 Temperature 1993.01 
-Partition 100.046313 
-Bulk 100.046313 
-Liquid 13.099315 
-Solid 86.946998 
-olivine_0 17.748575 
-garnet_0 11.792028 
-orthopyroxene_0 57.406395 
-Pressure 57879.20 Temperature 1992.49 
-Partition 100.046665 
-Bulk 100.046665 
-Liquid 13.361421 
-Solid 86.685244 
-olivine_0 17.533530 
-garnet_0 11.745760 
-orthopyroxene_0 57.405954 
-Pressure 57583.80 Temperature 1991.98 
-Partition 100.047026 
-Bulk 100.047026 
-Liquid 13.629727 
-Solid 86.417299 
-olivine_0 17.314001 
-garnet_0 11.698060 
-orthopyroxene_0 57.405237 
-Pressure 57288.40 Temperature 1991.46 
-Partition 100.047393 
-Bulk 100.047393 
-Liquid 13.902037 
-Solid 86.145356 
-olivine_0 17.091876 
-garnet_0 11.648998 
-orthopyroxene_0 57.404482 
-Pressure 56993.00 Temperature 1990.95 
-Partition 100.047769 
-Bulk 100.047769 
-Liquid 14.180561 
-Solid 85.867208 
-olivine_0 16.865284 
-garnet_0 11.598383 
-orthopyroxene_0 57.403542 
-Pressure 56697.60 Temperature 1990.44 
-Partition 100.048153 
-Bulk 100.048153 
-Liquid 14.464068 
-Solid 85.584085 
-olivine_0 16.635283 
-garnet_0 11.546231 
-orthopyroxene_0 57.402571 
-Pressure 56402.20 Temperature 1989.92 
-Partition 100.048543 
-Bulk 100.048543 
-Liquid 14.751201 
-Solid 85.297341 
-olivine_0 16.403026 
-garnet_0 11.492574 
-orthopyroxene_0 57.401741 
-Pressure 56106.80 Temperature 1989.41 
-Partition 100.048941 
-Bulk 100.048941 
-Liquid 15.044285 
-Solid 85.004656 
-olivine_0 16.166561 
-garnet_0 11.437197 
-orthopyroxene_0 57.400898 
-Pressure 55811.50 Temperature 1988.89 
-Partition 100.049346 
-Bulk 100.049346 
-Liquid 15.340539 
-Solid 84.708808 
-olivine_0 15.928232 
-garnet_0 11.380237 
-orthopyroxene_0 57.400338 
-Pressure 55516.20 Temperature 1988.38 
-Partition 100.049760 
-Bulk 100.049760 
-Liquid 15.642481 
-Solid 84.407279 
-olivine_0 15.685936 
-garnet_0 11.321444 
-orthopyroxene_0 57.399899 
-Pressure 55220.90 Temperature 1987.87 
-Partition 100.050182 
-Bulk 100.050182 
-Liquid 15.948667 
-Solid 84.101515 
-olivine_0 15.440897 
-garnet_0 11.260849 
-orthopyroxene_0 57.399770 
-Pressure 54925.60 Temperature 1987.35 
-Partition 100.050610 
-Bulk 100.050610 
-Liquid 16.257530 
-Solid 83.793080 
-olivine_0 15.194425 
-garnet_0 11.198499 
-orthopyroxene_0 57.400156 
-Pressure 54630.30 Temperature 1986.84 
-Partition 100.051047 
-Bulk 100.051047 
-Liquid 16.571587 
-Solid 83.479460 
-olivine_0 14.944432 
-garnet_0 11.134136 
-orthopyroxene_0 57.400892 
-Pressure 54335.00 Temperature 1986.32 
-Partition 100.051490 
-Bulk 100.051490 
-Liquid 16.887853 
-Solid 83.163637 
-olivine_0 14.693409 
-garnet_0 11.067916 
-orthopyroxene_0 57.402313 
-Pressure 54039.80 Temperature 1985.81 
-Partition 100.051942 
-Bulk 100.051942 
-Liquid 17.208789 
-Solid 82.843153 
-olivine_0 14.439316 
-garnet_0 10.999584 
-orthopyroxene_0 57.404252 
-Pressure 53744.60 Temperature 1985.29 
-Partition 100.052401 
-Bulk 100.052401 
-Liquid 17.531427 
-Solid 82.520974 
-olivine_0 14.184627 
-garnet_0 10.929290 
-orthopyroxene_0 57.407057 
-Pressure 53449.30 Temperature 1984.78 
-Partition 100.052868 
-Bulk 100.052868 
-Liquid 17.858578 
-Solid 82.194289 
-olivine_0 13.927027 
-garnet_0 10.856707 
-orthopyroxene_0 57.410555 
-Pressure 53154.20 Temperature 1984.26 
-Partition 100.053340 
-Bulk 100.053340 
-Liquid 18.186631 
-Solid 81.866709 
-olivine_0 13.669496 
-garnet_0 10.782105 
-orthopyroxene_0 57.415108 
-Pressure 52859.00 Temperature 1983.75 
-Partition 100.053822 
-Bulk 100.053822 
-Liquid 18.518755 
-Solid 81.535067 
-olivine_0 13.409444 
-garnet_0 10.705084 
-orthopyroxene_0 57.420539 
-Pressure 52563.80 Temperature 1983.23 
-Partition 100.054310 
-Bulk 100.054310 
-Liquid 18.851522 
-Solid 81.202788 
-olivine_0 13.149696 
-garnet_0 10.625878 
-orthopyroxene_0 57.427213 
-Pressure 52268.70 Temperature 1982.72 
-Partition 100.054806 
-Bulk 100.054806 
-Liquid 19.187632 
-Solid 80.867174 
-olivine_0 12.888042 
-garnet_0 10.544174 
-orthopyroxene_0 57.434958 
-Pressure 51973.50 Temperature 1982.20 
-Partition 100.055308 
-Bulk 100.055308 
-Liquid 19.524002 
-Solid 80.531306 
-olivine_0 12.627029 
-garnet_0 10.460137 
-orthopyroxene_0 57.444140 
-Pressure 51678.40 Temperature 1981.69 
-Partition 100.055818 
-Bulk 100.055818 
-Liquid 19.863274 
-Solid 80.192545 
-olivine_0 12.364497 
-garnet_0 10.373463 
-orthopyroxene_0 57.454585 
-Pressure 51383.30 Temperature 1981.17 
-Partition 100.056335 
-Bulk 100.056335 
-Liquid 20.202164 
-Solid 79.854171 
-olivine_0 12.103146 
-garnet_0 10.284364 
-orthopyroxene_0 57.466660 
-Pressure 51088.20 Temperature 1980.66 
-Partition 100.056859 
-Bulk 100.056859 
-Liquid 20.543678 
-Solid 79.513181 
-olivine_0 11.840537 
-garnet_0 10.192448 
-orthopyroxene_0 57.480195 
-Pressure 50793.20 Temperature 1980.14 
-Partition 100.057389 
-Bulk 100.057389 
-Liquid 20.884202 
-Solid 79.173187 
-olivine_0 11.579622 
-garnet_0 10.098014 
-orthopyroxene_0 57.495551 
-Pressure 50498.10 Temperature 1979.63 
-Partition 100.057928 
-Bulk 100.057928 
-Liquid 21.227111 
-Solid 78.830817 
-olivine_0 11.317680 
-garnet_0 10.000571 
-orthopyroxene_0 57.512566 
-Pressure 50203.10 Temperature 1979.11 
-Partition 100.058472 
-Bulk 100.058472 
-Liquid 21.568611 
-Solid 78.489861 
-olivine_0 11.057797 
-garnet_0 9.900473 
-orthopyroxene_0 57.531590 
-Pressure 49908.10 Temperature 1978.60 
-Partition 100.059024 
-Bulk 100.059024 
-Liquid 21.912010 
-Solid 78.147014 
-olivine_0 10.797311 
-garnet_0 9.797236 
-orthopyroxene_0 57.552467 
-Pressure 49613.10 Temperature 1978.08 
-Partition 100.059582 
-Bulk 100.059582 
-Liquid 22.253781 
-Solid 77.805801 
-olivine_0 10.539094 
-garnet_0 9.691161 
-orthopyroxene_0 57.575547 
-Pressure 49318.10 Temperature 1977.57 
-Partition 100.060149 
-Bulk 100.060149 
-Liquid 22.597160 
-Solid 77.462989 
-olivine_0 10.280547 
-garnet_0 9.581767 
-orthopyroxene_0 57.600675 
-Pressure 49023.10 Temperature 1977.05 
-Partition 100.060721 
-Bulk 100.060721 
-Liquid 22.938607 
-Solid 77.122114 
-olivine_0 10.024545 
-garnet_0 9.469377 
-orthopyroxene_0 57.628192 
-Pressure 48728.20 Temperature 1976.53 
-Partition 100.061300 
-Bulk 100.061300 
-Liquid 23.279554 
-Solid 76.781746 
-olivine_0 9.769942 
-garnet_0 9.353742 
-orthopyroxene_0 57.658062 
-Pressure 48433.30 Temperature 1976.02 
-Partition 100.061887 
-Bulk 100.061887 
-Liquid 23.621777 
-Solid 76.440110 
-olivine_0 9.515339 
-garnet_0 9.234496 
-orthopyroxene_0 57.690275 
-Pressure 48138.40 Temperature 1975.50 
-Partition 100.062481 
-Bulk 100.062481 
-Liquid 23.961728 
-Solid 76.100753 
-olivine_0 9.263606 
-garnet_0 9.111993 
-orthopyroxene_0 57.725154 
-Pressure 47843.50 Temperature 1974.99 
-Partition 100.063083 
-Bulk 100.063083 
-Liquid 24.302804 
-Solid 75.760279 
-olivine_0 9.012039 
-garnet_0 8.985663 
-orthopyroxene_0 57.762577 
-Pressure 47548.60 Temperature 1974.47 
-Partition 100.063691 
-Bulk 100.063691 
-Liquid 24.641460 
-Solid 75.422231 
-olivine_0 8.763498 
-garnet_0 8.855883 
-orthopyroxene_0 57.802850 
-Pressure 47253.70 Temperature 1973.96 
-Partition 100.064309 
-Bulk 100.064309 
-Liquid 24.981148 
-Solid 75.083161 
-olivine_0 8.515248 
-garnet_0 8.722042 
-orthopyroxene_0 57.845871 
-Pressure 46958.90 Temperature 1973.44 
-Partition 100.064932 
-Bulk 100.064932 
-Liquid 25.318182 
-Solid 74.746750 
-olivine_0 8.270244 
-garnet_0 8.584589 
-orthopyroxene_0 57.891916 
-Pressure 46664.00 Temperature 1972.92 
-Partition 100.065563 
-Bulk 100.065563 
-Liquid 25.654590 
-Solid 74.410973 
-olivine_0 8.026908 
-garnet_0 8.443049 
-orthopyroxene_0 57.941015 
-Pressure 46369.20 Temperature 1972.41 
-Partition 100.066204 
-Bulk 100.066204 
-Liquid 25.991850 
-Solid 74.074354 
-olivine_0 7.784079 
-garnet_0 8.297114 
-orthopyroxene_0 57.993161 
-Pressure 46074.40 Temperature 1971.89 
-Partition 100.066851 
-Bulk 100.066851 
-Liquid 26.326580 
-Solid 73.740271 
-olivine_0 7.544474 
-garnet_0 8.147163 
-orthopyroxene_0 58.048633 
-Pressure 45779.60 Temperature 1971.38 
-Partition 100.067508 
-Bulk 100.067508 
-Liquid 26.662348 
-Solid 73.405161 
-olivine_0 7.305296 
-garnet_0 7.992478 
-orthopyroxene_0 58.107387 
-Pressure 45484.90 Temperature 1970.86 
-Partition 100.068172 
-Bulk 100.068172 
-Liquid 26.995494 
-Solid 73.072678 
-olivine_0 7.069456 
-garnet_0 7.833571 
-orthopyroxene_0 58.169651 
-Pressure 45190.10 Temperature 1970.34 
-Partition 100.068845 
-Bulk 100.068845 
-Liquid 27.328131 
-Solid 72.740714 
-olivine_0 6.835334 
-garnet_0 7.669879 
-orthopyroxene_0 58.235501 
-Pressure 44895.40 Temperature 1969.83 
-Partition 100.069528 
-Bulk 100.069528 
-Liquid 27.661816 
-Solid 72.407713 
-olivine_0 6.601718 
-garnet_0 7.501034 
-orthopyroxene_0 58.304961 
-Pressure 44600.70 Temperature 1969.31 
-Partition 100.070219 
-Bulk 100.070219 
-Liquid 27.993195 
-Solid 72.077025 
-olivine_0 6.371288 
-garnet_0 7.327465 
-orthopyroxene_0 58.378272 
-Pressure 44306.00 Temperature 1968.80 
-Partition 100.070921 
-Bulk 100.070921 
-Liquid 28.325924 
-Solid 71.744997 
-olivine_0 6.141208 
-garnet_0 7.148323 
-orthopyroxene_0 58.455466 
-Pressure 44011.30 Temperature 1968.28 
-Partition 100.071632 
-Bulk 100.071632 
-Liquid 28.656519 
-Solid 71.415113 
-olivine_0 5.914245 
-garnet_0 6.964124 
-orthopyroxene_0 58.536744 
-Pressure 43716.60 Temperature 1967.76 
-Partition 100.072352 
-Bulk 100.072352 
-Liquid 28.986870 
-Solid 71.085481 
-olivine_0 5.688952 
-garnet_0 6.774334 
-orthopyroxene_0 58.622196 
-Pressure 43422.00 Temperature 1967.25 
-Partition 100.073084 
-Bulk 100.073084 
-Liquid 29.318744 
-Solid 70.754339 
-olivine_0 5.463983 
-garnet_0 6.578444 
-orthopyroxene_0 58.711912 
-Pressure 43127.30 Temperature 1966.73 
-Partition 100.073825 
-Bulk 100.073825 
-Liquid 29.648961 
-Solid 70.424864 
-olivine_0 5.241880 
-garnet_0 6.376859 
-orthopyroxene_0 58.806126 
-Pressure 42832.70 Temperature 1966.21 
-Partition 100.074577 
-Bulk 100.074577 
-Liquid 29.979159 
-Solid 70.095418 
-olivine_0 5.021382 
-garnet_0 6.169137 
-orthopyroxene_0 58.904899 
-Pressure 42538.10 Temperature 1965.70 
-Partition 100.075342 
-Bulk 100.075342 
-Liquid 30.311426 
-Solid 69.763916 
-olivine_0 4.800931 
-garnet_0 5.954554 
-orthopyroxene_0 59.008430 
-Pressure 42243.50 Temperature 1965.18 
-Partition 100.076117 
-Bulk 100.076117 
-Liquid 30.642311 
-Solid 69.433806 
-olivine_0 4.583245 
-garnet_0 5.733701 
-orthopyroxene_0 59.116859 
-Pressure 41949.00 Temperature 1964.66 
-Partition 100.076903 
-Bulk 100.076903 
-Liquid 30.973629 
-Solid 69.103274 
-olivine_0 4.366954 
-garnet_0 5.506003 
-orthopyroxene_0 59.230317 
-Pressure 41654.40 Temperature 1964.15 
-Partition 100.077705 
-Bulk 100.077705 
-Liquid 31.307647 
-Solid 68.770057 
-olivine_0 4.150394 
-garnet_0 5.270564 
-orthopyroxene_0 59.349100 
-Pressure 41359.90 Temperature 1963.63 
-Partition 100.078517 
-Bulk 100.078517 
-Liquid 31.640637 
-Solid 68.437880 
-olivine_0 3.936456 
-garnet_0 5.028191 
-orthopyroxene_0 59.473233 
-Pressure 41065.40 Temperature 1963.11 
-Partition 100.079342 
-Bulk 100.079342 
-Liquid 31.974736 
-Solid 68.104606 
-olivine_0 3.723566 
-garnet_0 4.778059 
-orthopyroxene_0 59.602981 
-Pressure 40770.90 Temperature 1962.59 
-Partition 100.080181 
-Bulk 100.080181 
-Liquid 32.310140 
-Solid 67.770041 
-olivine_0 3.511635 
-garnet_0 4.519860 
-orthopyroxene_0 59.738546 
-Pressure 40476.40 Temperature 1962.08 
-Partition 100.081036 
-Bulk 100.081036 
-Liquid 32.648876 
-Solid 67.432160 
-olivine_0 3.299185 
-garnet_0 4.252751 
-orthopyroxene_0 59.880224 
-Pressure 40181.90 Temperature 1961.56 
-Partition 100.081904 
-Bulk 100.081904 
-Liquid 32.987516 
-Solid 67.094388 
-olivine_0 3.088888 
-garnet_0 3.977420 
-orthopyroxene_0 60.028080 
-Pressure 39887.50 Temperature 1961.04 
-Partition 100.082787 
-Bulk 100.082787 
-Liquid 33.327954 
-Solid 66.754833 
-olivine_0 2.879353 
-garnet_0 3.693112 
-orthopyroxene_0 60.182367 
-Pressure 39593.00 Temperature 1960.53 
-Partition 100.083687 
-Bulk 100.083687 
-Liquid 33.672553 
-Solid 66.411134 
-olivine_0 2.668907 
-garnet_0 3.398664 
-orthopyroxene_0 60.343563 
-Pressure 39298.60 Temperature 1960.01 
-Partition 100.084602 
-Bulk 100.084602 
-Liquid 34.017595 
-Solid 66.067007 
-olivine_0 2.460392 
-garnet_0 3.095028 
-orthopyroxene_0 60.511587 
-Pressure 39004.20 Temperature 1959.49 
-Partition 100.085534 
-Bulk 100.085534 
-Liquid 34.365311 
-Solid 65.720223 
-olivine_0 2.252222 
-garnet_0 2.781122 
-orthopyroxene_0 60.686878 
-Pressure 38709.80 Temperature 1958.97 
-Partition 100.086483 
-Bulk 100.086483 
-Liquid 34.715964 
-Solid 65.370518 
-olivine_0 2.044285 
-garnet_0 2.456505 
-orthopyroxene_0 60.869729 
-Pressure 38415.40 Temperature 1958.46 
-Partition 100.087452 
-Bulk 100.087452 
-Liquid 35.071687 
-Solid 65.015765 
-olivine_0 1.835084 
-garnet_0 2.120059 
-orthopyroxene_0 61.060623 
-Pressure 38121.10 Temperature 1957.94 
-Partition 100.088438 
-Bulk 100.088438 
-Liquid 35.428905 
-Solid 64.659533 
-olivine_0 1.627351 
-garnet_0 1.772704 
-orthopyroxene_0 61.259478 
-Pressure 37826.80 Temperature 1957.42 
-Partition 100.089443 
-Bulk 100.089443 
-Liquid 35.789920 
-Solid 64.299523 
-olivine_0 1.419487 
-garnet_0 1.413168 
-orthopyroxene_0 61.466869 
-Pressure 37532.40 Temperature 1956.90 
-Partition 100.090469 
-Bulk 100.090469 
-Liquid 36.155204 
-Solid 63.935265 
-olivine_0 1.211270 
-garnet_0 1.040756 
-orthopyroxene_0 61.683239 
-Pressure 37238.10 Temperature 1956.39 
-Partition 100.091517 
-Bulk 100.091517 
-Liquid 36.526652 
-Solid 63.564865 
-olivine_0 1.001381 
-garnet_0 0.654421 
-orthopyroxene_0 61.909064 
-Pressure 36943.90 Temperature 1955.87 
-Partition 100.092585 
-Bulk 100.092585 
-Liquid 36.900841 
-Solid 63.191744 
-olivine_0 0.792439 
-garnet_0 0.255020 
-orthopyroxene_0 62.144285 
-Pressure 36649.60 Temperature 1955.35 
-Partition 100.093348 
-Bulk 100.093348 
-Liquid 37.229522 
-Solid 62.863826 
-olivine_0 0.611034 
-orthopyroxene_0 62.252792 
-Pressure 36355.30 Temperature 1954.83 
-Partition 100.093584 
-Bulk 100.093584 
-Liquid 37.476221 
-Solid 62.617363 
-olivine_0 0.476906 
-orthopyroxene_0 62.140457 
-Pressure 36061.10 Temperature 1954.32 
-Partition 100.093824 
-Bulk 100.093824 
-Liquid 37.723465 
-Solid 62.370359 
-olivine_0 0.343506 
-orthopyroxene_0 62.026853 
-Pressure 35766.90 Temperature 1953.80 
-Partition 100.094069 
-Bulk 100.094069 
-Liquid 37.968168 
-Solid 62.125900 
-olivine_0 0.213183 
-orthopyroxene_0 61.912718 
-Pressure 35472.70 Temperature 1953.28 
-Partition 100.094317 
-Bulk 100.094317 
-Liquid 38.212070 
-Solid 61.882248 
-olivine_0 0.084650 
-orthopyroxene_0 61.797597 
-Pressure 35178.50 Temperature 1952.76 
-Partition 100.094527 
-Bulk 100.094527 
-Liquid 38.413082 
-Solid 61.681445 
-orthopyroxene_0 61.681445 
-Pressure 34884.30 Temperature 1952.24 
-Partition 100.094657 
-Bulk 100.094657 
-Liquid 38.530899 
-Solid 61.563758 
-orthopyroxene_0 61.563758 
-Pressure 34590.20 Temperature 1951.73 
-Partition 100.094792 
-Bulk 100.094792 
-Liquid 38.650919 
-Solid 61.443873 
-orthopyroxene_0 61.443873 
-Pressure 34296.10 Temperature 1951.21 
-Partition 100.094934 
-Bulk 100.094934 
-Liquid 38.772382 
-Solid 61.322552 
-orthopyroxene_0 61.322552 
-Pressure 34001.90 Temperature 1950.69 
-Partition 100.095082 
-Bulk 100.095082 
-Liquid 38.895827 
-Solid 61.199255 
-orthopyroxene_0 61.199255 
-Pressure 33707.80 Temperature 1950.17 
-Partition 100.095235 
-Bulk 100.095235 
-Liquid 39.021214 
-Solid 61.074022 
-orthopyroxene_0 61.074022 
-Pressure 33413.80 Temperature 1949.65 
-Partition 100.095395 
-Bulk 100.095395 
-Liquid 39.148603 
-Solid 60.946791 
-orthopyroxene_0 60.946791 
-Pressure 33119.70 Temperature 1949.13 
-Partition 100.095560 
-Bulk 100.095560 
-Liquid 39.278164 
-Solid 60.817396 
-orthopyroxene_0 60.817396 
-Pressure 32825.60 Temperature 1948.62 
-Partition 100.095730 
-Bulk 100.095730 
-Liquid 39.410394 
-Solid 60.685336 
-orthopyroxene_0 60.685336 
-Pressure 32531.60 Temperature 1948.10 
-Partition 100.095907 
-Bulk 100.095907 
-Liquid 39.544353 
-Solid 60.551554 
-orthopyroxene_0 60.551554 
-Pressure 32237.60 Temperature 1947.58 
-Partition 100.096090 
-Bulk 100.096090 
-Liquid 39.680639 
-Solid 60.415451 
-orthopyroxene_0 60.415451 
-Pressure 31943.60 Temperature 1947.06 
-Partition 100.096278 
-Bulk 100.096278 
-Liquid 39.819327 
-Solid 60.276952 
-orthopyroxene_0 60.276952 
-Pressure 31649.60 Temperature 1946.54 
-Partition 100.096473 
-Bulk 100.096473 
-Liquid 39.960493 
-Solid 60.135980 
-orthopyroxene_0 60.135980 
-Pressure 31355.60 Temperature 1946.02 
-Partition 100.096673 
-Bulk 100.096673 
-Liquid 40.104217 
-Solid 59.992456 
-orthopyroxene_0 59.992456 
-Pressure 31061.70 Temperature 1945.50 
-Partition 100.096879 
-Bulk 100.096879 
-Liquid 40.250523 
-Solid 59.846357 
-orthopyroxene_0 59.846357 
-Pressure 30767.80 Temperature 1944.99 
-Partition 100.097091 
-Bulk 100.097091 
-Liquid 40.400094 
-Solid 59.696996 
-orthopyroxene_0 59.696996 
-Pressure 30473.90 Temperature 1944.47 
-Partition 100.097309 
-Bulk 100.097309 
-Liquid 40.551944 
-Solid 59.545365 
-orthopyroxene_0 59.545365 
-Pressure 30180.00 Temperature 1943.95 
-Partition 100.097533 
-Bulk 100.097533 
-Liquid 40.706697 
-Solid 59.390836 
-orthopyroxene_0 59.390836 
-Pressure 29886.10 Temperature 1943.43 
-Partition 100.097763 
-Bulk 100.097763 
-Liquid 40.864447 
-Solid 59.233316 
-orthopyroxene_0 59.233316 
-Pressure 29592.20 Temperature 1942.91 
-Partition 100.097999 
-Bulk 100.097999 
-Liquid 41.025293 
-Solid 59.072706 
-orthopyroxene_0 59.072706 
-Pressure 29298.40 Temperature 1942.39 
-Partition 100.098242 
-Bulk 100.098242 
-Liquid 41.189269 
-Solid 58.908973 
-orthopyroxene_0 58.908973 
-Pressure 29004.50 Temperature 1941.87 
-Partition 100.098490 
-Bulk 100.098490 
-Liquid 41.356611 
-Solid 58.741879 
-orthopyroxene_0 58.741879 
-Pressure 28710.70 Temperature 1941.35 
-Partition 100.098745 
-Bulk 100.098745 
-Liquid 41.527295 
-Solid 58.571450 
-orthopyroxene_0 58.571450 
-Pressure 28416.90 Temperature 1940.83 
-Partition 100.099007 
-Bulk 100.099007 
-Liquid 41.701500 
-Solid 58.397507 
-orthopyroxene_0 58.397507 
-Pressure 28123.10 Temperature 1940.31 
-Partition 100.099274 
-Bulk 100.099274 
-Liquid 41.879341 
-Solid 58.219933 
-orthopyroxene_0 58.219933 
-Pressure 27829.40 Temperature 1939.79 
-Partition 100.099548 
-Bulk 100.099548 
-Liquid 42.060868 
-Solid 58.038680 
-orthopyroxene_0 58.038680 
-Pressure 27535.60 Temperature 1939.28 
-Partition 100.099828 
-Bulk 100.099828 
-Liquid 42.247017 
-Solid 57.852811 
-orthopyroxene_0 57.852811 
-Pressure 27241.90 Temperature 1938.76 
-Partition 100.100116 
-Bulk 100.100116 
-Liquid 42.436451 
-Solid 57.663665 
-orthopyroxene_0 57.663665 
-Pressure 26948.20 Temperature 1938.24 
-Partition 100.100410 
-Bulk 100.100410 
-Liquid 42.630033 
-Solid 57.470377 
-orthopyroxene_0 57.470377 
-Pressure 26654.50 Temperature 1937.72 
-Partition 100.100711 
-Bulk 100.100711 
-Liquid 42.827902 
-Solid 57.272809 
-orthopyroxene_0 57.272809 
-Pressure 26360.80 Temperature 1937.20 
-Partition 100.101019 
-Bulk 100.101019 
-Liquid 43.030206 
-Solid 57.070813 
-orthopyroxene_0 57.070813 
-Pressure 26067.20 Temperature 1936.68 
-Partition 100.101334 
-Bulk 100.101334 
-Liquid 43.237010 
-Solid 56.864324 
-orthopyroxene_0 56.864324 
-Pressure 25773.50 Temperature 1936.16 
-Partition 100.101657 
-Bulk 100.101657 
-Liquid 43.448640 
-Solid 56.653017 
-orthopyroxene_0 56.653017 
-Pressure 25479.90 Temperature 1935.64 
-Partition 100.101987 
-Bulk 100.101987 
-Liquid 43.665087 
-Solid 56.436899 
-orthopyroxene_0 56.436899 
-Pressure 25186.30 Temperature 1935.12 
-Partition 100.102324 
-Bulk 100.102324 
-Liquid 43.886608 
-Solid 56.215716 
-orthopyroxene_0 56.215716 
-Pressure 24892.70 Temperature 1934.60 
-Partition 100.102669 
-Bulk 100.102669 
-Liquid 44.113377 
-Solid 55.989292 
-orthopyroxene_0 55.989292 
-Pressure 24599.10 Temperature 1934.08 
-Partition 100.103022 
-Bulk 100.103022 
-Liquid 44.345580 
-Solid 55.757442 
-orthopyroxene_0 55.757442 
-Pressure 24305.60 Temperature 1933.56 
-Partition 100.103384 
-Bulk 100.103384 
-Liquid 44.583311 
-Solid 55.520073 
-orthopyroxene_0 55.520073 
-Pressure 24012.00 Temperature 1933.04 
-Partition 100.103753 
-Bulk 100.103753 
-Liquid 44.826960 
-Solid 55.276793 
-orthopyroxene_0 55.276793 
-Pressure 23718.50 Temperature 1932.52 
-Partition 100.104131 
-Bulk 100.104131 
-Liquid 45.076539 
-Solid 55.027592 
-orthopyroxene_0 55.027592 
-Pressure 23425.00 Temperature 1932.00 
-Partition 100.104518 
-Bulk 100.104518 
-Liquid 45.332361 
-Solid 54.772157 
-orthopyroxene_0 54.772157 
-Pressure 23131.50 Temperature 1931.48 
-Partition 100.104914 
-Bulk 100.104914 
-Liquid 45.594651 
-Solid 54.510263 
-orthopyroxene_0 54.510263 
-Pressure 22838.00 Temperature 1930.96 
-Partition 100.105319 
-Bulk 100.105319 
-Liquid 45.863644 
-Solid 54.241675 
-orthopyroxene_0 54.241675 
-Pressure 22544.60 Temperature 1930.44 
-Partition 100.105734 
-Bulk 100.105734 
-Liquid 46.139473 
-Solid 53.966260 
-orthopyroxene_0 53.966260 
-Pressure 22251.10 Temperature 1929.92 
-Partition 100.106158 
-Bulk 100.106158 
-Liquid 46.422616 
-Solid 53.683542 
-orthopyroxene_0 53.683542 
-Pressure 21957.70 Temperature 1929.40 
-Partition 100.106592 
-Bulk 100.106592 
-Liquid 46.713112 
-Solid 53.393481 
-orthopyroxene_0 53.393481 
-Pressure 21664.30 Temperature 1928.87 
-Partition 100.107038 
-Bulk 100.107038 
-Liquid 47.010350 
-Solid 53.096688 
-orthopyroxene_0 53.096688 
-Pressure 21370.90 Temperature 1928.35 
-Partition 100.107493 
-Bulk 100.107493 
-Liquid 47.316604 
-Solid 52.790889 
-orthopyroxene_0 52.790889 
-Pressure 21077.50 Temperature 1927.83 
-Partition 100.107960 
-Bulk 100.107960 
-Liquid 47.631199 
-Solid 52.476761 
-orthopyroxene_0 52.476761 
-Pressure 20784.20 Temperature 1927.31 
-Partition 100.108438 
-Bulk 100.108438 
-Liquid 47.954323 
-Solid 52.154115 
-orthopyroxene_0 52.154115 
-Pressure 20490.80 Temperature 1926.79 
-Partition 100.108928 
-Bulk 100.108928 
-Liquid 48.286570 
-Solid 51.822358 
-orthopyroxene_0 51.822358 
-Pressure 20197.50 Temperature 1926.27 
-Partition 100.109430 
-Bulk 100.109430 
-Liquid 48.628024 
-Solid 51.481406 
-orthopyroxene_0 51.481406 
-Pressure 19904.20 Temperature 1925.75 
-Partition 100.109944 
-Bulk 100.109944 
-Liquid 48.979184 
-Solid 51.130760 
-orthopyroxene_0 51.130760 
-Pressure 19610.90 Temperature 1925.23 
-Partition 100.110472 
-Bulk 100.110472 
-Liquid 49.340437 
-Solid 50.770035 
-orthopyroxene_0 50.770035 
-Pressure 19317.60 Temperature 1924.71 
-Partition 100.111014 
-Bulk 100.111014 
-Liquid 49.712187 
-Solid 50.398827 
-orthopyroxene_0 50.398827 
-Pressure 19024.40 Temperature 1924.19 
-Partition 100.111569 
-Bulk 100.111569 
-Liquid 50.094707 
-Solid 50.016862 
-orthopyroxene_0 50.016862 
-Pressure 18731.20 Temperature 1923.67 
-Partition 100.112139 
-Bulk 100.112139 
-Liquid 50.488591 
-Solid 49.623548 
-orthopyroxene_0 49.623548 
-Pressure 18437.90 Temperature 1923.15 
-Partition 100.112724 
-Bulk 100.112724 
-Liquid 50.894474 
-Solid 49.218250 
-orthopyroxene_0 49.218250 
-Pressure 18144.70 Temperature 1922.62 
-Partition 100.113326 
-Bulk 100.113326 
-Liquid 51.311209 
-Solid 48.802116 
-orthopyroxene_0 48.802116 
-Pressure 17851.60 Temperature 1922.10 
-Partition 100.113943 
-Bulk 100.113943 
-Liquid 51.741920 
-Solid 48.372023 
-orthopyroxene_0 48.372023 
-Pressure 17558.40 Temperature 1921.58 
-Partition 100.114577 
-Bulk 100.114577 
-Liquid 52.186210 
-Solid 47.928367 
-orthopyroxene_0 47.928367 
-Pressure 17265.20 Temperature 1912.15 
-Partition 100.115562 
-Bulk 100.115562 
-Liquid 51.416857 
-Solid 48.698705 
-orthopyroxene_0 48.698705 
-Pressure 16972.10 Temperature 1891.93 
-Partition 100.117113 
-Bulk 100.117113 
-Liquid 49.355614 
-Solid 50.761498 
-orthopyroxene_0 50.761498 
-Pressure 16679.00 Temperature 1871.42 
-Partition 100.118892 
-Bulk 100.118892 
-Liquid 47.495135 
-Solid 52.623757 
-orthopyroxene_0 52.623757 
-Pressure 16385.90 Temperature 1850.63 
-Partition 100.118964 
-Bulk 100.118964 
-Liquid 44.792475 
-Solid 55.326489 
-olivine_0 1.404626 
-orthopyroxene_0 53.921864 
-Pressure 16092.80 Temperature 1829.55 
-Partition 100.118337 
-Bulk 100.118337 
-Liquid 41.874104 
-Solid 58.244233 
-olivine_0 3.241732 
-orthopyroxene_0 55.002500 
-Pressure 15799.70 Temperature 1808.18 
-Partition 100.117623 
-Bulk 100.117623 
-Liquid 39.068553 
-Solid 61.049069 
-olivine_0 5.022257 
-orthopyroxene_0 56.026812 
-Pressure 15506.70 Temperature 1786.53 
-Partition 100.116783 
-Bulk 100.116783 
-Liquid 36.350267 
-Solid 63.766517 
-olivine_0 6.761648 
-orthopyroxene_0 57.004869 
-Pressure 15213.70 Temperature 1764.60 
-Partition 100.115778 
-Bulk 100.115778 
-Liquid 33.697172 
-Solid 66.418606 
-olivine_0 8.473546 
-orthopyroxene_0 57.945060 
-Pressure 14920.70 Temperature 1742.39 
-Partition 100.114562 
-Bulk 100.114562 
-Liquid 31.091921 
-Solid 69.022641 
-olivine_0 10.168982 
-orthopyroxene_0 58.853659 
-Pressure 14627.70 Temperature 1719.91 
-Partition 100.113094 
-Bulk 100.113094 
-Liquid 28.523992 
-Solid 71.589102 
-olivine_0 11.855332 
-orthopyroxene_0 59.733770 
-Pressure 14334.70 Temperature 1697.15 
-Partition 100.111333 
-Bulk 100.111333 
-Liquid 25.987119 
-Solid 74.124214 
-olivine_0 13.538275 
-orthopyroxene_0 60.585940 
-Pressure 14041.70 Temperature 1674.11 
-Partition 100.109246 
-Bulk 100.109246 
-Liquid 23.485435 
-Solid 76.623812 
-olivine_0 15.218750 
-orthopyroxene_0 61.405062 
-Pressure 13748.80 Temperature 1650.80 
-Partition 100.106813 
-Bulk 100.106813 
-Liquid 21.035739 
-Solid 79.071074 
-olivine_0 16.892376 
-orthopyroxene_0 62.178698 
-Pressure 13455.90 Temperature 1627.22 
-Partition 100.104027 
-Bulk 100.104027 
-Liquid 18.667350 
-Solid 81.436677 
-olivine_0 18.550300 
-orthopyroxene_0 62.886377 
-Pressure 13162.90 Temperature 1603.38 
-Partition 100.100901 
-Bulk 100.100901 
-Liquid 16.423901 
-Solid 83.677000 
-olivine_0 20.177038 
-orthopyroxene_0 63.499962 
-Pressure 12870.10 Temperature 1579.28 
-Partition 100.097457 
-Bulk 100.097457 
-Liquid 14.356734 
-Solid 85.740723 
-olivine_0 21.749866 
-orthopyroxene_0 63.990858 
-Pressure 12577.20 Temperature 1554.91 
-Partition 100.095591 
-Bulk 100.095591 
-Liquid 11.496323 
-Solid 88.599269 
-olivine_0 23.785429 
-orthopyroxene_0 55.787236 
-clinopyroxene_0 9.026604 
-Pressure 12284.30 Temperature 1530.28 
-Partition 100.092867 
-Bulk 100.092867 
-Liquid 9.706777 
-Solid 90.386090 
-olivine_0 25.264872 
-orthopyroxene_0 52.296668 
-clinopyroxene_0 12.824550 
-Pressure 11991.50 Temperature 1505.40 
-Partition 100.089881 
-Bulk 100.089881 
-Liquid 8.424466 
-Solid 91.665415 
-olivine_0 26.410840 
-orthopyroxene_0 50.441038 
-clinopyroxene_0 14.813537 
-Pressure 11698.70 Temperature 1480.27 
-Partition 100.086762 
-Bulk 100.086762 
-Liquid 7.478213 
-Solid 92.608549 
-olivine_0 27.296746 
-orthopyroxene_0 49.750798 
-clinopyroxene_0 15.561005 
-Pressure 11405.90 Temperature 1454.90 
-Partition 100.083621 
-Bulk 100.083621 
-Liquid 6.750456 
-Solid 93.333165 
-olivine_0 27.992744 
-orthopyroxene_0 49.993873 
-clinopyroxene_0 15.346548 
-Pressure 11113.10 Temperature 1429.28 
-Partition 100.080562 
-Bulk 100.080562 
-Liquid 6.170422 
-Solid 93.910140 
-olivine_0 28.551444 
-orthopyroxene_0 51.514768 
-clinopyroxene_0 13.843928 
-Pressure 10820.30 Temperature 1403.42 
-Partition 100.078369 
-Bulk 100.078369 
-Liquid 5.756502 
-Solid 94.321866 
-olivine_0 28.980297 
-orthopyroxene_0 58.302569 
-clinopyroxene_0 7.039000 
-Pressure 10527.50 Temperature 1377.32 
+Liquid 13.436936 
+Solid 86.608692 
+olivine_0 17.386225 
+garnet_0 12.005305 
+orthopyroxene_0 57.217162 
+Pressure 60243.40 Temperature 2019.12 
+Partition 100.045978 
+Bulk 100.045978 
+Liquid 13.718396 
+Solid 86.327582 
+olivine_0 17.154741 
+garnet_0 11.962731 
+orthopyroxene_0 57.210111 
+Pressure 59947.80 Temperature 2018.60 
+Partition 100.046336 
+Bulk 100.046336 
+Liquid 14.005995 
+Solid 86.040341 
+olivine_0 16.918781 
+garnet_0 11.918881 
+orthopyroxene_0 57.202678 
+Pressure 59652.20 Temperature 2018.08 
+Partition 100.046700 
+Bulk 100.046700 
+Liquid 14.299546 
+Solid 85.747155 
+olivine_0 16.678513 
+garnet_0 11.873725 
+orthopyroxene_0 57.194917 
+Pressure 59356.70 Temperature 2017.56 
+Partition 100.047072 
+Bulk 100.047072 
+Liquid 14.598828 
+Solid 85.448244 
+olivine_0 16.434127 
+garnet_0 11.827232 
+orthopyroxene_0 57.186884 
+Pressure 59061.20 Temperature 2017.04 
+Partition 100.047451 
+Bulk 100.047451 
+Liquid 14.903845 
+Solid 85.143606 
+olivine_0 16.185632 
+garnet_0 11.779341 
+orthopyroxene_0 57.178633 
+Pressure 58765.70 Temperature 2016.52 
+Partition 100.047837 
+Bulk 100.047837 
+Liquid 15.214458 
+Solid 84.833380 
+olivine_0 15.933152 
+garnet_0 11.730003 
+orthopyroxene_0 57.170225 
+Pressure 58470.20 Temperature 2016.00 
+Partition 100.048231 
+Bulk 100.048231 
+Liquid 15.530504 
+Solid 84.517727 
+olivine_0 15.676830 
+garnet_0 11.679170 
+orthopyroxene_0 57.161728 
+Pressure 58174.70 Temperature 2015.48 
+Partition 100.048631 
+Bulk 100.048631 
+Liquid 15.851801 
+Solid 84.196830 
+olivine_0 15.416825 
+garnet_0 11.626793 
+orthopyroxene_0 57.153212 
+Pressure 57879.20 Temperature 2014.96 
+Partition 100.049039 
+Bulk 100.049039 
+Liquid 16.178146 
+Solid 83.870893 
+olivine_0 15.153317 
+garnet_0 11.572825 
+orthopyroxene_0 57.144752 
+Pressure 57583.80 Temperature 2014.44 
+Partition 100.049454 
+Bulk 100.049454 
+Liquid 16.509176 
+Solid 83.540278 
+olivine_0 14.886610 
+garnet_0 11.517235 
+orthopyroxene_0 57.136433 
+Pressure 57288.40 Temperature 2013.92 
+Partition 100.049876 
+Bulk 100.049876 
+Liquid 16.844783 
+Solid 83.205092 
+olivine_0 14.616804 
+garnet_0 11.459956 
+orthopyroxene_0 57.128332 
+Pressure 56993.00 Temperature 2013.41 
+Partition 100.050306 
+Bulk 100.050306 
+Liquid 17.186202 
+Solid 82.864104 
+olivine_0 14.342878 
+garnet_0 11.400836 
+orthopyroxene_0 57.120389 
+Pressure 56697.60 Temperature 2012.89 
+Partition 100.050742 
+Bulk 100.050742 
+Liquid 17.530198 
+Solid 82.520544 
+olivine_0 14.067538 
+garnet_0 11.340023 
+orthopyroxene_0 57.112984 
+Pressure 56402.20 Temperature 2012.37 
+Partition 100.051184 
+Bulk 100.051184 
+Liquid 17.877948 
+Solid 82.173236 
+olivine_0 13.789804 
+garnet_0 11.277368 
+orthopyroxene_0 57.106063 
+Pressure 56106.80 Temperature 2011.85 
+Partition 100.051634 
+Bulk 100.051634 
+Liquid 18.229155 
+Solid 81.822479 
+olivine_0 13.509935 
+garnet_0 11.212823 
+orthopyroxene_0 57.099722 
+Pressure 55811.50 Temperature 2011.33 
+Partition 100.052089 
+Bulk 100.052089 
+Liquid 18.583361 
+Solid 81.468728 
+olivine_0 13.228310 
+garnet_0 11.146358 
+orthopyroxene_0 57.094059 
+Pressure 55516.20 Temperature 2010.81 
+Partition 100.052552 
+Bulk 100.052552 
+Liquid 18.940400 
+Solid 81.112151 
+olivine_0 12.945082 
+garnet_0 11.077901 
+orthopyroxene_0 57.089169 
+Pressure 55220.90 Temperature 2010.28 
+Partition 100.053019 
+Bulk 100.053019 
+Liquid 19.298315 
+Solid 80.754704 
+olivine_0 12.661877 
+garnet_0 11.007524 
+orthopyroxene_0 57.085303 
+Pressure 54925.60 Temperature 2009.76 
+Partition 100.053494 
+Bulk 100.053494 
+Liquid 19.660047 
+Solid 80.393447 
+olivine_0 12.376271 
+garnet_0 10.934925 
+orthopyroxene_0 57.082251 
+Pressure 54630.30 Temperature 2009.24 
+Partition 100.053975 
+Bulk 100.053975 
+Liquid 20.023661 
+Solid 80.030314 
+olivine_0 12.089875 
+garnet_0 10.860173 
+orthopyroxene_0 57.080266 
+Pressure 54335.00 Temperature 2008.72 
+Partition 100.054462 
+Bulk 100.054462 
+Liquid 20.388845 
+Solid 79.665617 
+olivine_0 11.802957 
+garnet_0 10.783212 
+orthopyroxene_0 57.079449 
+Pressure 54039.80 Temperature 2008.20 
+Partition 100.054955 
+Bulk 100.054955 
+Liquid 20.755138 
+Solid 79.299817 
+olivine_0 11.515902 
+garnet_0 10.704016 
+orthopyroxene_0 57.079899 
+Pressure 53744.60 Temperature 2007.68 
+Partition 100.055454 
+Bulk 100.055454 
+Liquid 21.122396 
+Solid 78.933058 
+olivine_0 11.228846 
+garnet_0 10.622499 
+orthopyroxene_0 57.081713 
+Pressure 53449.30 Temperature 2007.16 
+Partition 100.055959 
+Bulk 100.055959 
+Liquid 21.490488 
+Solid 78.565471 
+olivine_0 10.941914 
+garnet_0 10.538572 
+orthopyroxene_0 57.084985 
+Pressure 53154.20 Temperature 2006.64 
+Partition 100.056469 
+Bulk 100.056469 
+Liquid 21.858671 
+Solid 78.197798 
+olivine_0 10.655711 
+garnet_0 10.452268 
+orthopyroxene_0 57.089818 
+Pressure 52859.00 Temperature 2006.12 
+Partition 100.056985 
+Bulk 100.056985 
+Liquid 22.227152 
+Solid 77.829832 
+olivine_0 10.370099 
+garnet_0 10.363431 
+orthopyroxene_0 57.096303 
+Pressure 52563.80 Temperature 2005.60 
+Partition 100.057506 
+Bulk 100.057506 
+Liquid 22.595530 
+Solid 77.461977 
+olivine_0 10.085414 
+garnet_0 10.272028 
+orthopyroxene_0 57.104535 
+Pressure 52268.70 Temperature 2005.08 
+Partition 100.058033 
+Bulk 100.058033 
+Liquid 22.963417 
+Solid 77.094616 
+olivine_0 9.801982 
+garnet_0 10.178027 
+orthopyroxene_0 57.114607 
+Pressure 51973.50 Temperature 2004.56 
+Partition 100.058566 
+Bulk 100.058566 
+Liquid 23.330915 
+Solid 76.727651 
+olivine_0 9.519747 
+garnet_0 10.081292 
+orthopyroxene_0 57.126612 
+Pressure 51678.40 Temperature 2004.04 
+Partition 100.059104 
+Bulk 100.059104 
+Liquid 23.697517 
+Solid 76.361587 
+olivine_0 9.239126 
+garnet_0 9.981823 
+orthopyroxene_0 57.140638 
+Pressure 51383.30 Temperature 2003.52 
+Partition 100.059648 
+Bulk 100.059648 
+Liquid 24.063201 
+Solid 75.996446 
+olivine_0 8.960159 
+garnet_0 9.879510 
+orthopyroxene_0 57.156777 
+Pressure 51088.20 Temperature 2003.00 
+Partition 100.060197 
+Bulk 100.060197 
+Liquid 24.427812 
+Solid 75.632385 
+olivine_0 8.682990 
+garnet_0 9.774278 
+orthopyroxene_0 57.175117 
+Pressure 50793.20 Temperature 2002.48 
+Partition 100.060751 
+Bulk 100.060751 
+Liquid 24.791054 
+Solid 75.269697 
+olivine_0 8.407869 
+garnet_0 9.666088 
+orthopyroxene_0 57.195740 
+Pressure 50498.10 Temperature 2001.96 
+Partition 100.061312 
+Bulk 100.061312 
+Liquid 25.153119 
+Solid 74.908193 
+olivine_0 8.134673 
+garnet_0 9.554776 
+orthopyroxene_0 57.218744 
+Pressure 50203.10 Temperature 2001.43 
+Partition 100.061876 
+Bulk 100.061876 
+Liquid 25.511746 
+Solid 74.550130 
+olivine_0 7.865237 
+garnet_0 9.440561 
+orthopyroxene_0 57.244332 
+Pressure 49908.10 Temperature 2000.91 
+Partition 100.062448 
+Bulk 100.062448 
+Liquid 25.870698 
+Solid 74.191749 
+olivine_0 7.596538 
+garnet_0 9.322875 
+orthopyroxene_0 57.272336 
+Pressure 49613.10 Temperature 2000.39 
+Partition 100.063025 
+Bulk 100.063025 
+Liquid 26.228067 
+Solid 73.834958 
+olivine_0 7.330144 
+garnet_0 9.201841 
+orthopyroxene_0 57.302973 
+Pressure 49318.10 Temperature 1999.87 
+Partition 100.063608 
+Bulk 100.063608 
+Liquid 26.583803 
+Solid 73.479805 
+olivine_0 7.066114 
+garnet_0 9.077360 
+orthopyroxene_0 57.336331 
+Pressure 49023.10 Temperature 1999.35 
+Partition 100.064198 
+Bulk 100.064198 
+Liquid 26.937875 
+Solid 73.126323 
+olivine_0 6.804497 
+garnet_0 8.949330 
+orthopyroxene_0 57.372496 
+Pressure 48728.20 Temperature 1998.83 
+Partition 100.064793 
+Bulk 100.064793 
+Liquid 27.290113 
+Solid 72.774680 
+olivine_0 6.545440 
+garnet_0 8.817696 
+orthopyroxene_0 57.411544 
+Pressure 48433.30 Temperature 1998.31 
+Partition 100.065395 
+Bulk 100.065395 
+Liquid 27.640671 
+Solid 72.424724 
+olivine_0 6.288853 
+garnet_0 8.682299 
+orthopyroxene_0 57.453572 
+Pressure 48138.40 Temperature 1997.79 
+Partition 100.066003 
+Bulk 100.066003 
+Liquid 27.989562 
+Solid 72.076442 
+olivine_0 6.034747 
+garnet_0 8.543024 
+orthopyroxene_0 57.498671 
+Pressure 47843.50 Temperature 1997.26 
+Partition 100.066617 
+Bulk 100.066617 
+Liquid 28.334945 
+Solid 71.731671 
+olivine_0 5.784622 
+garnet_0 8.400029 
+orthopyroxene_0 57.547020 
+Pressure 47548.60 Temperature 1996.74 
+Partition 100.067239 
+Bulk 100.067239 
+Liquid 28.680599 
+Solid 71.386640 
+olivine_0 5.535474 
+garnet_0 8.252637 
+orthopyroxene_0 57.598528 
+Pressure 47253.70 Temperature 1996.22 
+Partition 100.067868 
+Bulk 100.067868 
+Liquid 29.024710 
+Solid 71.043158 
+olivine_0 5.288785 
+garnet_0 8.100988 
+orthopyroxene_0 57.653386 
+Pressure 46958.90 Temperature 1995.70 
+Partition 100.068504 
+Bulk 100.068504 
+Liquid 29.367194 
+Solid 70.701309 
+olivine_0 5.044638 
+garnet_0 7.945002 
+orthopyroxene_0 57.711669 
+Pressure 46664.00 Temperature 1995.18 
+Partition 100.069147 
+Bulk 100.069147 
+Liquid 29.708430 
+Solid 70.360717 
+olivine_0 4.802781 
+garnet_0 7.784419 
+orthopyroxene_0 57.773517 
+Pressure 46369.20 Temperature 1994.66 
+Partition 100.069798 
+Bulk 100.069798 
+Liquid 30.048207 
+Solid 70.021591 
+olivine_0 4.563390 
+garnet_0 7.619209 
+orthopyroxene_0 57.838991 
+Pressure 46074.40 Temperature 1994.13 
+Partition 100.070456 
+Bulk 100.070456 
+Liquid 30.384903 
+Solid 69.685553 
+olivine_0 4.327794 
+garnet_0 7.449488 
+orthopyroxene_0 57.908270 
+Pressure 45779.60 Temperature 1993.61 
+Partition 100.071123 
+Bulk 100.071123 
+Liquid 30.722370 
+Solid 69.348753 
+olivine_0 4.092965 
+garnet_0 7.274436 
+orthopyroxene_0 57.981352 
+Pressure 45484.90 Temperature 1993.09 
+Partition 100.071799 
+Bulk 100.071799 
+Liquid 31.058709 
+Solid 69.013090 
+olivine_0 3.860435 
+garnet_0 7.094272 
+orthopyroxene_0 58.058383 
+Pressure 45190.10 Temperature 1992.57 
+Partition 100.072483 
+Bulk 100.072483 
+Liquid 31.394341 
+Solid 68.678142 
+olivine_0 3.629928 
+garnet_0 6.908682 
+orthopyroxene_0 58.139533 
+Pressure 44895.40 Temperature 1992.05 
+Partition 100.073177 
+Bulk 100.073177 
+Liquid 31.729111 
+Solid 68.344066 
+olivine_0 3.401581 
+garnet_0 6.717616 
+orthopyroxene_0 58.224869 
+Pressure 44600.70 Temperature 1991.52 
+Partition 100.073878 
+Bulk 100.073878 
+Liquid 32.061436 
+Solid 68.012442 
+olivine_0 3.176687 
+garnet_0 6.521193 
+orthopyroxene_0 58.314562 
+Pressure 44306.00 Temperature 1991.00 
+Partition 100.074590 
+Bulk 100.074590 
+Liquid 32.395217 
+Solid 67.679373 
+olivine_0 2.952217 
+garnet_0 6.318450 
+orthopyroxene_0 58.408706 
+Pressure 44011.30 Temperature 1990.48 
+Partition 100.075312 
+Bulk 100.075312 
+Liquid 32.728742 
+Solid 67.346570 
+olivine_0 2.729562 
+garnet_0 6.109544 
+orthopyroxene_0 58.507464 
+Pressure 43716.60 Temperature 1989.96 
 Partition 100.076045 
 Bulk 100.076045 
-Liquid 5.267677 
-Solid 94.808368 
-olivine_0 29.399881 
-orthopyroxene_0 57.942967 
-clinopyroxene_0 7.465519 
-Pressure 10234.80 Temperature 1350.99 
-Partition 100.073931 
-Bulk 100.073931 
-Liquid 4.814581 
-Solid 95.259350 
-olivine_0 29.765059 
-orthopyroxene_0 57.520500 
-clinopyroxene_0 7.973792 
-Pressure 9942.09 Temperature 1324.44 
-Partition 100.059668 
-Bulk 100.059668 
-Liquid 2.247890 
-Solid 97.811777 
-olivine_0 34.075792 
-orthopyroxene_0 51.775631 
-clinopyroxene_0 7.698755 
-feldspar_0 4.261600 
+Liquid 33.062181 
+Solid 67.013864 
+olivine_0 2.508634 
+garnet_0 5.894250 
+orthopyroxene_0 58.610980 
+Pressure 43422.00 Temperature 1989.44 
+Partition 100.076788 
+Bulk 100.076788 
+Liquid 33.395565 
+Solid 66.681223 
+olivine_0 2.289440 
+garnet_0 5.672414 
+orthopyroxene_0 58.719369 
+Pressure 43127.30 Temperature 1988.91 
+Partition 100.077540 
+Bulk 100.077540 
+Liquid 33.727491 
+Solid 66.350049 
+olivine_0 2.073146 
+garnet_0 5.444066 
+orthopyroxene_0 58.832837 
+Pressure 42832.70 Temperature 1988.39 
+Partition 100.078306 
+Bulk 100.078306 
+Liquid 34.061617 
+Solid 66.016688 
+olivine_0 1.856927 
+garnet_0 5.208242 
+orthopyroxene_0 58.951520 
+Pressure 42538.10 Temperature 1987.87 
+Partition 100.079083 
+Bulk 100.079083 
+Liquid 34.396412 
+Solid 65.682671 
+olivine_0 1.642045 
+garnet_0 4.965016 
+orthopyroxene_0 59.075611 
+Pressure 42243.50 Temperature 1987.35 
+Partition 100.079872 
+Bulk 100.079872 
+Liquid 34.732082 
+Solid 65.347790 
+olivine_0 1.428395 
+garnet_0 4.714100 
+orthopyroxene_0 59.205295 
+Pressure 41949.00 Temperature 1986.82 
+Partition 100.080672 
+Bulk 100.080672 
+Liquid 35.066808 
+Solid 65.013864 
+olivine_0 1.217422 
+garnet_0 4.455792 
+orthopyroxene_0 59.340650 
+Pressure 41654.40 Temperature 1986.30 
+Partition 100.081487 
+Bulk 100.081487 
+Liquid 35.404883 
+Solid 64.676605 
+olivine_0 1.005908 
+garnet_0 4.188599 
+orthopyroxene_0 59.482098 
+Pressure 41359.90 Temperature 1985.78 
+Partition 100.082316 
+Bulk 100.082316 
+Liquid 35.744356 
+Solid 64.337960 
+olivine_0 0.795393 
+garnet_0 3.912871 
+orthopyroxene_0 59.629696 
+Pressure 41065.40 Temperature 1985.26 
+Partition 100.083158 
+Bulk 100.083158 
+Liquid 36.085616 
+Solid 63.997541 
+olivine_0 0.585661 
+garnet_0 3.628161 
+orthopyroxene_0 59.783720 
+Pressure 40770.90 Temperature 1984.73 
+Partition 100.084013 
+Bulk 100.084013 
+Liquid 36.427010 
+Solid 63.657003 
+olivine_0 0.378042 
+garnet_0 3.334667 
+orthopyroxene_0 59.944294 
+Pressure 40476.40 Temperature 1984.21 
+Partition 100.084884 
+Bulk 100.084884 
+Liquid 36.772597 
+Solid 63.312287 
+olivine_0 0.169518 
+garnet_0 3.030888 
+orthopyroxene_0 60.111881 
+Pressure 40181.90 Temperature 1983.69 
+Partition 100.085723 
+Bulk 100.085723 
+Liquid 37.080098 
+Solid 63.005624 
+garnet_0 2.723664 
+orthopyroxene_0 60.281961 
+Pressure 39887.50 Temperature 1983.16 
+Partition 100.086361 
+Bulk 100.086361 
+Liquid 37.212052 
+Solid 62.874309 
+garnet_0 2.436899 
+orthopyroxene_0 60.437409 
+Pressure 39593.00 Temperature 1982.64 
+Partition 100.087013 
+Bulk 100.087013 
+Liquid 37.348322 
+Solid 62.738691 
+garnet_0 2.140702 
+orthopyroxene_0 60.597989 
+Pressure 39298.60 Temperature 1982.12 
+Partition 100.087679 
+Bulk 100.087679 
+Liquid 37.488601 
+Solid 62.599079 
+garnet_0 1.835269 
+orthopyroxene_0 60.763810 
+Pressure 39004.20 Temperature 1981.60 
+Partition 100.088360 
+Bulk 100.088360 
+Liquid 37.633138 
+Solid 62.455222 
+garnet_0 1.520109 
+orthopyroxene_0 60.935113 
+Pressure 38709.80 Temperature 1981.07 
+Partition 100.089055 
+Bulk 100.089055 
+Liquid 37.781706 
+Solid 62.307349 
+garnet_0 1.195228 
+orthopyroxene_0 61.112121 
+Pressure 38415.40 Temperature 1980.55 
+Partition 100.089766 
+Bulk 100.089766 
+Liquid 37.935391 
+Solid 62.154375 
+garnet_0 0.859384 
+orthopyroxene_0 61.294991 
+Pressure 38121.10 Temperature 1980.03 
+Partition 100.090492 
+Bulk 100.090492 
+Liquid 38.093939 
+Solid 61.996553 
+garnet_0 0.512648 
+orthopyroxene_0 61.483906 
+Pressure 37826.80 Temperature 1979.50 
+Partition 100.091234 
+Bulk 100.091234 
+Liquid 38.257188 
+Solid 61.834046 
+garnet_0 0.154876 
+orthopyroxene_0 61.679170 
+Pressure 37532.40 Temperature 1978.98 
+Partition 100.091605 
+Bulk 100.091605 
+Liquid 38.395953 
+Solid 61.695652 
+orthopyroxene_0 61.695652 
+Pressure 37238.10 Temperature 1978.46 
+Partition 100.091700 
+Bulk 100.091700 
+Liquid 38.514934 
+Solid 61.576767 
+orthopyroxene_0 61.576767 
+Pressure 36943.90 Temperature 1977.93 
+Partition 100.091802 
+Bulk 100.091802 
+Liquid 38.635175 
+Solid 61.456627 
+orthopyroxene_0 61.456627 
+Pressure 36649.60 Temperature 1977.41 
+Partition 100.091910 
+Bulk 100.091910 
+Liquid 38.757678 
+Solid 61.334232 
+orthopyroxene_0 61.334232 
+Pressure 36355.30 Temperature 1976.89 
+Partition 100.092022 
+Bulk 100.092022 
+Liquid 38.882026 
+Solid 61.209997 
+orthopyroxene_0 61.209997 
+Pressure 36061.10 Temperature 1976.36 
+Partition 100.092142 
+Bulk 100.092142 
+Liquid 39.007772 
+Solid 61.084370 
+orthopyroxene_0 61.084370 
+Pressure 35766.90 Temperature 1975.84 
+Partition 100.092267 
+Bulk 100.092267 
+Liquid 39.135919 
+Solid 60.956347 
+orthopyroxene_0 60.956347 
+Pressure 35472.70 Temperature 1975.31 
+Partition 100.092398 
+Bulk 100.092398 
+Liquid 39.265616 
+Solid 60.826782 
+orthopyroxene_0 60.826782 
+Pressure 35178.50 Temperature 1974.79 
+Partition 100.092534 
+Bulk 100.092534 
+Liquid 39.397849 
+Solid 60.694685 
+orthopyroxene_0 60.694685 
+Pressure 34884.30 Temperature 1974.27 
+Partition 100.092676 
+Bulk 100.092676 
+Liquid 39.532223 
+Solid 60.560453 
+orthopyroxene_0 60.560453 
+Pressure 34590.20 Temperature 1973.74 
+Partition 100.092825 
+Bulk 100.092825 
+Liquid 39.668256 
+Solid 60.424569 
+orthopyroxene_0 60.424569 
+Pressure 34296.10 Temperature 1973.22 
+Partition 100.092978 
+Bulk 100.092978 
+Liquid 39.807044 
+Solid 60.285934 
+orthopyroxene_0 60.285934 
+Pressure 34001.90 Temperature 1972.70 
+Partition 100.093137 
+Bulk 100.093137 
+Liquid 39.948230 
+Solid 60.144907 
+orthopyroxene_0 60.144907 
+Pressure 33707.80 Temperature 1972.17 
+Partition 100.093303 
+Bulk 100.093303 
+Liquid 40.091256 
+Solid 60.002047 
+orthopyroxene_0 60.002047 
+Pressure 33413.80 Temperature 1971.65 
+Partition 100.093474 
+Bulk 100.093474 
+Liquid 40.237219 
+Solid 59.856255 
+orthopyroxene_0 59.856255 
+Pressure 33119.70 Temperature 1971.12 
+Partition 100.093651 
+Bulk 100.093651 
+Liquid 40.385269 
+Solid 59.708383 
+orthopyroxene_0 59.708383 
+Pressure 32825.60 Temperature 1970.60 
+Partition 100.093834 
+Bulk 100.093834 
+Liquid 40.536488 
+Solid 59.557345 
+orthopyroxene_0 59.557345 
+Pressure 32531.60 Temperature 1970.07 
+Partition 100.094023 
+Bulk 100.094023 
+Liquid 40.689816 
+Solid 59.404207 
+orthopyroxene_0 59.404207 
+Pressure 32237.60 Temperature 1969.55 
+Partition 100.094217 
+Bulk 100.094217 
+Liquid 40.846498 
+Solid 59.247719 
+orthopyroxene_0 59.247719 
+Pressure 31943.60 Temperature 1969.03 
+Partition 100.094417 
+Bulk 100.094417 
+Liquid 41.006075 
+Solid 59.088341 
+orthopyroxene_0 59.088341 
+Pressure 31649.60 Temperature 1968.50 
+Partition 100.094623 
+Bulk 100.094623 
+Liquid 41.168053 
+Solid 58.926570 
+orthopyroxene_0 58.926570 
+Pressure 31355.60 Temperature 1967.98 
+Partition 100.094835 
+Bulk 100.094835 
+Liquid 41.333688 
+Solid 58.761147 
+orthopyroxene_0 58.761147 
+Pressure 31061.70 Temperature 1967.45 
+Partition 100.095054 
+Bulk 100.095054 
+Liquid 41.501823 
+Solid 58.593230 
+orthopyroxene_0 58.593230 
+Pressure 30767.80 Temperature 1966.93 
+Partition 100.095277 
+Bulk 100.095277 
+Liquid 41.673832 
+Solid 58.421445 
+orthopyroxene_0 58.421445 
+Pressure 30473.90 Temperature 1966.40 
+Partition 100.095508 
+Bulk 100.095508 
+Liquid 41.848588 
+Solid 58.246920 
+orthopyroxene_0 58.246920 
+Pressure 30180.00 Temperature 1965.88 
+Partition 100.095744 
+Bulk 100.095744 
+Liquid 42.027452 
+Solid 58.068292 
+orthopyroxene_0 58.068292 
+Pressure 29886.10 Temperature 1965.35 
+Partition 100.095987 
+Bulk 100.095987 
+Liquid 42.209259 
+Solid 57.886728 
+orthopyroxene_0 57.886728 
+Pressure 29592.20 Temperature 1964.83 
+Partition 100.096236 
+Bulk 100.096236 
+Liquid 42.395424 
+Solid 57.700812 
+orthopyroxene_0 57.700812 
+Pressure 29298.40 Temperature 1964.30 
+Partition 100.096492 
+Bulk 100.096492 
+Liquid 42.584664 
+Solid 57.511828 
+orthopyroxene_0 57.511828 
+Pressure 29004.50 Temperature 1963.78 
+Partition 100.096753 
+Bulk 100.096753 
+Liquid 42.778607 
+Solid 57.318146 
+orthopyroxene_0 57.318146 
+Pressure 28710.70 Temperature 1963.25 
+Partition 100.097022 
+Bulk 100.097022 
+Liquid 42.975848 
+Solid 57.121174 
+orthopyroxene_0 57.121174 
+Pressure 28416.90 Temperature 1962.73 
+Partition 100.097297 
+Bulk 100.097297 
+Liquid 43.178000 
+Solid 56.919296 
+orthopyroxene_0 56.919296 
+Pressure 28123.10 Temperature 1962.20 
+Partition 100.097579 
+Bulk 100.097579 
+Liquid 43.383771 
+Solid 56.713808 
+orthopyroxene_0 56.713808 
+Pressure 27829.40 Temperature 1961.68 
+Partition 100.097867 
+Bulk 100.097867 
+Liquid 43.594678 
+Solid 56.503189 
+orthopyroxene_0 56.503189 
+Pressure 27535.60 Temperature 1961.15 
+Partition 100.098163 
+Bulk 100.098163 
+Liquid 43.809549 
+Solid 56.288614 
+orthopyroxene_0 56.288614 
+Pressure 27241.90 Temperature 1960.63 
+Partition 100.098466 
+Bulk 100.098466 
+Liquid 44.029885 
+Solid 56.068581 
+orthopyroxene_0 56.068581 
+Pressure 26948.20 Temperature 1960.10 
+Partition 100.098776 
+Bulk 100.098776 
+Liquid 44.254381 
+Solid 55.844395 
+orthopyroxene_0 55.844395 
+Pressure 26654.50 Temperature 1959.58 
+Partition 100.099093 
+Bulk 100.099093 
+Liquid 44.484786 
+Solid 55.614308 
+orthopyroxene_0 55.614308 
+Pressure 26360.80 Temperature 1959.05 
+Partition 100.099419 
+Bulk 100.099419 
+Liquid 44.719658 
+Solid 55.379761 
+orthopyroxene_0 55.379761 
+Pressure 26067.20 Temperature 1958.53 
+Partition 100.099751 
+Bulk 100.099751 
+Liquid 44.960725 
+Solid 55.139026 
+orthopyroxene_0 55.139026 
+Pressure 25773.50 Temperature 1958.00 
+Partition 100.100092 
+Bulk 100.100092 
+Liquid 45.206688 
+Solid 54.893404 
+orthopyroxene_0 54.893404 
+Pressure 25479.90 Temperature 1957.48 
+Partition 100.100440 
+Bulk 100.100440 
+Liquid 45.459258 
+Solid 54.641182 
+orthopyroxene_0 54.641182 
+Pressure 25186.30 Temperature 1956.95 
+Partition 100.100798 
+Bulk 100.100798 
+Liquid 45.716985 
+Solid 54.383813 
+orthopyroxene_0 54.383813 
+Pressure 24892.70 Temperature 1956.42 
+Partition 100.101163 
+Bulk 100.101163 
+Liquid 45.980944 
+Solid 54.120219 
+orthopyroxene_0 54.120219 
+Pressure 24599.10 Temperature 1955.90 
+Partition 100.101537 
+Bulk 100.101537 
+Liquid 46.252296 
+Solid 53.849242 
+orthopyroxene_0 53.849242 
+Pressure 24305.60 Temperature 1955.37 
+Partition 100.101921 
+Bulk 100.101921 
+Liquid 46.529292 
+Solid 53.572629 
+orthopyroxene_0 53.572629 
+Pressure 24012.00 Temperature 1954.85 
+Partition 100.102313 
+Bulk 100.102313 
+Liquid 46.814298 
+Solid 53.288015 
+orthopyroxene_0 53.288015 
+Pressure 23718.50 Temperature 1954.32 
+Partition 100.102715 
+Bulk 100.102715 
+Liquid 47.105389 
+Solid 52.997325 
+orthopyroxene_0 52.997325 
+Pressure 23425.00 Temperature 1953.79 
+Partition 100.103127 
+Bulk 100.103127 
+Liquid 47.403899 
+Solid 52.699227 
+orthopyroxene_0 52.699227 
+Pressure 23131.50 Temperature 1953.27 
+Partition 100.103548 
+Bulk 100.103548 
+Liquid 47.711146 
+Solid 52.392402 
+orthopyroxene_0 52.392402 
+Pressure 22838.00 Temperature 1952.74 
+Partition 100.103980 
+Bulk 100.103980 
+Liquid 48.025339 
+Solid 52.078641 
+orthopyroxene_0 52.078641 
+Pressure 22544.60 Temperature 1952.22 
+Partition 100.104422 
+Bulk 100.104422 
+Liquid 48.348762 
+Solid 51.755660 
+orthopyroxene_0 51.755660 
+Pressure 22251.10 Temperature 1951.69 
+Partition 100.104876 
+Bulk 100.104876 
+Liquid 48.679819 
+Solid 51.425057 
+orthopyroxene_0 51.425057 
+Pressure 21957.70 Temperature 1951.16 
+Partition 100.105341 
+Bulk 100.105341 
+Liquid 49.019637 
+Solid 51.085704 
+orthopyroxene_0 51.085704 
+Pressure 21664.30 Temperature 1950.64 
+Partition 100.105817 
+Bulk 100.105817 
+Liquid 49.369859 
+Solid 50.735959 
+orthopyroxene_0 50.735959 
+Pressure 21370.90 Temperature 1950.11 
+Partition 100.106306 
+Bulk 100.106306 
+Liquid 49.728522 
+Solid 50.377784 
+orthopyroxene_0 50.377784 
+Pressure 21077.50 Temperature 1949.58 
+Partition 100.106808 
+Bulk 100.106808 
+Liquid 50.097146 
+Solid 50.009662 
+orthopyroxene_0 50.009662 
+Pressure 20784.20 Temperature 1949.06 
+Partition 100.107322 
+Bulk 100.107322 
+Liquid 50.477223 
+Solid 49.630099 
+orthopyroxene_0 49.630099 
+Pressure 20490.80 Temperature 1948.53 
+Partition 100.107850 
+Bulk 100.107850 
+Liquid 50.866987 
+Solid 49.240863 
+orthopyroxene_0 49.240863 
+Pressure 20197.50 Temperature 1948.01 
+Partition 100.108391 
+Bulk 100.108391 
+Liquid 51.269100 
+Solid 48.839291 
+orthopyroxene_0 48.839291 
+Pressure 19904.20 Temperature 1947.48 
+Partition 100.108947 
+Bulk 100.108947 
+Liquid 51.681572 
+Solid 48.427374 
+orthopyroxene_0 48.427374 
+Pressure 19610.90 Temperature 1946.95 
+Partition 100.109518 
+Bulk 100.109518 
+Liquid 52.106168 
+Solid 48.003350 
+orthopyroxene_0 48.003350 
+Pressure 19317.60 Temperature 1946.43 
+Partition 100.110104 
+Bulk 100.110104 
+Liquid 52.544807 
+Solid 47.565297 
+orthopyroxene_0 47.565297 
+Pressure 19024.40 Temperature 1945.90 
+Partition 100.110706 
+Bulk 100.110706 
+Liquid 52.995049 
+Solid 47.115658 
+orthopyroxene_0 47.115658 
+Pressure 18731.20 Temperature 1945.37 
+Partition 100.111326 
+Bulk 100.111326 
+Liquid 53.459008 
+Solid 46.652317 
+orthopyroxene_0 46.652317 
+Pressure 18437.90 Temperature 1944.84 
+Partition 100.111962 
+Bulk 100.111962 
+Liquid 53.937475 
+Solid 46.174487 
+orthopyroxene_0 46.174487 
+Pressure 18144.70 Temperature 1944.32 
+Partition 100.112617 
+Bulk 100.112617 
+Liquid 54.432263 
+Solid 45.680353 
+orthopyroxene_0 45.680353 
+Pressure 17851.60 Temperature 1943.79 
+Partition 100.113290 
+Bulk 100.113290 
+Liquid 54.940940 
+Solid 45.172350 
+orthopyroxene_0 45.172350 
+Pressure 17558.40 Temperature 1943.26 
+Partition 100.113982 
+Bulk 100.113982 
+Liquid 55.466143 
+Solid 44.647840 
+orthopyroxene_0 44.647840 
+Pressure 17265.20 Temperature 1942.74 
+Partition 100.114695 
+Bulk 100.114695 
+Liquid 56.010117 
+Solid 44.104578 
+orthopyroxene_0 44.104578 
+Pressure 16972.10 Temperature 1942.21 
+Partition 100.115429 
+Bulk 100.115429 
+Liquid 56.570108 
+Solid 43.545321 
+orthopyroxene_0 43.545321 
+Pressure 16679.00 Temperature 1941.68 
+Partition 100.116185 
+Bulk 100.116185 
+Liquid 57.148825 
+Solid 42.967359 
+orthopyroxene_0 42.967359 
+Pressure 16385.90 Temperature 1941.15 
+Partition 100.116963 
+Bulk 100.116963 
+Liquid 57.747182 
+Solid 42.369781 
+orthopyroxene_0 42.369781 
+Pressure 16092.80 Temperature 1935.69 
+Partition 100.117785 
+Bulk 100.117785 
+Liquid 57.455984 
+Solid 42.661801 
+orthopyroxene_0 42.661801 
+Pressure 15799.70 Temperature 1913.54 
+Partition 100.118885 
+Bulk 100.118885 
+Liquid 54.384364 
+Solid 45.734521 
+orthopyroxene_0 45.734521 
+Pressure 15506.70 Temperature 1891.05 
+Partition 100.120312 
+Bulk 100.120312 
+Liquid 51.678422 
+Solid 48.441890 
+orthopyroxene_0 48.441890 
+Pressure 15213.70 Temperature 1868.22 
+Partition 100.122058 
+Bulk 100.122058 
+Liquid 49.285201 
+Solid 50.836857 
+orthopyroxene_0 50.836857 
+Pressure 14920.70 Temperature 1845.05 
+Partition 100.122118 
+Bulk 100.122118 
+Liquid 46.172985 
+Solid 53.949133 
+olivine_0 1.450012 
+orthopyroxene_0 52.499120 
+Pressure 14627.70 Temperature 1821.53 
+Partition 100.121267 
+Bulk 100.121267 
+Liquid 42.816695 
+Solid 57.304572 
+olivine_0 3.486397 
+orthopyroxene_0 53.818175 
+Pressure 14334.70 Temperature 1797.69 
+Partition 100.120323 
+Bulk 100.120323 
+Liquid 39.624730 
+Solid 60.495593 
+olivine_0 5.447977 
+orthopyroxene_0 55.047617 
+Pressure 14041.70 Temperature 1773.50 
+Partition 100.119227 
+Bulk 100.119227 
+Liquid 36.551362 
+Solid 63.567866 
+olivine_0 7.361035 
+orthopyroxene_0 56.206831 
+Pressure 13748.80 Temperature 1748.99 
+Partition 100.117918 
+Bulk 100.117918 
+Liquid 33.567737 
+Solid 66.550181 
+olivine_0 9.242670 
+orthopyroxene_0 57.307511 
+Pressure 13455.90 Temperature 1724.14 
+Partition 100.116328 
+Bulk 100.116328 
+Liquid 30.645879 
+Solid 69.470449 
+olivine_0 11.110094 
+orthopyroxene_0 58.360354 
+Pressure 13162.90 Temperature 1698.97 
+Partition 100.114395 
+Bulk 100.114395 
+Liquid 27.772065 
+Solid 72.342329 
+olivine_0 12.973076 
+orthopyroxene_0 59.369253 
+Pressure 12870.10 Temperature 1673.47 
+Partition 100.112056 
+Bulk 100.112056 
+Liquid 24.939175 
+Solid 75.172880 
+olivine_0 14.838965 
+orthopyroxene_0 60.333915 
+Pressure 12577.20 Temperature 1647.65 
+Partition 100.109266 
+Bulk 100.109266 
+Liquid 22.158499 
+Solid 77.950767 
+olivine_0 16.707379 
+orthopyroxene_0 61.243388 
+Pressure 12284.30 Temperature 1621.51 
+Partition 100.106002 
+Bulk 100.106002 
+Liquid 19.459042 
+Solid 80.646960 
+olivine_0 18.571399 
+orthopyroxene_0 62.075561 
+Pressure 11991.50 Temperature 1595.06 
+Partition 100.102265 
+Bulk 100.102265 
+Liquid 16.893598 
+Solid 83.208667 
+olivine_0 20.413215 
+orthopyroxene_0 62.795451 
+Pressure 11698.70 Temperature 1568.29 
+Partition 100.098090 
+Bulk 100.098090 
+Liquid 14.534397 
+Solid 85.563693 
+olivine_0 22.199389 
+orthopyroxene_0 63.364303 
+Pressure 11405.90 Temperature 1541.22 
+Partition 100.095537 
+Bulk 100.095537 
+Liquid 11.368310 
+Solid 88.727227 
+olivine_0 24.441913 
+orthopyroxene_0 54.202767 
+clinopyroxene_0 10.082546 
+Pressure 11113.10 Temperature 1513.84 
+Partition 100.092127 
+Bulk 100.092127 
+Liquid 9.488499 
+Solid 90.603627 
+olivine_0 25.986427 
+orthopyroxene_0 50.662321 
+clinopyroxene_0 13.954879 
+Pressure 10820.30 Temperature 1486.17 
+Partition 100.088498 
+Bulk 100.088498 
+Liquid 8.207893 
+Solid 91.880604 
+olivine_0 27.110888 
+orthopyroxene_0 49.174194 
+clinopyroxene_0 15.595523 
+Pressure 10527.50 Temperature 1458.20 
+Partition 100.084810 
+Bulk 100.084810 
+Liquid 7.287612 
+Solid 92.797198 
+olivine_0 27.943784 
+orthopyroxene_0 49.035926 
+clinopyroxene_0 15.817488 
+Pressure 10234.80 Temperature 1429.94 
+Partition 100.081192 
+Bulk 100.081192 
+Liquid 6.586977 
+Solid 93.494215 
+olivine_0 28.580894 
+orthopyroxene_0 50.095297 
+clinopyroxene_0 14.818024 
+Pressure 9942.09 Temperature 1401.40 
+Partition 100.078427 
+Bulk 100.078427 
+Liquid 6.114960 
+Solid 93.963467 
+olivine_0 29.051420 
+orthopyroxene_0 58.303369 
+clinopyroxene_0 6.608678 
+Pressure 9649.39 Temperature 1372.58 
+Partition 100.075713 
+Bulk 100.075713 
+Liquid 5.566502 
+Solid 94.509211 
+olivine_0 29.495100 
+orthopyroxene_0 57.926395 
+clinopyroxene_0 7.087715 
+Pressure 9356.70 Temperature 1343.48 
+Partition 100.060928 
+Bulk 100.060928 
+Liquid 2.974496 
+Solid 97.086432 
+olivine_0 33.610442 
+orthopyroxene_0 52.642661 
+clinopyroxene_0 6.793868 
+feldspar_0 4.039461 

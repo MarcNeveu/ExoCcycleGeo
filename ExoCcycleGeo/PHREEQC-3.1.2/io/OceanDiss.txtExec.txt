@@ -2,41 +2,41 @@ TITLE ExoCcycleGeo generated speciation input using core10.dat
 
 SOLUTION 1 Planetary ocean surface waters (PHREEQC v3 manual p. 282)
 
-	pH 	 	12.1311 charge
-	temp 	 	52.9135
-	pressure 	2.14252
-	pe 	 	-0.855107
+	pH 	 	4.36097 charge
+	temp 	 	9.55925
+	pressure 	0.472582
+	pe 	 	-0.336663
 # Mass of Earth’s atmosphere: 5.1480e18 kg
 # Mean molecular mass of Earth’s atmosphere: 29 g mol -1
 # Moles of air in Earth’s atmosphere: 1.775e20 mol
 # Mass of Earth’s oceans: 1.4e21 kg (/(1-L): water-world)
 # Mass of ocean per mole of air: 7.9 kg
-	-water 	 	3.66959
+	-water 	 	16.6331
 	units		mol/kgw
-	Ca 		1.12408e-06 mol/kgw
-	Mg 		4.02109e-11 mol/kgw
-	Na 		0.2078 mol/kgw
+	Ca 		0 mol/kgw
+	Mg 		0 mol/kgw
+	Na 		0 mol/kgw
 #	K		0.01021      # 399.1e-6/(39.0983/1000)
-	Fe 		7.21976e-14 mol/kgw
-	Si 		0.0176022 mol/kgw
-	Cl 		0.2078 mol/kgw
-	S(6) 		5.0723e-05 mol/kgw
-	C(4) 		0.0282415 mol/kgw
-	Ntg 		0.000239356 mol/kgw
-	O(0) 		-5.17476e-09 mol/kgw
+	Fe 		0 mol/kgw
+	Si 		0 mol/kgw
+	Cl 		0 mol/kgw
+	S(6) 		0 mol/kgw
+	C(4) 		0.00568537 mol/kgw
+	Ntg 		0.000310357 mol/kgw
+	O(0) 		0 mol/kgw
 
 GAS_PHASE 1 Atmosphere, no rock
 
 	-fixed_volume
-	temp 	 	52.9135
-	pressure 	2.14252
-	volume 		12.4874
+	temp 	 	9.55925
+	pressure 	0.472582
+	volume 		49.0858
 	# partial pressures (atm = 1.01325 bar)
-	Ntg(g) 		0.39792
+	Ntg(g) 		0.361307
 	O2(g) 		0
-	CO2(g) 		1.63682
-	CH4(g) 		9.60673e-15
-	H2O(g) 		0.107781
+	CO2(g) 		0.101493
+	CH4(g) 		4.51956e-10
+	H2O(g) 		0.00978197
 
 SELECTED_OUTPUT 1
 	
