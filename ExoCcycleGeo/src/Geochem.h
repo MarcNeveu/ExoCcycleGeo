@@ -725,6 +725,11 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
 	aMELTSsys[0] = '\0';
 	char *aMELTStmp = (char*)malloc(1024);  // Temporary path
 	aMELTStmp[0] = '\0';
+	char *doalarm = (char*)malloc(256);
+	doalarm[0] = '\0';
+	strcpy(doalarm, "doalarm () { perl -e 'alarm shift; exec @ARGV' \"$@\"; }"); // To kill alphaMELTS if it takes longer than X seconds to run (usually alphaMELTS runs successfully but gets hung up toward the end of a run)
+
+	strcpy(aMELTStmp, "doalarm 30 ");
 
 	// Executable
 	if (cmdline == 1) strncat(aMELTStmp,path,strlen(path)-20);
@@ -758,17 +763,8 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
 
 	// --- Run alphaMELTS ---
 	printf("Running alphaMELTS\n");
-	char doalarm[300];
-	strcpy(doalarm, "doalarm () { perl -e 'alarm shift; exec @ARGV' \"$@\"; }"); // To kill alphaMELTS if it takes longer than X seconds to run (usually alphaMELTS runs successfully but gets hung up toward the end of a run)
-	char aMELTSrun[1000]; // TODO Move to beginning of routine and fill in aMELTStmp instead
-	strcpy(aMELTSrun, "doalarm 30 ");
-	strcat(aMELTSrun,aMELTSsys);
-//	printf("%s\n", doalarm);
-//	printf("%s\n", aMELTSrun);
-//	exit(0);
 	system(doalarm);
-	system(aMELTSrun);
-//	system(aMELTSsys);
+	system(aMELTSsys);
 	printf("alphaMELTS ran successfully\n");
 	// Alternative if ever needed: echo [interactive inputs] |.
 	// system("echo \"1 /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCcycleGeo.melts 4 1 0\" | /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/run_alphameltsExoC.command -f /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/Mantle_env.txt");
@@ -804,6 +800,7 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
 
 	free(aMELTSsys);
 	free(aMELTStmp);
+	free(doalarm);
 
 	return 0;
 }
