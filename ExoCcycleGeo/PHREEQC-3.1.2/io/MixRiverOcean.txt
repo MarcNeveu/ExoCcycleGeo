@@ -44,18 +44,10 @@ MIX 1 Mix river into ocean
 	1	1.1	# Mocean / (Mriver = 4*pi*R2*L*runoff/(1-fracEvap)*rhoH2O * dtime)
 	2	1	
 
-SELECTED_OUTPUT 1
-	
-#	-file		./Mix.out
-	-state 		false	
-	-solution 	false
-	-distance 	false
-	-time 		false
-	-step 		false
-	-temperature	true
-	-ionic_strength	true
-	-water		true
-	-totals 	Al C Ca Cl Fe K Mg N Na P S Si Ti C(-2) C(-3) C(-4) C(2) C(4) Cl(-1) Cl(1) Cl(3) Cl(5) Cl(7) Fe(2) Fe(3) H(0) N(-3) N(0) N(3) N(5) O(0) P(5) S(-2) S(2) S(3) S(4) S(5) S(6) S(7) S(8) Ntg
-	-molalities 	OH-	H+	H2O	AlO2-	HAlO2	AlOH+2	Al+3	Al(CH3COO)2+	C2H4	C2H6	CH4	CO	CO3-2	HCOO-	CH3OH	HCO3-	NaHCO3	CaCO3	CH3COO-	NaCH3COO	HCOOH	CO2	MgCO3	C3H8	CH3CH2OH	CH2O	KCH3COO	CN-	CH3COOH	NH4CH3COO	CaCH3COO+	SCN-	CO(NH2)2	HCN	MgCH3COO+	FeCH3COO+	Na(CH3COO)2-	K(CH3COO)2-	Ca(CH3COO)2	NH4(CH3COO)2-	Mg(CH3COO)2	Fe(CH3COO)2	Ca+2	CaCl+	CaCl2	CaSO4	Cl-	NaCl	KCl	HCl	MgCl+	FeCl+	FeCl2	FeCl+2	ClO-	ClO2-	ClO3-	ClO4-	FeOH+	Fe+2	FeOH+2	Fe+3	H2	K+	KSO4-	KHSO4	Mg+2	MgSO4	NH3	NH4+	N2	NO2-	HNO2	NO3-	HNO3	Na+	NaOH	NaHSiO3	O2	S2O6-2	S3O6-2	S4O6-2	S5O6-2	PO4-3	HPO4-2	P2O7-4	H2PO4-	HP2O7-3	H3PO4	H2P2O7-2	H3P2O7-	H4P2O7	HS-	H2S	S2-2	S3-2	S4-2	S5-2	S2O3-2	S2O4-2	SO3-2	HSO3-	SO2	S2O5-2	SO4-2	HSO4-	S2O8-2	HSO5-	HSiO3-	SiO2	Ti(OH)4
+SAVE solution 3
+
+DUMP
+#	-file		../PHREEQC-3.1.2/io/dump.txt
+	-solution 	3
 
 END

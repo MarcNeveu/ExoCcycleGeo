@@ -71,7 +71,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 	strncat(infile,dbase,strlen(dbase)-19);
 	strcat(infile, filename);
 
-	if (kintime || strcmp(filename, "io/MixRiverOcean.txt") == 0  || strcmp(filename, "io/OceanConc.txt") == 0  || strcmp(filename, "io/SeafWeather.txt") == 0) *mass_w *= nAir0; // Don't scale water mass for weathering, which does not require equilibrating ocean and atmosphere i.e. handling large numbers
+	if (kintime || strcmp(filename, "io/MixRiverOcean.txt") == 0  || strcmp(filename, "io/OceanConc.txt") == 0) *mass_w *= nAir0; // Don't scale water mass for weathering, which does not require equilibrating ocean and atmosphere i.e. handling large numbers
 
 	WritePHREEQCInput(infile, itime, T-Kelvin, *P, *V/nAir0, *pH, *pe, *mass_w/nAir0, *xgas, *xaq, (*xriver)[iResTime], forcedPP, kintime, kinsteps, &tempinput);
 
@@ -118,7 +118,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 		infile[0] = '\0';
 		strncat(infile,dbase,strlen(dbase)-19);
-		strcat(infile, "io/SeafWeather.txt");
+		strcat(infile, "io/Seafloor.txt");
 
 		int line_no = 0;        // Line number
 		int line_length = 300;
@@ -129,10 +129,10 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 		while (fgets(line, line_length, f)) {
 			line_no++;
-			if (line[0] == 'T' && line[1] == 'I' && line[2] == 'T' && line[3] == 'L') { // TITLE line with crust molar mass value
-				for (i=0;i<10;i++) rockVol_str[i] = line[i+40];
+			if (line[0] == 'E' && line[1] == 'Q' && line[2] == 'U' && line[3] == 'I') { // EQUILIBRIUM_PHASES line with crust molar mass value
+				for (i=0;i<10;i++) rockVol_str[i] = line[i+55];
 				mass_w_seaf *= strtod((const char*)rockVol_str, NULL); // Multiply W:R by input rock volume to get mass of water in kg
-				if (mass_w_seaf == 0.0) printf("Need to add volume of rock in TITLE line of PHREEQC SeafWeather input, see template.\n");
+				if (mass_w_seaf == 0.0) printf("Need to add volume of rock in TITLE line of PHREEQC Seafloor input, see template.\n");
 				break;
 			}
 		}
@@ -147,11 +147,11 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 		AccumulateLine(phreeqc, "END\n");
 
 //		OutputAccumulatedLines(phreeqc); // Check everything looks good before running
-		printf("Running PHREEQC to reconcentrate to conserve ocean mass, adjust pressure to seafloor, and adjust water mass to match W:R given the seafloor rock amount specified in SeafWeather.txt...\n");
+		printf("Running PHREEQC to reconcentrate to conserve ocean mass, adjust pressure to seafloor, and adjust water mass to match W:R given the seafloor rock amount specified in Seafloor.txt...\n");
 		if (RunAccumulated(phreeqc) != 0) OutputErrorString(phreeqc);
 		else printf("PHREEQC ran successfully\n");
 
-		// React with seafloor: add EQUILIBRIUM_PHASES and SELECTED_OUTPUT blocks from SeafWeather.txt
+		// React with seafloor: add EQUILIBRIUM_PHASES and SELECTED_OUTPUT blocks from Seafloor.txt
 		ClearAccumulatedLines(phreeqc);
 		AccumulateLine(phreeqc, GetDumpString(phreeqc)); // SOLUTION_RAW block
 		AccumulateLine(phreeqc, "END\n");
@@ -164,7 +164,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 		while (fgets(line, line_length, fin)) {
 			line_no++;
-			if (line_no > 28) {
+			if (line_no > 0) {
 				fgets(line, 0, fin);  // Simulation time step (years)
 				AccumulateLine(phreeqc, line);
 			}
@@ -191,8 +191,8 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 		printf("Water mass scaling before/after: %g\n", mass_w_seaf/simdata[0][5]);
 		(*xaq)[0] = simdata[0][23] * simdata[0][5] / mass_w_seaf; // C(4), i.e. dissolved CO2 and carbonate
 		(*xaq)[1] = simdata[0][21] * simdata[0][5] / mass_w_seaf; // C(-4), i.e. dissolved methane
-		(*xaq)[2] = simdata[0][36] * simdata[0][5] / mass_w_seaf; // O(0)
-		(*xaq)[3] = simdata[0][46] * simdata[0][5] / mass_w_seaf; // Ntg
+//		(*xaq)[2] = simdata[0][36] * simdata[0][5] / mass_w_seaf; // O(0), commented out so as not to throw off redox
+//		(*xaq)[3] = simdata[0][46] * simdata[0][5] / mass_w_seaf; // Ntg, commented out otherwise N is not quite conserved
 //		(*xaq)[4] = 0.0;                                              // N excluding Ntg
 //		(*xaq)[5] = 0.0;                                              // N(-3), i.e. dissolved NH3 and NH4+
 		(*xaq)[6] = simdata[0][12] * simdata[0][5] / mass_w_seaf; // Mg
@@ -275,49 +275,6 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 			}
 		}
 	}
-
-//	// Mixing river and ocean. Ocean mass is not updated as it is assumed constant.
-//	if (strcmp(filename, "io/MixRiverOcean.txt") == 0) {
-//		(*pH) = simdata[0][1]; // 1st index is 2, i.e., 3rd row of selected output file for mixing calculation
-//		(*pe) = simdata[0][2];
-//
-//		(*xaq)[0] = simdata[0][25]; // C(4), i.e. dissolved CO2 and carbonate
-//		(*xaq)[1] = simdata[0][23]; // C(-4), i.e. dissolved methane
-////		(*xaq)[2] = simdata[0][16]; // O(0)
-//		(*xaq)[3] = simdata[0][48]; // Ntg
-////		(*xaq)[4] = 0.0;                                              // N excluding Ntg
-////		(*xaq)[5] = 0.0;                                              // N(-3), i.e. dissolved NH3 and NH4+
-//		(*xaq)[6] = simdata[0][13]; // Mg
-//		(*xaq)[7] = simdata[0][8] ; // Ca
-//		(*xaq)[8] = simdata[0][10]; // Fe
-//		(*xaq)[9] = simdata[0][19]; // Si
-//		(*xaq)[10]= simdata[0][15]; // Na
-//		(*xaq)[11]= simdata[0][18]; // S
-//		(*xaq)[12]= simdata[0][9] ; // Cl
-//	}
-//
-//	// Seafloor weathering
-//	if (strcmp(filename, "io/SeafWeather.txt") == 0) {
-//		(*pH) = simdata[0][1]; // Closed-system pH, does not correspond to pH of ocean equilibrated with atmosphere
-////		(*pe) = simdata[0][2]; // Do not account for redox changes associated with water:rock interaction at the seafloor, assuming that hydration/dehydration are balanced (but not carbonation/decarbonation) TODO what about pyrite formation?
-//		// Scale by (original water mass)/(new water mass) under assumption that hydration and dehydration (but not carbonation/decarbonation) of ocean crust are balanced
-//		printf("Water mass scaling before/after: %g\n", (*mass_w)*rockVol/nAir0 / simdata[0][5]);
-//		(*xaq)[0] = simdata[0][23] * simdata[0][5] / ((*mass_w)*rockVol/nAir0); // C(4), i.e. dissolved CO2 and carbonate
-//		(*xaq)[1] = simdata[0][21] * simdata[0][5] / ((*mass_w)*rockVol/nAir0); // C(-4), i.e. dissolved methane
-//		(*xaq)[2] = simdata[0][36] * simdata[0][5] / ((*mass_w)*rockVol/nAir0); // O(0)
-//		(*xaq)[3] = simdata[0][46] * simdata[0][5] / ((*mass_w)*rockVol/nAir0); // Ntg
-////		(*xaq)[4] = 0.0;                                              // N excluding Ntg
-////		(*xaq)[5] = 0.0;                                              // N(-3), i.e. dissolved NH3 and NH4+
-//		(*xaq)[6] = simdata[0][12] * simdata[0][5] / ((*mass_w)*rockVol/nAir0); // Mg
-//		(*xaq)[7] = simdata[0][8]  * simdata[0][5] / ((*mass_w)*rockVol/nAir0); // Ca
-//		(*xaq)[8] = simdata[0][10] * simdata[0][5] / ((*mass_w)*rockVol/nAir0); // Fe
-//		(*xaq)[9] = simdata[0][17] * simdata[0][5] / ((*mass_w)*rockVol/nAir0); // Si
-//		(*xaq)[10]= simdata[0][14] * simdata[0][5] / ((*mass_w)*rockVol/nAir0); // Na
-//		(*xaq)[11]= simdata[0][16] * simdata[0][5] / ((*mass_w)*rockVol/nAir0); // S
-//		(*xaq)[12]= simdata[0][9] * simdata[0][5] / ((*mass_w)*rockVol/nAir0); // Cl
-//		// Alternatively, track moles of carbonate precipitated
-////		(*xaq)[215] = simdata[0][215];          // Aragonite CaCO3
-//	}
 
 	for (i=0;i<kinsteps;i++) free (simdata[i]);
 	free (dbase);
@@ -464,7 +421,7 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	sprintf(pe_str, "%g", pe);
 	sprintf(mass_w_str, "%g", mass_w);
 
-	// Used if gases are in EQUILIBRIUM_PHASES block, which is not the case here but could be for SeafWeather
+	// Used if gases are in EQUILIBRIUM_PHASES block
 	if (!forcedPP) {
 		for (i=0;i<nAtmSpecies;i++) {
 			if (xgas[i] > 0.0)
@@ -801,7 +758,17 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
 
 	// --- Run alphaMELTS ---
 	printf("Running alphaMELTS\n");
-	system(aMELTSsys);
+	char doalarm[300];
+	strcpy(doalarm, "doalarm () { perl -e 'alarm shift; exec @ARGV' \"$@\"; }"); // To kill alphaMELTS if it takes longer than X seconds to run (usually alphaMELTS runs successfully but gets hung up toward the end of a run)
+	char aMELTSrun[1000]; // TODO Move to beginning of routine and fill in aMELTStmp instead
+	strcpy(aMELTSrun, "doalarm 30 ");
+	strcat(aMELTSrun,aMELTSsys);
+//	printf("%s\n", doalarm);
+//	printf("%s\n", aMELTSrun);
+//	exit(0);
+	system(doalarm);
+	system(aMELTSrun);
+//	system(aMELTSsys);
 	printf("alphaMELTS ran successfully\n");
 	// Alternative if ever needed: echo [interactive inputs] |.
 	// system("echo \"1 /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCcycleGeo.melts 4 1 0\" | /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/run_alphameltsExoC.command -f /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/Mantle_env.txt");
