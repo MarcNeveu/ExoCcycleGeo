@@ -279,7 +279,7 @@ int main(int argc, char *argv[]) {
 	double dtSeafW = 0.0;              // Sub-timestep for seafloor weathering model so that river runoff * timestep < Mocean, use is optional since this is an equilibrium calculation
 	double mix = 0.0;                  // Mocean/Mriver, optionally scaled by sub-timestep
 	double deltaCreac = 0.0;           // Net C leached/precipitated per kg of rock (mol kg-1) over one sub-timestep
-	double deltaCreacTot = 0.0;        // Net C leached/precipitated per kg of rock (mol kg-1) cumulated over one main time step, = deltaCreac if no sub-timesteps
+//	double deltaCreacTot = 0.0;        // Net C leached/precipitated per kg of rock (mol kg-1) cumulated over one main time step, = deltaCreac if no sub-timesteps
 	double xaq0 = 0.0;                 // Memory of xaq[0] (mol/kg) before seafloor weathering calculation to avoid removing oxidized C twice (during PHREEQC calculation and from netFC)
 	double xaq1 = 0.0;                 // Memory of xaq[1] (mol/kg) before seafloor weathering calculation to avoid removing reduced C twice (during PHREEQC calculation and from netFC)
 	double volSeafCrust = 0.0;         // Volume of seafloor reacting with ocean water (m3)
@@ -551,7 +551,7 @@ int main(int argc, char *argv[]) {
 		if (xgas[i] > 0.0 && xaq[i] == 0.0) xaq[i] = 1.0; // xaq must be >0 otherwise PHREEQC ignores it, set to 1 mol/kgw (initial guess).
 	}
 
-	AqueousChem(path, "io/OceanStart.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 1, 0.0, 1, nvarEq, 0.0, 0.0);
+	AqueousChem(path, "io/OceanStart.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 1, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac);
 
 	RCocean = (xaq[0]+xaq[1])*Mocean;
 	RCatmoc = RCatm + RCocean;
@@ -716,7 +716,7 @@ int main(int argc, char *argv[]) {
 		if (Tsurf > Tfreeze) {
 			printf("\nTime: %g Gyr. Equilibrating ocean and atmosphere... ", realtime/Myr2sec/1000.0);
 
-			AqueousChem(path, "io/OceanDiss.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0);
+			AqueousChem(path, "io/OceanDiss.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac);
 
 			if (Psurf < 0.01) {
 				printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
@@ -1207,7 +1207,7 @@ int main(int argc, char *argv[]) {
 			WRcontW = 5000.0*runoff/runoff_0;
 
 			printf("Continental weathering... ");
-			AqueousChem(path, "io/ContWeather.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin, 0.0, 0.0);
+			AqueousChem(path, "io/ContWeather.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin, 0.0, 0.0, &deltaCreac);
 
 			rainpH = xriver[1][3]; // xriver[0][3], the initial rain speciation, is returned as = 0, so this is as close as it gets (smallest reaction time)
 			massH2Oriver = xriver[iResTime][7];
@@ -1278,22 +1278,23 @@ int main(int argc, char *argv[]) {
 			// Memorize aqueous C abundances
 			xaq0 = xaq[0];
 			xaq1 = xaq[1];
-			deltaCreacTot = 0.0;
+//			deltaCreacTot = 0.0;
 
 //			for (i=0;i<iterSeafW;i++) {
 				printf("Mixing river input into ocean...\n");
 				printf("Ocean will react with seafloor crust at W/R by vol. = %g\n", Mocean / 1000.0 / volSeafCrust);
-				AqueousChem(path, "io/MixRiverOcean.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq, Pseaf, WRseafW);
-
-				deltaCreac = xaq[0]+xaq[1]-xaq0-xaq1;
-				deltaCreacTot += deltaCreac;
+				AqueousChem(path, "io/MixRiverOcean.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq, Pseaf, WRseafW, &deltaCreac);
+				printf("deltaCreac = %g mol/kg\n", deltaCreac);
+//				deltaCreac = xaq[0]+xaq[1]-xaq0-xaq1;
+//				deltaCreacTot += deltaCreac;
 //			}
 			// Reset aqueous C abundances as they'll be adjusted by ocean-atmosphere equilibrium at the next time step, when netFC C is added to {atmosphere+ocean}
 			xaq[0] = xaq0;
 			xaq[1] = xaq1;
 
 //			FCseafsubd = volSeafCrust/dtime * rhoSeaf * deltaCreacTot * WRseafW/18.933; // m3 rock/s * kg rock/m3 rock * mol/kg water * kg water/kg rock = mol/s, otherwise expressed below:
-			FCseafsubd = deltaCreacTot * Mocean / dtime;
+//			FCseafsubd = deltaCreacTot * Mocean / dtime;
+			FCseafsubd = deltaCreac * Mocean / dtime;
 		}
 
 		//-------------------------------------------------------------------

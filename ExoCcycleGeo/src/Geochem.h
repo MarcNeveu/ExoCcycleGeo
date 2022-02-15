@@ -15,7 +15,7 @@
 //-------------------------------------------------------------------
 
 int AqueousChem (char path[1024], char filename[64], int itime, double T, double *P, double *V, double *nAir, double *pH, double *pe,
-		double *mass_w, double **xgas, double **xaq, double ***xriver, int iResTime, int forcedPP, double kintime, int kinsteps, int nvar, double Pseaf, double mass_w_seaf);
+		double *mass_w, double **xgas, double **xaq, double ***xriver, int iResTime, int forcedPP, double kintime, int kinsteps, int nvar, double Pseaf, double mass_w_seaf, double *deltaCreac);
 int ExtractWrite(int instance, double*** data, int line, int nvar);
 const char* ConCat (const char *str1, const char *str2);
 int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
@@ -38,7 +38,7 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
  *--------------------------------------------------------------------*/
 
 int AqueousChem (char path[1024], char filename[64], int itime, double T, double *P, double *V, double *nAir, double *pH, double *pe,
-		double *mass_w, double **xgas, double **xaq, double ***xriver, int iResTime, int forcedPP, double kintime, int kinsteps, int nvar, double Pseaf, double mass_w_seaf) {
+		double *mass_w, double **xgas, double **xaq, double ***xriver, int iResTime, int forcedPP, double kintime, int kinsteps, int nvar, double Pseaf, double mass_w_seaf, double *deltaCreac) {
 
 	int phreeqc = 0;
 	int i = 0;
@@ -141,15 +141,43 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 		sprintf(RiverOceanRatio, "\t 4 \t %g", pow(((*mass_w)/nAir0)*(1.0+((*mass_w)/nAir0)),-2) * mass_w_seaf); // Scaling twice: first since solution output by MixRiverOcean has approx. water mass Mocean/Mriver*(1+Mocean/Mriver), second because divided water mass by this same quantity to concentrate the ocean post-mixing so as to conserve Mocean
 		AccumulateLine(phreeqc, RiverOceanRatio); // Could avoid this scaling if the first rover-ocean mix starts with solution masses of 1 kg each
 		AccumulateLine(phreeqc, "SAVE solution 5\n");
-//		AccumulateLine(phreeqc, "DUMP");
+		AccumulateLine(phreeqc, "DUMP");
 //		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dumpConc.txt");
-//		AccumulateLine(phreeqc, "\t-solution 5");
+		AccumulateLine(phreeqc, "\t-solution 5");
 		AccumulateLine(phreeqc, "END\n");
 
 //		OutputAccumulatedLines(phreeqc); // Check everything looks good before running
 		printf("Running PHREEQC to reconcentrate to conserve ocean mass, adjust pressure to seafloor, and adjust water mass to match W:R given the seafloor rock amount specified in Seafloor.txt...\n");
 		if (RunAccumulated(phreeqc) != 0) OutputErrorString(phreeqc);
 		else printf("PHREEQC ran successfully\n");
+
+		// Memorize C(4) and C(-4) molalities here rather than before river mixing in the main code.
+		char oxCconc[300];   oxCconc[0] = '\0';
+		char redCconc[300];  redCconc[0] = '\0';
+		char masswater[300]; masswater[0] = '\0';
+
+		for (i=0;i<60;i++) { // Get them by reading dump string rather than by line number because number of lines printed out depends on number of solutes with non-neglible molalities
+			if (GetDumpStringLine(phreeqc, i)[4] == 'C' && GetDumpStringLine(phreeqc, i)[6] == '4') {
+				strcpy(oxCconc, GetDumpStringLine(phreeqc, i));
+				for (j=0;j<30;j++) oxCconc[j] = oxCconc[j+29];
+			}
+			if (GetDumpStringLine(phreeqc, i)[4] == 'C' && GetDumpStringLine(phreeqc, i)[6] == '-' && GetDumpStringLine(phreeqc, i)[7] == '4') {
+				strcpy(redCconc, GetDumpStringLine(phreeqc, i));
+				for (j=0;j<30;j++) redCconc[j] = redCconc[j+29];
+			}
+			if (GetDumpStringLine(phreeqc, i)[3] == 'm' && GetDumpStringLine(phreeqc, i)[4] == 'a') {
+				strcpy(masswater, GetDumpStringLine(phreeqc, i));
+				for (j=0;j<30;j++) masswater[j] = masswater[j+29];
+				break;
+			}
+		}
+
+		double oxC = 0.0;
+		double redC = 0.0;
+
+		oxC = strtod((const char*)oxCconc, NULL)/strtod((const char*)masswater, NULL);
+		redC = strtod((const char*)redCconc, NULL)/strtod((const char*)masswater, NULL);
+//		printf("%g\n%g\n", oxC, redC);
 
 		// React with seafloor: add EQUILIBRIUM_PHASES and SELECTED_OUTPUT blocks from Seafloor.txt
 		ClearAccumulatedLines(phreeqc);
@@ -171,12 +199,12 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 		}
 		fclose (fin);
 
-//		AccumulateLine(phreeqc, "SAVE solution 6\n");
+//		AccumulateLine(phreeqc, "SAVE solution 6\n"); // Debug, make sure to remove "END" at end of Seafloor.txt when uncommenting this
 //		AccumulateLine(phreeqc, "DUMP");
 //		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dumpSeafReact.txt");
 //		AccumulateLine(phreeqc, "\t-solution 6");
 //		AccumulateLine(phreeqc, "END\n");
-//
+
 //		OutputAccumulatedLines(phreeqc); // Check everything looks good before running
 		printf("Running PHREEQC to react ocean with seafloor...\n");
 		if (RunAccumulated(phreeqc) != 0) OutputErrorString(phreeqc);
@@ -204,6 +232,8 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 		(*xaq)[12]= simdata[0][9]  * simdata[0][5] / mass_w_seaf; // Cl
 
 		for (i=0;i<nAqSpecies;i++) printf("%d \t %g\n", i, (*xaq)[i]);
+
+		(*deltaCreac) = (*xaq)[0] + (*xaq)[1] - oxC - redC;
 	}
 
 	if      (strcmp(filename, "io/OceanStart.txt") == 0) ExtractWrite(phreeqc, &simdata, 1, nvarEq); // 1st line of selected output has initial solution composition = equilibrium when there are no equilibrium phases
