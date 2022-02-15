@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
 	int iCMB = 0;                      // Index of grid zone that corresponds to core-mantle boundary
 	int iBDT = 0;                      // Index of grid zone of the brittleo-ductile transition
 	int itime = 0;                     // Time step counter
-	int ntime = 0;                     // Total number of steps
+//	int ntime = 0;                     // Total number of steps
 
 	int nslopeAvg = 5;                 // Target number of data points used for averaging melt fraction slope in the mantle
 	int islope = 0;                    // Actual numbers of data points used for averaging melt fraction slope in the mantle
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
 	double slope = 0.0;                // Average melt fraction slope in the mantle (bar-1)
 	double meltfrac = 0.0;             // Melt fraction extrapolated at higher pressures than MELTS can handle
 
-	double realtime = 0;               // Real time since birth of planetary system (s)
+	double realtime = 0.0;             // Real time since birth of planetary system (s)
 
 	// Planet parameters
 	double r_p = 0.0;                  // Planet radius (m)
@@ -394,7 +394,7 @@ int main(int argc, char *argv[]) {
 	printf("\n");
 	printf("Computing geo C fluxes through time...\n");
 
-	ntime = (int) (tend/dtime);        // Number of time steps of simulation
+//	ntime = (int) (tend/dtime);        // Number of time steps of simulation
 
 	// Get pressure and density profiles with depth, accounting for compression and self-gravity
 	compression(NR, m_p, m_c, Tsurf, 101, 107, 203, &r, &P, &rho, &g, &iCMB, path);
@@ -645,9 +645,13 @@ int main(int argc, char *argv[]) {
 //	double TotalN0 = xgas[3]*2.0*nAir + xaq[3]*Mocean;
 
 	printf("Starting time loop...\n");
-	for (itime = 0;itime<ntime;itime++) {
+//	for (itime = 0;itime<ntime;itime++) {
+	while (realtime < tend) {
 
-		realtime = (double)itime*dtime;                // Start at birth of planetary system
+		dtime = fmin(10.0*Myr2sec, 0.1*fmin(RCatmoc, RCmantle)/netFC);
+		if (realtime < tstart + 1.0*Myr2sec) dtime = fmin(dtime, 0.2*Myr2sec); // Start slow
+		realtime += dtime;
+//		realtime = (double)itime*dtime;                // Start at birth of planetary system
 //		realtime = (double)itime*dtime + 4.55*Gyr2sec; // Start at present day
 
 		//-------------------------------------------------------------------
@@ -1294,7 +1298,7 @@ int main(int argc, char *argv[]) {
 
 //			FCseafsubd = volSeafCrust/dtime * rhoSeaf * deltaCreacTot * WRseafW/18.933; // m3 rock/s * kg rock/m3 rock * mol/kg water * kg water/kg rock = mol/s, otherwise expressed below:
 //			FCseafsubd = deltaCreacTot * Mocean / dtime;
-			FCseafsubd = deltaCreac * Mocean / dtime;
+			FCseafsubd = deltaCreac * Mocean / dtime; // If no plate tectonics, this expression still holds
 		}
 
 		//-------------------------------------------------------------------
