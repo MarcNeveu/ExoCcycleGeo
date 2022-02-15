@@ -643,7 +643,7 @@ int main(int argc, char *argv[]) {
 	printf("Starting time loop...\n");
 	while (realtime < tend) {
 
-		dtime = fmin(10.0*Myr2sec, 0.1*fmin(RCatmoc, RCmantle)/netFC);
+		dtime = fmin(10.0*Myr2sec, 0.1*fmin(RCatmoc, RCmantle)/fabs(netFC));
 		if (realtime < tstart + 1.0*Myr2sec) dtime = fmin(dtime, 0.2*Myr2sec); // Start slow
 		if (realtime < tstart) dtime = 10.0*Myr2sec;                           // Sufficient to achieve numerical convergence for geodynamics alone
 		realtime += dtime;
@@ -1269,7 +1269,8 @@ int main(int argc, char *argv[]) {
 			// Today indicative size of 7 major plates is 70e6 km2, corresponding to diameter 2*sqrt(70e6/(4*pi)) = 4720 km > mantle depth, even though (isoviscous) convection cell should have aspect ratio of 1 (Bercovici et al. 2015).
 			// For Earth inputs it is = mantle depth (2900 km) for Ra = 1e7, i.e., 2 billion years ago (oldest evidence of plate tectonics 2-3 Ga; Brown et al. 2020)
 
-			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*vConv*zCrack*dtime; // MOR length = 6.5*Earth circumference, crust assumed fully cracked
+//			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*vConv*zCrack*dtime; // MOR length = 6.5*Earth circumference, crust assumed fully cracked
+			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*(vConv*fmin(1.0,realtime/(1.5*Gyr2sec)))*zCrack*dtime; // vConv*fmin() term represents sluggish convection until full plate tectonics
 
 			Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth TODO scale with land coverage
 			WRseafW = Mocean / volSeafCrust; // Will be multiplied in AqueousChem() by (mass rock input to PHREEQC / seafloor crust density) = volume rock input to PHREEQC
