@@ -73,8 +73,6 @@ int main(int argc, char *argv[]) {
 	int imax = 0;                      // Index of outermost grid zone of melting in MELTS output
 	int iCMB = 0;                      // Index of grid zone that corresponds to core-mantle boundary
 	int iBDT = 0;                      // Index of grid zone of the brittleo-ductile transition
-	int itime = 0;                     // Time step counter
-//	int ntime = 0;                     // Total number of steps
 
 	int nslopeAvg = 5;                 // Target number of data points used for averaging melt fraction slope in the mantle
 	int islope = 0;                    // Actual numbers of data points used for averaging melt fraction slope in the mantle
@@ -394,8 +392,6 @@ int main(int argc, char *argv[]) {
 	printf("\n");
 	printf("Computing geo C fluxes through time...\n");
 
-//	ntime = (int) (tend/dtime);        // Number of time steps of simulation
-
 	// Get pressure and density profiles with depth, accounting for compression and self-gravity
 	compression(NR, m_p, m_c, Tsurf, 101, 107, 203, &r, &P, &rho, &g, &iCMB, path);
 
@@ -551,7 +547,7 @@ int main(int argc, char *argv[]) {
 		if (xgas[i] > 0.0 && xaq[i] == 0.0) xaq[i] = 1.0; // xaq must be >0 otherwise PHREEQC ignores it, set to 1 mol/kgw (initial guess).
 	}
 
-	AqueousChem(path, "io/OceanStart.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 1, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac);
+	AqueousChem(path, "io/OceanStart.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 1, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac);
 
 	RCocean = (xaq[0]+xaq[1])*Mocean;
 	RCatmoc = RCatm + RCocean;
@@ -645,14 +641,13 @@ int main(int argc, char *argv[]) {
 //	double TotalN0 = xgas[3]*2.0*nAir + xaq[3]*Mocean;
 
 	printf("Starting time loop...\n");
-//	for (itime = 0;itime<ntime;itime++) {
 	while (realtime < tend) {
 
 		dtime = fmin(10.0*Myr2sec, 0.1*fmin(RCatmoc, RCmantle)/netFC);
 		if (realtime < tstart + 1.0*Myr2sec) dtime = fmin(dtime, 0.2*Myr2sec); // Start slow
+		if (realtime < tstart) dtime = 10.0*Myr2sec;                           // Sufficient to achieve numerical convergence for geodynamics alone
 		realtime += dtime;
-//		realtime = (double)itime*dtime;                // Start at birth of planetary system
-//		realtime = (double)itime*dtime + 4.55*Gyr2sec; // Start at present day
+//		realtime = 4.55*Gyr2sec; // Present day
 
 		//-------------------------------------------------------------------
 		// Update surface temperature (unnecessary once coupled to Atmos)
@@ -686,10 +681,10 @@ int main(int argc, char *argv[]) {
 		// Update atmosphere
 		//-------------------------------------------------------------------
 
-		if (itime < 2) { // First 2 time steps: re-compute Vatm to avoid it being too influenced by ballpark initial conditions
+//		if (itime < 2) { // First 2 time steps: re-compute Vatm to avoid it being too influenced by ballpark initial conditions
 			Vatm1 = nAir*R_G*Tsurf/(Psurf*bar2Pa);
 			Tsurf1 = Tsurf;
-		}
+//		}
 		Vatm = Vatm1*Tsurf/Tsurf1; // After 2nd time step, keep Vatm constant
 
 		// Redox of outgassing (see e.g. Gaillard and Scaillet 2014 EPSL or Scaillet and Gaillard 2011 Nature comment)
@@ -720,7 +715,7 @@ int main(int argc, char *argv[]) {
 		if (Tsurf > Tfreeze) {
 			printf("\nTime: %g Gyr. Equilibrating ocean and atmosphere... ", realtime/Myr2sec/1000.0);
 
-			AqueousChem(path, "io/OceanDiss.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac);
+			AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac);
 
 			if (Psurf < 0.01) {
 				printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
@@ -1211,7 +1206,7 @@ int main(int argc, char *argv[]) {
 			WRcontW = 5000.0*runoff/runoff_0;
 
 			printf("Continental weathering... ");
-			AqueousChem(path, "io/ContWeather.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin, 0.0, 0.0, &deltaCreac);
+			AqueousChem(path, "io/ContWeather.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin, 0.0, 0.0, &deltaCreac);
 
 			rainpH = xriver[1][3]; // xriver[0][3], the initial rain speciation, is returned as = 0, so this is as close as it gets (smallest reaction time)
 			massH2Oriver = xriver[iResTime][7];
@@ -1234,18 +1229,18 @@ int main(int argc, char *argv[]) {
 			// Individual carbon fluxes (mol/s). Rainout = (river runoff)/(1-fracEvap).
 			FC_Mg_carb =     Mg_carb_consumed/massH2Oriver*Mriver/dtime; // Factor of 1 because despite divalent cation vs. monovalent bicarbonate, 1 biarbonate is released in dissolution, so net 1
 			FC_Mg_sil  = 2.0*(xriver[iResTime][11]        *Mriver/dtime - FC_Mg_carb); // Factor of 2 because of divalent cation and monovalent bicarbonate
-			if (FC_Mg_sil < 0.0) printf("itime=%d, Continental weathering: Mg silicate net formation\n", itime);
+			if (FC_Mg_sil < 0.0) printf("time=%g Gyr, Continental weathering: Mg silicate net formation\n", realtime/Gyr2sec);
 			FC_Mg = FC_Mg_carb + FC_Mg_sil;
 
 			FC_Ca_carb =     Ca_carb_consumed/massH2Oriver*Mriver/dtime;
 			FC_Ca_sulf = 2.0*Ca_sulf_consumed/massH2Oriver*Mriver/dtime; // Factor of 2 because of divalent cation and monovalent bicarbonate
 			FC_Ca_sil  = 2.0*(xriver[iResTime][13]        *Mriver/dtime - FC_Ca_carb - 0.5*FC_Ca_sulf);
-			if (FC_Ca_sil < 0.0) printf("itime=%d, Continental weathering: Ca silicate net formation\n", itime);
+			if (FC_Ca_sil < 0.0) printf("time=%g Gyr, Continental weathering: Ca silicate net formation\n", realtime/Gyr2sec);
 			FC_Ca = FC_Ca_carb + FC_Ca_sulf + FC_Ca_sil;
 
 			FC_Fe_sulf = 2.0*Fe_sulf_consumed/massH2Oriver*Mriver/dtime; // Factor of 2 because of divalent cation and monovalent bicarbonate
 			FC_Fe_sil  = 2.0*(xriver[iResTime][14]        *Mriver/dtime - 0.5*FC_Fe_sulf);
-			if (FC_Fe_sil < 0.0) printf("itime=%d, Continental weathering: Fe silicate net formation\n", itime);
+			if (FC_Fe_sil < 0.0) printf("time=%g Gyr, Continental weathering: Fe silicate net formation\n", realtime/Gyr2sec);
 			FC_Fe = FC_Fe_sulf + FC_Fe_sil;
 
 			FCcontW = - FC_Mg - FC_Ca - FC_Fe; // Negative out of atmosphere
@@ -1287,7 +1282,7 @@ int main(int argc, char *argv[]) {
 //			for (i=0;i<iterSeafW;i++) {
 				printf("Mixing river input into ocean...\n");
 				printf("Ocean will react with seafloor crust at W/R by vol. = %g\n", Mocean / 1000.0 / volSeafCrust);
-				AqueousChem(path, "io/MixRiverOcean.txt", itime, Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq, Pseaf, WRseafW, &deltaCreac);
+				AqueousChem(path, "io/MixRiverOcean.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq, Pseaf, WRseafW, &deltaCreac);
 				printf("deltaCreac = %g mol/kg\n", deltaCreac);
 //				deltaCreac = xaq[0]+xaq[1]-xaq0-xaq1;
 //				deltaCreacTot += deltaCreac;

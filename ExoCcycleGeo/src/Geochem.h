@@ -14,11 +14,11 @@
 // SUBROUTINE DECLARATIONS
 //-------------------------------------------------------------------
 
-int AqueousChem (char path[1024], char filename[64], int itime, double T, double *P, double *V, double *nAir, double *pH, double *pe,
+int AqueousChem (char path[1024], char filename[64], double T, double *P, double *V, double *nAir, double *pH, double *pe,
 		double *mass_w, double **xgas, double **xaq, double ***xriver, int iResTime, int forcedPP, double kintime, int kinsteps, int nvar, double Pseaf, double mass_w_seaf, double *deltaCreac);
 int ExtractWrite(int instance, double*** data, int line, int nvar);
 const char* ConCat (const char *str1, const char *str2);
-int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
+int WritePHREEQCInput(const char *TemplateFile, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
 		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput);
 int cleanup (char path[1024]);
 double molmass_atm (double *xgas);
@@ -37,7 +37,7 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
  *
  *--------------------------------------------------------------------*/
 
-int AqueousChem (char path[1024], char filename[64], int itime, double T, double *P, double *V, double *nAir, double *pH, double *pe,
+int AqueousChem (char path[1024], char filename[64], double T, double *P, double *V, double *nAir, double *pH, double *pe,
 		double *mass_w, double **xgas, double **xaq, double ***xriver, int iResTime, int forcedPP, double kintime, int kinsteps, int nvar, double Pseaf, double mass_w_seaf, double *deltaCreac) {
 
 	int phreeqc = 0;
@@ -73,7 +73,7 @@ int AqueousChem (char path[1024], char filename[64], int itime, double T, double
 
 	if (kintime || strcmp(filename, "io/MixRiverOcean.txt") == 0  || strcmp(filename, "io/OceanConc.txt") == 0) *mass_w *= nAir0; // Don't scale water mass for weathering, which does not require equilibrating ocean and atmosphere i.e. handling large numbers
 
-	WritePHREEQCInput(infile, itime, T-Kelvin, *P, *V/nAir0, *pH, *pe, *mass_w/nAir0, *xgas, *xaq, (*xriver)[iResTime], forcedPP, kintime, kinsteps, &tempinput);
+	WritePHREEQCInput(infile, T-Kelvin, *P, *V/nAir0, *pH, *pe, *mass_w/nAir0, *xgas, *xaq, (*xriver)[iResTime], forcedPP, kintime, kinsteps, &tempinput);
 
 	phreeqc = CreateIPhreeqc(); // Run PHREEQC
 	if (LoadDatabase(phreeqc,dbase) != 0) OutputErrorString(phreeqc);
@@ -374,7 +374,7 @@ const char* ConCat(const char *str1, const char *str2) {
  *
  *--------------------------------------------------------------------*/
 
-int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
+int WritePHREEQCInput(const char *TemplateFile, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
 		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput) {
 
 	int i = 0;
@@ -387,7 +387,6 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 
 	FILE *fin;
 	FILE *fout;
-	char itime_str[32];
 	char temp_str[32];
 	char pressure_str[32];
 	char vol_str[32];
@@ -412,7 +411,6 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	char (**river_str) = (char**) malloc(nvarKin*sizeof(char*));
 	for (i=0;i<nvarKin;i++) river_str[i] = (char*)malloc(1024);
 
-	itime_str[0] = '\0';
 	temp_str[0] = '\0';
 	pressure_str[0] = '\0';
 	vol_str[0] = '\0';
@@ -443,7 +441,6 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 	// Kinetic simulation applies only to continental weathering, for which the pH of rain is used, not that of the ocean
 	if (kintime) pH = 7.0;
 
-	sprintf(itime_str, "%d", itime);
 	sprintf(temp_str, "%g", temp);
 	sprintf(pressure_str, "%g", pressure);
 	sprintf(vol_str, "%g", gasvol);
@@ -489,7 +486,6 @@ int WritePHREEQCInput(const char *TemplateFile, int itime, double temp, double p
 //	}
 
 	strcpy(*tempinput,TemplateFile);
-//	strcat(*tempinput,itime_str);
 	strcat(*tempinput,"Exec.txt"); // File title complete
 
 	sprintf(steps_str1,"%g in ", kintime);    // Duration of kinetic simulation
