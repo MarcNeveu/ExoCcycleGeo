@@ -91,13 +91,14 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 
 		// Reconcentration to conserve ocean mass
 		AccumulateLine(phreeqc, "TITLE Reconcentration to conserve ocean mass\n");
-
 		AccumulateLine(phreeqc, "USE solution 3");
-
 		AccumulateLine(phreeqc, "REACTION 1");
-		AccumulateLine(phreeqc, "\tH2O \t -1.0"); // Remove water. Solution has mass ((*mass_w)/nAir0) * (1.0+((*mass_w)/nAir0)).
-		double waterRemoval = ((*mass_w)/nAir0)*(1.0+((*mass_w)/nAir0))/(0.001*(1.0079*2.0+15.994)) * (1.0 - ((*mass_w)/nAir0)*(1.0+((*mass_w)/nAir0))); // Initial moles of water - final moles of water
-		printf("Removing %g moles of water, initial moles %g, multiplying water mass by %g\n", waterRemoval, ((*mass_w)/nAir0)/(0.001*(1.0079*2.0+15.994)), ((*mass_w)/nAir0)*(1.0+((*mass_w)/nAir0)));
+		AccumulateLine(phreeqc, "\tH2O \t -1.0"); // Remove water.
+		// Let us set M = (*mass_w)/nAir0.
+		// Solution as written in MixRiverOceanExec.txt by WritePHREEQCInput() has mass M*(1+M) kg. We want it to have mass M^2 kg.
+		// So, remove M*(1+M) - M^2 = M kg. This is equivalent to multiplying by M^2/(M*(1+M)) = M/(1+M).
+		double waterRemoval = ((*mass_w)/nAir0)/(0.001*(1.0079*2.0+15.994)); // moles of water to be removed
+		printf("Removing %g moles of water, initial moles %g, multiplying water mass by %g\n", waterRemoval, ((*mass_w)/nAir0)*(1.0+((*mass_w)/nAir0))/(0.001*(1.0079*2.0+15.994)), ((*mass_w)/nAir0)/(1.0+((*mass_w)/nAir0)));
 		char waterRem_str[30];
 		sprintf(waterRem_str, "\t%g \t moles\n", waterRemoval);
 		AccumulateLine(phreeqc, waterRem_str);
@@ -138,7 +139,8 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 		}
 		fclose (f);
 
-		sprintf(RiverOceanRatio, "\t 4 \t %g", pow(((*mass_w)/nAir0)*(1.0+((*mass_w)/nAir0)),-2) * mass_w_seaf); // Scaling twice: first since solution output by MixRiverOcean has approx. water mass Mocean/Mriver*(1+Mocean/Mriver), second because divided water mass by this same quantity to concentrate the ocean post-mixing so as to conserve Mocean
+		// Scale mass of water twice: first since solution output by MixRiverOcean has approx. water mass Mocean/Mriver*(1+Mocean/Mriver) kg rather than 1 kg, second because we multiplied, post-mixing, the water mass by M/(1+M) to concentrate the ocean so as to conserve Mocean
+		sprintf(RiverOceanRatio, "\t 4 \t %g", mass_w_seaf / (((*mass_w)/nAir0)*(1.0+((*mass_w)/nAir0))) / (((*mass_w)/nAir0)/(1.0+((*mass_w)/nAir0))));
 		AccumulateLine(phreeqc, RiverOceanRatio); // Could avoid this scaling if the first rover-ocean mix starts with solution masses of 1 kg each
 		AccumulateLine(phreeqc, "SAVE solution 5\n");
 		AccumulateLine(phreeqc, "DUMP");
@@ -486,7 +488,7 @@ int WritePHREEQCInput(const char *TemplateFile, double temp, double pressure, do
 //	}
 
 	strcpy(*tempinput,TemplateFile);
-	strcat(*tempinput,"Exec.txt"); // File title complete
+	strncat(*tempinput, "Exec.txt", strlen(*tempinput)-4); // File title complete
 
 	sprintf(steps_str1,"%g in ", kintime);    // Duration of kinetic simulation
 	sprintf(steps_str2,"%d steps", kinsteps); // Number of time steps of kinetic simulation

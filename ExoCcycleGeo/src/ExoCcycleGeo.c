@@ -643,7 +643,7 @@ int main(int argc, char *argv[]) {
 	printf("Starting time loop...\n");
 	while (realtime < tend) {
 
-		dtime = fmin(10.0*Myr2sec, 0.1*fmin(RCatmoc, RCmantle)/fabs(netFC));
+		dtime = fmin(10.0*Myr2sec, 0.01*fmin(RCatmoc, RCmantle)/fabs(netFC));
 		if (realtime < tstart + 1.0*Myr2sec) dtime = fmin(dtime, 0.2*Myr2sec); // Start slow
 		if (realtime < tstart) dtime = 10.0*Myr2sec;                           // Sufficient to achieve numerical convergence for geodynamics alone
 		realtime += dtime;
