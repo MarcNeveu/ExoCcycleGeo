@@ -537,7 +537,7 @@ int WritePHREEQCInput(const char *TemplateFile, double temp, double pressure, do
 			if      (solution1) fprintf(fout, "%s\n", ConCat("\tpe \t \t",pe_str));
 			else if (solution2) fprintf(fout, "%s\n", ConCat("\tpe \t \t",river_str[4]));
 		}
-		// Common water mass even for mixing calculation because proportions of solutions mixed are set in MIX block. These proportions could be set here instead, the outcome is the same.
+		// Common water mass even for mixing calculation because proportions of solutions mixed are set in MIX block. These proportions could be set here instead, the outcome would be the same provided the ocean concentration and seafloor water mass are scaled accordingly in AqueousChem().
 		else if (!sel && line[1] == '-' && line[2] == 'w' && line[3] == 'a' && line[4] == 't') fprintf(fout, "%s\n", ConCat("\t-water \t \t",mass_w_str));
 		else if (!eqphases && line[1] == 'C' && line[2] == '(' && line[3] == '4' && line[4] == ')') {
 			if (forcedPP && xgas[0] > 0.0) {

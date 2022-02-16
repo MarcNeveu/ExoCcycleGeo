@@ -270,7 +270,6 @@ int main(int argc, char *argv[]) {
 	// Quantities to be computed by seafloor weathering model
 	double LplateBnd = 0.0;            // Length of tectonic plate boundaries, today 6.5*Earth circumference (m)
 	double zCrack = 6000.0;            // Depth of fracturing below seafloor (m), default 6000 m (Vance et al. 2007)
-//	double tcirc = 0.0;                // Time scale of hydrothermal circulation (s)
 	double Pseaf = 0.0;                // Avg. seafloor pressure calculated assuming avg. ocean depth
 	double WRseafW = 1.0;              // Water to rock ratio of seafloor weathering, here multiplied by rock mass
 //	int iterSeafW = 0;                 // Number of iterations (sub-timesteps) of seafloor weathering model so that river runoff * timestep < Mocean, use is optional since this is for an equilibrium calculation
@@ -281,6 +280,7 @@ int main(int argc, char *argv[]) {
 	double xaq0 = 0.0;                 // Memory of xaq[0] (mol/kg) before seafloor weathering calculation to avoid removing oxidized C twice (during PHREEQC calculation and from netFC)
 	double xaq1 = 0.0;                 // Memory of xaq[1] (mol/kg) before seafloor weathering calculation to avoid removing reduced C twice (during PHREEQC calculation and from netFC)
 	double volSeafCrust = 0.0;         // Volume of seafloor reacting with ocean water (m3)
+	double tcirc = 1.0e7*Yr2sec;	   // Timescale of ocean cycling through seafloor hydrothermal systems (Mottl 1983; Kadko et al. 1995) (s)
 
 	double *xaq = (double*) malloc(nAqSpecies*sizeof(double));
 	if (xaq == NULL) printf("ExoCcycleGeo: Not enough memory to create xaq[nAqSpecies]\n"); // Molalities of aqueous species (mol (kg H2O)-1)
@@ -643,7 +643,7 @@ int main(int argc, char *argv[]) {
 	printf("Starting time loop...\n");
 	while (realtime < tend) {
 
-		dtime = fmin(10.0*Myr2sec, 0.01*fmin(RCatmoc, RCmantle)/fabs(netFC));
+		dtime = fmin(10.0*Myr2sec, 0.1*fmin(RCatmoc, RCmantle)/fabs(netFC));
 		if (realtime < tstart + 1.0*Myr2sec) dtime = fmin(dtime, 0.2*Myr2sec); // Start slow
 		if (realtime < tstart) dtime = 10.0*Myr2sec;                           // Sufficient to achieve numerical convergence for geodynamics alone
 		realtime += dtime;
@@ -1263,17 +1263,17 @@ int main(int argc, char *argv[]) {
 //			dtSeafW = dtime/(double)iterSeafW;
 			mix = Mocean/Mriver * dtime/dtSeafW;
 
-			LplateBnd = 6.5*2.0*PI_greek*r_p;
-//			LplateBnd = pow(Ra/2.3e6,1.0/3.0) * 6.5*2.0*PI_greek*r_p;
-			// 2.3e6 is canonical Ra for Earth today. Scaling with Ra^1/3 is consistent with scaling with Nu.
+//			LplateBnd = 6.5*2.0*PI_greek*r_p;
+			LplateBnd = pow(Ra/2.3e6,1.0/3.0) * 6.5*2.0*PI_greek*r_p;
+			// 2.3e6 is canonical Ra for Earth today. Scaling with Ra^1/3 is consistent with scaling with Nu and also consistent with 3-5 times greater ridge length from Kadko et al. (1995).
 			// Today indicative size of 7 major plates is 70e6 km2, corresponding to diameter 2*sqrt(70e6/(4*pi)) = 4720 km > mantle depth, even though (isoviscous) convection cell should have aspect ratio of 1 (Bercovici et al. 2015).
 			// For Earth inputs it is = mantle depth (2900 km) for Ra = 1e7, i.e., 2 billion years ago (oldest evidence of plate tectonics 2-3 Ga; Brown et al. 2020)
 
-//			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*vConv*zCrack*dtime; // MOR length = 6.5*Earth circumference, crust assumed fully cracked
-			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*(vConv*fmin(1.0,realtime/(1.5*Gyr2sec)))*zCrack*dtime; // vConv*fmin() term represents sluggish convection until full plate tectonics
+			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*vConv*zCrack*dtime; // MOR length = 6.5*Earth circumference, crust assumed fully cracked
+//			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*(vConv*fmin(1.0,realtime/(1.5*Gyr2sec)))*zCrack*dtime; // vConv*fmin() term represents sluggish convection until full plate tectonics
 
 			Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth TODO scale with land coverage
-			WRseafW = Mocean / volSeafCrust; // Will be multiplied in AqueousChem() by (mass rock input to PHREEQC / seafloor crust density) = volume rock input to PHREEQC
+			WRseafW = Mocean*dtime/tcirc / volSeafCrust; // Will be multiplied in AqueousChem() by (mass rock input to PHREEQC / seafloor crust density) = volume rock input to PHREEQC. 1e7 yr is hydrothermal circulation timescale (Kadko et al. 1995)
 
 			// Memorize aqueous C abundances
 			xaq0 = xaq[0];
@@ -1292,9 +1292,8 @@ int main(int argc, char *argv[]) {
 			xaq[0] = xaq0;
 			xaq[1] = xaq1;
 
-//			FCseafsubd = volSeafCrust/dtime * rhoSeaf * deltaCreacTot * WRseafW/18.933; // m3 rock/s * kg rock/m3 rock * mol/kg water * kg water/kg rock = mol/s, otherwise expressed below:
-//			FCseafsubd = deltaCreacTot * Mocean / dtime;
-			FCseafsubd = deltaCreac * Mocean / dtime; // If no plate tectonics, this expression still holds
+//			FCseafsubd = volSeafCrust/dtime * deltaCreac * WRseafW; // m3 rock/s * mol/kg water * kg water/m3 rock = mol/s, otherwise expressed below:
+			FCseafsubd = deltaCreac * Mocean / tcirc; // If no plate tectonics, this expression still holds
 		}
 
 		//-------------------------------------------------------------------
