@@ -43,11 +43,27 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 	int phreeqc = 0;
 	int i = 0;
 	int j = 0;
+	int line_length = 300;    // Length of input/output file line
 
-	char *dbase = (char*)malloc(1024);                           // Path to thermodynamic database
-	char *infile = (char*)malloc(1024);                          // Path to initial (template) input file
-	char *tempinput = (char*)malloc(1024);                       // Temporary PHREEQC input file, modified from template
-	double nAir0 = *nAir; // Scaling factor for gas volume and water mass, so PHREEQC doesn't have to handle large numbers
+	char *dbase = (char*)malloc(1024);     dbase[0] = '\0'; 	// Path to thermodynamic database
+	char *infile = (char*)malloc(1024);    infile[0] = '\0';    // Path to initial (template) input file
+	char *tempinput = (char*)malloc(1024); tempinput[0] = '\0'; // Temporary PHREEQC input file, modified from template
+
+	double nAir0 = *nAir; 					// Scaling factor for gas volume and water mass, so PHREEQC doesn't have to handle large numbers
+	double waterRemoval = 0.0;				// Abundance of water to remove in MIX block to reconcentrate ocean (mol)
+	double oxC = 0.0; 						// Memory of oxidized carbon molality (mol/kg)
+	double redC = 0.0;						// Memory of reduced carbon molality (mol/kg)
+
+	char oxCmol[line_length];      	oxCmol[0] = '\0';			// Oxidized C abundance as read from SOLUTION_RAW block of DUMP (mol)
+	char redCmol[line_length];    	redCmol[0] = '\0';          // Reduced C abundance as read from SOLUTION_RAW block of DUMP (mol)
+	char masswater[line_length];   	masswater[0] = '\0';        // Mass of water as read from SOLUTION_RAW block of DUMP (kg)
+	char waterRem_str[30];			waterRem_str[0] = '\0';     // Abundance of water to remove in MIX block to reconcentrate ocean (mol)
+	char seafPressure[30];     		seafPressure[0] = '\0';		// Seafloor pressure in REACTION_PRESSURE block
+	char mass_w_str[30];  	   		mass_w_str[0] = '\0';       // Water mass (kg)
+	char rockVol_str[10];      		rockVol_str[0] = '\0';      // Volume of seafloor rock (m3)
+
+	int line_no = 0;        // Line number
+	char line[line_length]; // Individual line
 
 	double **simdata = (double**) malloc(kinsteps*sizeof(double*));
 	if (simdata == NULL) printf("AqueousChem: Not enough memory to create simdata[kinsteps][kinsteps]\n");
@@ -55,11 +71,6 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 		simdata[i] = (double*) malloc(nvar*sizeof(double));
 		if (simdata[i] == NULL) printf("AqueousChem: Not enough memory to create simdata[kinsteps][nvar]\n");
 	}
-
-	// Initializations
-	dbase[0] = '\0';
-	infile[0] = '\0';
-	tempinput[0] = '\0';
 	for (i=0;i<kinsteps;i++) {
 		for (j=0;j<nvar;j++) simdata[i][j] = 0.0;
 	}
@@ -97,32 +108,25 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 		// Let us set M = (*mass_w)/nAir0.
 		// Solution as written in MixRiverOceanExec.txt by WritePHREEQCInput() has mass M*(1+M) kg. We want it to have mass M^2 kg.
 		// So, remove M*(1+M) - M^2 = M kg. This is equivalent to multiplying by M^2/(M*(1+M)) = M/(1+M).
-		double waterRemoval = ((*mass_w)/nAir0)/(0.001*(1.0079*2.0+15.994)); // moles of water to be removed
+		waterRemoval = ((*mass_w)/nAir0)/(0.001*(1.0079*2.0+15.994)); // moles of water to be removed
 		printf("Removing %g moles of water, initial moles %g, multiplying water mass by %g\n", waterRemoval, ((*mass_w)/nAir0)*(1.0+((*mass_w)/nAir0))/(0.001*(1.0079*2.0+15.994)), ((*mass_w)/nAir0)/(1.0+((*mass_w)/nAir0)));
-		char waterRem_str[30];
 		sprintf(waterRem_str, "\t%g \t moles\n", waterRemoval);
 		AccumulateLine(phreeqc, waterRem_str);
 		AccumulateLine(phreeqc, "SAVE solution 4");
-		AccumulateLine(phreeqc, "DUMP");
-		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump4Conc.txt");
-		AccumulateLine(phreeqc, "\t-solution 4");
+//		AccumulateLine(phreeqc, "DUMP");
+//		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump4Conc.txt");
+//		AccumulateLine(phreeqc, "\t-solution 4");
 		AccumulateLine(phreeqc, "END\n");
 
 		// Adjust solution pressure and mass to match seafloor weathering W:R
 		AccumulateLine(phreeqc, "TITLE Adjust solution pressure and mass to match seafloor weathering W:R");
 
 		AccumulateLine(phreeqc, "REACTION_PRESSURE 1");
-		char seafPressure[30];
+
 		sprintf(seafPressure, "\t %g", Pseaf/1.01325); // PHREEQC uses atm, not bar
 		AccumulateLine(phreeqc, seafPressure);
 
 		AccumulateLine(phreeqc, "MIX");
-		char RiverOceanRatio[30];
-		char rockVol_str[10];
-
-		int line_no = 0;        // Line number
-		int line_length = 300;
-		char line[line_length]; // Individual line
 
 		infile[0] = '\0';
 		strncat(infile,dbase,strlen(dbase)-19);
@@ -144,11 +148,11 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 		fclose (f);
 
 		// Scale mass of water twice: first since solution output by MixRiverOcean has approx. water mass Mocean/Mriver*(1+Mocean/Mriver) kg rather than 1 kg, second because we multiplied, post-mixing, the water mass by M/(1+M) to concentrate the ocean so as to conserve Mocean
-		sprintf(RiverOceanRatio, "\t 4 \t %g", mass_w_seaf / (((*mass_w)/nAir0)*(1.0+((*mass_w)/nAir0))) / (((*mass_w)/nAir0)/(1.0+((*mass_w)/nAir0))));
-		AccumulateLine(phreeqc, RiverOceanRatio); // Could avoid this scaling if the first rover-ocean mix starts with solution masses of 1 kg each
+		sprintf(mass_w_str, "\t 4 \t %g", mass_w_seaf / (((*mass_w)/nAir0)*(1.0+((*mass_w)/nAir0))) / (((*mass_w)/nAir0)/(1.0+((*mass_w)/nAir0))));
+		AccumulateLine(phreeqc, mass_w_str); // Could avoid this scaling if the first rover-ocean mix starts with solution masses of 1 kg each
 		AccumulateLine(phreeqc, "SAVE solution 5\n");
 		AccumulateLine(phreeqc, "DUMP"); // !! DO NOT COMMENT, need DumpStrings below
-		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump5PresMass.txt"); // Can comment this
+//		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump5PresMass.txt"); // Can comment this
 		AccumulateLine(phreeqc, "\t-solution 5"); // !! DO NOT COMMENT, need DumpStrings below
 		AccumulateLine(phreeqc, "END\n");
 
@@ -158,18 +162,15 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 		else printf("PHREEQC ran successfully\n");
 
 		// Memorize C(4) and C(-4) molalities here rather than before river mixing in the main code.
-		char oxCconc[300];   oxCconc[0] = '\0';
-		char redCconc[300];  redCconc[0] = '\0';
-		char masswater[300]; masswater[0] = '\0';
 
 		for (i=0;i<60;i++) { // Get them by reading dump string rather than by line number because number of lines printed out depends on number of solutes with non-neglible molalities
 			if (GetDumpStringLine(phreeqc, i)[4] == 'C' && GetDumpStringLine(phreeqc, i)[6] == '4') {
-				strcpy(oxCconc, GetDumpStringLine(phreeqc, i));
-				for (j=0;j<30;j++) oxCconc[j] = oxCconc[j+29];
+				strcpy(oxCmol, GetDumpStringLine(phreeqc, i));
+				for (j=0;j<30;j++) oxCmol[j] = oxCmol[j+29];
 			}
 			if (GetDumpStringLine(phreeqc, i)[4] == 'C' && GetDumpStringLine(phreeqc, i)[6] == '-' && GetDumpStringLine(phreeqc, i)[7] == '4') {
-				strcpy(redCconc, GetDumpStringLine(phreeqc, i));
-				for (j=0;j<30;j++) redCconc[j] = redCconc[j+29];
+				strcpy(redCmol, GetDumpStringLine(phreeqc, i));
+				for (j=0;j<30;j++) redCmol[j] = redCmol[j+29];
 			}
 			if (GetDumpStringLine(phreeqc, i)[3] == 'm' && GetDumpStringLine(phreeqc, i)[4] == 'a') {
 				strcpy(masswater, GetDumpStringLine(phreeqc, i));
@@ -178,18 +179,12 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 			}
 		}
 
-		double oxC = 0.0;
-		double redC = 0.0;
-
-		oxC = strtod((const char*)oxCconc, NULL)/strtod((const char*)masswater, NULL);
-		redC = strtod((const char*)redCconc, NULL)/strtod((const char*)masswater, NULL);
-//		printf("%g\n%g\n", oxC, redC);
+		oxC = strtod((const char*)oxCmol, NULL)/strtod((const char*)masswater, NULL);
+		redC = strtod((const char*)redCmol, NULL)/strtod((const char*)masswater, NULL);
 
 		if (!staglid) {
 			// React with seafloor: add EQUILIBRIUM_PHASES and SELECTED_OUTPUT blocks from Seafloor.txt
 			ClearAccumulatedLines(phreeqc);
-			AccumulateLine(phreeqc, GetDumpString(phreeqc)); // SOLUTION_RAW block TODO unnecessary?
-			AccumulateLine(phreeqc, "END\n");                // TODO unneeded?
 
 			AccumulateLine(phreeqc, "TITLE Seafloor weathering\n");
 			AccumulateLine(phreeqc, "USE solution 5");
@@ -211,12 +206,12 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 			fclose (fin);
 
 			AccumulateLine(phreeqc, "SAVE solution 6\n");
-			AccumulateLine(phreeqc, "DUMP");
-			AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump6SeafReact.txt");
-			AccumulateLine(phreeqc, "\t-solution 6");
+//			AccumulateLine(phreeqc, "DUMP");
+//			AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump6SeafReact.txt");
+//			AccumulateLine(phreeqc, "\t-solution 6");
 			AccumulateLine(phreeqc, "END\n");
 
-	//		OutputAccumulatedLines(phreeqc); // Check everything looks good before running
+//			OutputAccumulatedLines(phreeqc); // Check everything looks good before running
 			printf("Running PHREEQC to react ocean with seafloor...\n");
 			if (RunAccumulated(phreeqc) != 0) OutputErrorString(phreeqc);
 			else printf("PHREEQC ran successfully\n");
@@ -229,15 +224,15 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 			sprintf(seafPressure, "\t %g", (*P)/1.01325); // Back to Psurf, PHREEQC uses atm, not bar
 			AccumulateLine(phreeqc, seafPressure);
 			AccumulateLine(phreeqc, "MIX\n");
-			                                    //   Contribution       * New mass to match sol 5 / Old mass
-			sprintf(RiverOceanRatio, "\t 4 %g\n", (1.0-dtime/tcirc)     * mass_w_seaf             / ((*mass_w)/nAir0)/((*mass_w)/nAir0));
-			AccumulateLine(phreeqc, RiverOceanRatio);     // Solution 4 is bulk ocean, contribution should be 1-dtime/tcirc if the two solutions had the same mass, it has mass M^2
-			sprintf(RiverOceanRatio, "\t 6 %g\n", (    dtime/tcirc));// * mass_w_seaf             / mass_w_seaf));
-			AccumulateLine(phreeqc, RiverOceanRatio);     // Solution 6 is hydrothermal plume, contribution should be dtime/tcirc if the two solutions had the same mass, it has mass mass_w_seaf*(dtime/tcirc) minus what went into hydrating the seafloor
+			                               //   Contribution       * New mass to match sol 5 / Old mass
+			sprintf(mass_w_str, "\t 4 %g\n", (1.0-dtime/tcirc)     * mass_w_seaf             / ((*mass_w)/nAir0)/((*mass_w)/nAir0));
+			AccumulateLine(phreeqc, mass_w_str);     // Solution 4 is bulk ocean, contribution should be 1-dtime/tcirc if the two solutions had the same mass, it has mass M^2
+			sprintf(mass_w_str, "\t 6 %g\n", (    dtime/tcirc));// * mass_w_seaf             / mass_w_seaf));
+			AccumulateLine(phreeqc, mass_w_str);     // Solution 6 is hydrothermal plume, contribution should be dtime/tcirc if the two solutions had the same mass, it has mass mass_w_seaf*(dtime/tcirc) minus what went into hydrating the seafloor
 			AccumulateLine(phreeqc, "SAVE solution 7\n");
-			AccumulateLine(phreeqc, "DUMP");
-			AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump7HydMix.txt"); // Can comment this
-			AccumulateLine(phreeqc, "\t-solution 7");
+//			AccumulateLine(phreeqc, "DUMP");
+//			AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump7HydMix.txt"); // Can comment this
+//			AccumulateLine(phreeqc, "\t-solution 7");
 			AccumulateLine(phreeqc, "END\n");
 
 			printf("Running PHREEQC to mix hydrothermal plume with ocean...\n");
@@ -267,10 +262,10 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 		}
 		fclose (fin);
 
-		AccumulateLine(phreeqc, "SAVE solution 8\n");
-		AccumulateLine(phreeqc, "DUMP");
-		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump8FinalOcean.txt");
-		AccumulateLine(phreeqc, "\t-solution 8");
+//		AccumulateLine(phreeqc, "SAVE solution 8\n");
+//		AccumulateLine(phreeqc, "DUMP");
+//		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump8FinalOcean.txt");
+//		AccumulateLine(phreeqc, "\t-solution 8");
 		AccumulateLine(phreeqc, "END\n");
 
 //		OutputAccumulatedLines(phreeqc); // Check everything looks good before running
@@ -282,15 +277,15 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 
 		// Update ocean concentrations
 		(*pH) = simdata[0][1]; // Closed-system pH, does not correspond to pH of ocean equilibrated with atmosphere
-//		(*pe) = simdata[0][2]; // Does not account for redox changes associated with water:rock interaction at the seafloor, assuming that hydration/dehydration are balanced (but not carbonation/decarbonation) TODO what about org C or pyrite formation?
+//		(*pe) = simdata[0][2]; // Redox seems set by relative abundances of C(4) and C(-4)
 		// Scale by (original water mass)/(new water mass) under assumption that hydration and dehydration (but not carbonation/decarbonation) of ocean crust are balanced
 		printf("Water mass scaling before/after: %g\n", mass_w_seaf/simdata[0][5]);
 		(*xaq)[0] = simdata[0][23] * simdata[0][5] / mass_w_seaf; // C(4), i.e. dissolved CO2 and carbonate
 		(*xaq)[1] = simdata[0][21] * simdata[0][5] / mass_w_seaf; // C(-4), i.e. dissolved methane
 //		(*xaq)[2] = simdata[0][36] * simdata[0][5] / mass_w_seaf; // O(0), commented out so as not to throw off redox
 //		(*xaq)[3] = simdata[0][46] * simdata[0][5] / mass_w_seaf; // Ntg, commented out otherwise N is not quite conserved
-//		(*xaq)[4] = 0.0;                                              // N excluding Ntg
-//		(*xaq)[5] = 0.0;                                              // N(-3), i.e. dissolved NH3 and NH4+
+//		(*xaq)[4] = 0.0;                                          // N excluding Ntg
+//		(*xaq)[5] = 0.0;                                          // N(-3), i.e. dissolved NH3 and NH4+
 		(*xaq)[6] = simdata[0][12] * simdata[0][5] / mass_w_seaf; // Mg
 		(*xaq)[7] = simdata[0][8]  * simdata[0][5] / mass_w_seaf; // Ca
 		(*xaq)[8] = simdata[0][10] * simdata[0][5] / mass_w_seaf; // Fe
@@ -316,7 +311,6 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 	if (strcmp(filename, "io/OceanStart.txt") == 0) {
 		(*pH) = simdata[0][1];
 		(*pe) = simdata[0][2];
-
 		(*xaq)[0] = simdata[0][39];             // C(4), i.e. dissolved CO2 and carbonate
 		(*xaq)[1] = simdata[0][37];             // C(-4), i.e. dissolved methane
 		(*xaq)[2] = simdata[0][66];             // O(0), i.e. dissolved O2

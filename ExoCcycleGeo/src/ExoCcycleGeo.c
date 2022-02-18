@@ -272,15 +272,11 @@ int main(int argc, char *argv[]) {
 	double zCrack = 6000.0;            // Depth of fracturing below seafloor (m), default 6000 m (Vance et al. 2007)
 	double Pseaf = 0.0;                // Avg. seafloor pressure calculated assuming avg. ocean depth
 	double WRseafW = 1.0;              // Water to rock ratio of seafloor weathering, here multiplied by rock mass
-//	int iterSeafW = 0;                 // Number of iterations (sub-timesteps) of seafloor weathering model so that river runoff * timestep < Mocean, use is optional since this is for an equilibrium calculation
-	double dtSeafW = 0.0;              // Sub-timestep for seafloor weathering model so that river runoff * timestep < Mocean, use is optional since this is an equilibrium calculation
 	double mix = 0.0;                  // Mocean/Mriver, optionally scaled by sub-timestep
 	double deltaCreac = 0.0;           // Net C leached/precipitated per kg of rock (mol kg-1) over one sub-timestep
-//	double deltaCreacTot = 0.0;        // Net C leached/precipitated per kg of rock (mol kg-1) cumulated over one main time step, = deltaCreac if no sub-timesteps
 	double xaq0 = 0.0;                 // Memory of xaq[0] (mol/kg) before seafloor weathering calculation to avoid removing oxidized C twice (during PHREEQC calculation and from netFC)
 	double xaq1 = 0.0;                 // Memory of xaq[1] (mol/kg) before seafloor weathering calculation to avoid removing reduced C twice (during PHREEQC calculation and from netFC)
 	double volSeafCrust = 0.0;         // Volume of seafloor reacting with ocean water (m3)
-//	double tcirc = 1.0e7*Yr2sec;	   // Timescale of ocean cycling through seafloor hydrothermal systems (Mottl 1983; Kadko et al. 1995) (s)
 
 	double *xaq = (double*) malloc(nAqSpecies*sizeof(double));
 	if (xaq == NULL) printf("ExoCcycleGeo: Not enough memory to create xaq[nAqSpecies]\n"); // Molalities of aqueous species (mol (kg H2O)-1)
@@ -1256,48 +1252,36 @@ int main(int argc, char *argv[]) {
 
 		if (realtime > tstart && realtime <= tend) {
 
-			// Could run in sub-time steps commensurate with Mocean/runoff*4*pi*r_p^2,
-			// but it shouldn't matter even if there is much more cumulative river runoff than ocean water since this is an equilibrium calculation
-//			iterSeafW = floor(Mriver/Mocean);
-			dtSeafW = dtime;
-//			dtSeafW = dtime/(double)iterSeafW;
-			mix = Mocean/Mriver * dtime/dtSeafW;
+			mix = Mocean/Mriver;
 
-			LplateBnd = 6.5*2.0*PI_greek*r_p; // TODO that's both MOR and subduction, MOR alone is less, 1.5*2 pi r?
-//			LplateBnd = pow(Ra/2.3e6,1.0/3.0) * 6.5*2.0*PI_greek*r_p;
+//			LplateBnd = 1.5*2.0*PI_greek*r_p; // Current length of mid-ocean ridges = length of subduction zones = 60000-65000 km
+			LplateBnd = pow(Ra/2.3e6,1.0/3.0) * 1.5*2.0*PI_greek*r_p;
 			// 2.3e6 is canonical Ra for Earth today. Scaling with Ra^1/3 is consistent with scaling with Nu and also consistent with 3-5 times greater ridge length in Archean from Kadko et al. (1995).
 			// Today indicative size of 7 major plates is 70e6 km2, corresponding to diameter 2*sqrt(70e6/(4*pi)) = 4720 km > mantle depth, even though (isoviscous) convection cell should have aspect ratio of 1 (Bercovici et al. 2015).
 			// For Earth inputs it is = mantle depth (2900 km) for Ra = 1e7, i.e., 2 billion years ago (oldest evidence of plate tectonics 2-3 Ga; Brown et al. 2020)
 
-//			zCrack = realtime/Myr2sec; // Reflects secular cooling below crust, which prevents cracks from healing as fast
+			zCrack = realtime/Myr2sec; // Reflects secular cooling below crust, which prevents cracks from healing as fast
 
-			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*vConv*zCrack*dtime; // MOR length = 6.5*Earth circumference, crust assumed fully cracked
-//			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*(vConv*fmin(1.0,realtime/(1.5*Gyr2sec)))*zCrack*dtime; // vConv*fmin() term represents sluggish convection until full plate tectonics
+//			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*vConv*zCrack*dtime; // MOR length = 6.5*Earth circumference, crust assumed fully cracked
+			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*(vConv*fmin(1.0,realtime/(1.5*Gyr2sec)))*zCrack*dtime; // vConv*fmin() term represents sluggish convection until full plate tectonics
 
 			Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth TODO scale with land coverage
-//			tcirc = dtime; // Effectively, only a fraction dtime/tcirc of the ocean reacts with seafloor crust during a timestep. This is equivalent to the full ocean reacting at an effective water:rock ratio (tcirc/dtime)*W:R
 			WRseafW = Mocean*dtime/tcirc / volSeafCrust; // Will be multiplied in AqueousChem() by (mass rock input to PHREEQC / seafloor crust density) = volume rock input to PHREEQC. 1e7 yr is hydrothermal circulation timescale (Kadko et al. 1995)
 
 			// Memorize aqueous C abundances
 			xaq0 = xaq[0];
 			xaq1 = xaq[1];
-//			deltaCreacTot = 0.0;
 
-//			for (i=0;i<iterSeafW;i++) {
-				printf("Mixing river input into ocean...\n");
-				printf("Ocean will react with seafloor crust at W/R by vol. = %g\n", Mocean*dtime/tcirc / 1000.0 / volSeafCrust);
-				AqueousChem(path, "io/MixRiverOcean.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq, Pseaf, WRseafW, &deltaCreac, 0, dtime);
-				printf("deltaCreac = %g mol/kg\n", deltaCreac);
-//				deltaCreac = xaq[0]+xaq[1]-xaq0-xaq1;
-//				deltaCreacTot += deltaCreac;
-//			}
+			printf("Mixing river input into ocean...\n");
+			printf("Ocean will react with seafloor crust at W/R by vol. = %g\n", Mocean*dtime/tcirc / 1000.0 / volSeafCrust);
+			AqueousChem(path, "io/MixRiverOcean.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq, Pseaf, WRseafW, &deltaCreac, 0, dtime);
+			printf("deltaCreac = %g mol/kg\n", deltaCreac);
+
 			// Reset aqueous C abundances as they'll be adjusted by ocean-atmosphere equilibrium at the next time step, when netFC C is added to {atmosphere+ocean}
 			xaq[0] = xaq0;
 			xaq[1] = xaq1;
 
-//			FCseafsubd = volSeafCrust/dtime * deltaCreac * WRseafW; // m3 rock/s * mol/kg water * kg water/m3 rock = mol/s, otherwise expressed below:
-//			FCseafsubd = deltaCreac * Mocean / tcirc; // If plate tectonics (some spontaneous preciptation from supersaturated oceans is also expected to take place if plate tectonics, but in negligible relative amounts)
-			FCseafsubd = deltaCreac * Mocean / dtime; // If no plate tectonics
+			FCseafsubd = deltaCreac * Mocean / dtime; // *dtime in updating reservoirs through netFC, so this is time-independent (chemical equilibrium)
 		}
 
 		//-------------------------------------------------------------------

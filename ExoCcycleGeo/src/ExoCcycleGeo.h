@@ -38,7 +38,7 @@
 #define Yr2sec 3.15576e7                // Convert 1 year to s
 
 // Earth scalings
-#define TsurfEarth 288.0                // Mean equilibrium surface temperature on Earth (K)
+//#define TsurfEarth 288.0                // Mean equilibrium surface temperature on Earth (K)
 //#define RmeltEarth 3.8e-19              // Rate of melt generation on Earth (s-1) Kite et al. 2009 Fig. 15; http://dx.doi.org/10.1088/0004-637X/700/2/1732
 //#define deltaCvolcEarth 2.2e5           // Surface C flux from subaerial+submarine volcanic outgassing (mol C s-1) Donnadieu et al. 2006; http://dx.doi.org/10.1029/2006GC001278
 //#define deltaCcontwEarth 8.4543e-10     // Surface C flux from continental weathering on Earth (mol C m-2 s-1)
