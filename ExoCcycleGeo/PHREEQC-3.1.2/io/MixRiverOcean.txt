@@ -47,7 +47,7 @@ MIX 1 Mix river into ocean
 SAVE solution 3
 
 DUMP
-#	-file		../PHREEQC-3.1.2/io/dump.txt
+	-file		../PHREEQC-3.1.2/io/dump.txt
 	-solution 	3
 
 END

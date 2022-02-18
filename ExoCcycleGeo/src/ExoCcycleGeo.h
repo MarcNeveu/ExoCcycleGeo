@@ -39,10 +39,10 @@
 
 // Earth scalings
 #define TsurfEarth 288.0                // Mean equilibrium surface temperature on Earth (K)
-#define RmeltEarth 3.8e-19              // Rate of melt generation on Earth (s-1) Kite et al. 2009 Fig. 15; http://dx.doi.org/10.1088/0004-637X/700/2/1732
-#define deltaCvolcEarth 2.2e5           // Surface C flux from subaerial+submarine volcanic outgassing (mol C s-1) Donnadieu et al. 2006; http://dx.doi.org/10.1029/2006GC001278
-#define deltaCcontwEarth 8.4543e-10     // Surface C flux from continental weathering on Earth (mol C m-2 s-1)
-#define MORlength 60000.0*km2m          // Length of mid-ocean ridges, unconstrained parameter, default 60000 km (Earth today), likely did not vary monotonically in the past
+//#define RmeltEarth 3.8e-19              // Rate of melt generation on Earth (s-1) Kite et al. 2009 Fig. 15; http://dx.doi.org/10.1088/0004-637X/700/2/1732
+//#define deltaCvolcEarth 2.2e5           // Surface C flux from subaerial+submarine volcanic outgassing (mol C s-1) Donnadieu et al. 2006; http://dx.doi.org/10.1029/2006GC001278
+//#define deltaCcontwEarth 8.4543e-10     // Surface C flux from continental weathering on Earth (mol C m-2 s-1)
+//#define MORlength 60000.0*km2m          // Length of mid-ocean ridges, unconstrained parameter, default 60000 km (Earth today), likely did not vary monotonically in the past
 
 // Accretion parameters
 #define chi 2.0                         // Ratio of planetesimal velocity to escape velocity
@@ -57,7 +57,7 @@
 #define TminMELTS 750.0                 // Don't run MELTS below 750ºC to avoid it crashing (ºC)
 
 // Atmosphere parameters
-#define xCO2g0 355.0e-6                 // Reference atmospheric CO2 mixing ratio (ppmv)
+//#define xCO2g0 355.0e-6                 // Reference atmospheric CO2 mixing ratio (ppmv)
 #define runoff_0 7.75e-9                // Reference runoff (m s-1) = 0.67e-3 m day-1 (Edson et al. 2012, http://dx.doi.org/10.1089/ast.2011.0762)
 
 // Geochem parameters
@@ -69,6 +69,7 @@
 #define nmingas 389                     // Number of minerals and gases
 #define nelts 31                        // 30 elements + 1 extra column in WaterRock/Molar_masses.txt
 #define rhoH2O 1000.0                   // Density of water (kg m-3)
+#define tcirc (1.0e7*Yr2sec)			// Timescale of ocean cycling through seafloor hydrothermal systems (Mottl 1983; Kadko et al. 1995) (s)
 
 #ifndef EXOCCYCLEGEO_H_
 #define EXOCCYCLEGEO_H_

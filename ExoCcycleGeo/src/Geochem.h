@@ -15,7 +15,7 @@
 //-------------------------------------------------------------------
 
 int AqueousChem (char path[1024], char filename[64], double T, double *P, double *V, double *nAir, double *pH, double *pe, double *mass_w, double **xgas, double **xaq,
-		double ***xriver, int iResTime, int forcedPP, double kintime, int kinsteps, int nvar, double Pseaf, double mass_w_seaf, double *deltaCreac, int staglid);
+		double ***xriver, int iResTime, int forcedPP, double kintime, int kinsteps, int nvar, double Pseaf, double mass_w_seaf, double *deltaCreac, int staglid, double dtime);
 int ExtractWrite(int instance, double*** data, int line, int nvar);
 const char* ConCat (const char *str1, const char *str2);
 int WritePHREEQCInput(const char *TemplateFile, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
@@ -38,7 +38,7 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
  *--------------------------------------------------------------------*/
 
 int AqueousChem (char path[1024], char filename[64], double T, double *P, double *V, double *nAir, double *pH, double *pe, double *mass_w, double **xgas, double **xaq,
-		double ***xriver, int iResTime, int forcedPP, double kintime, int kinsteps, int nvar, double Pseaf, double mass_w_seaf, double *deltaCreac, int staglid) {
+		double ***xriver, int iResTime, int forcedPP, double kintime, int kinsteps, int nvar, double Pseaf, double mass_w_seaf, double *deltaCreac, int staglid, double dtime) {
 
 	int phreeqc = 0;
 	int i = 0;
@@ -103,9 +103,9 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 		sprintf(waterRem_str, "\t%g \t moles\n", waterRemoval);
 		AccumulateLine(phreeqc, waterRem_str);
 		AccumulateLine(phreeqc, "SAVE solution 4");
-//		AccumulateLine(phreeqc, "DUMP");
-//		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dumpConc.txt");
-//		AccumulateLine(phreeqc, "\t-solution 4");
+		AccumulateLine(phreeqc, "DUMP");
+		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump4Conc.txt");
+		AccumulateLine(phreeqc, "\t-solution 4");
 		AccumulateLine(phreeqc, "END\n");
 
 		// Adjust solution pressure and mass to match seafloor weathering W:R
@@ -120,14 +120,14 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 		char RiverOceanRatio[30];
 		char rockVol_str[10];
 
+		int line_no = 0;        // Line number
+		int line_length = 300;
+		char line[line_length]; // Individual line
+
 		infile[0] = '\0';
 		strncat(infile,dbase,strlen(dbase)-19);
 		if (staglid) strcat(infile, "io/Seafloor_staglid.txt");
 		else strcat(infile, "io/Seafloor_platetect.txt");
-
-		int line_no = 0;        // Line number
-		int line_length = 300;
-		char line[line_length]; // Individual line
 
 		FILE *f = fopen (infile,"r"); 	// Open input file
 		if (f == NULL) printf("WritePHREEQCInput: Missing input file. Path: %s\n", infile);
@@ -148,7 +148,7 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 		AccumulateLine(phreeqc, RiverOceanRatio); // Could avoid this scaling if the first rover-ocean mix starts with solution masses of 1 kg each
 		AccumulateLine(phreeqc, "SAVE solution 5\n");
 		AccumulateLine(phreeqc, "DUMP"); // !! DO NOT COMMENT, need DumpStrings below
-//		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dumpPresMass.txt"); // Can comment this
+		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump5PresMass.txt"); // Can comment this
 		AccumulateLine(phreeqc, "\t-solution 5"); // !! DO NOT COMMENT, need DumpStrings below
 		AccumulateLine(phreeqc, "END\n");
 
@@ -185,13 +185,75 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 		redC = strtod((const char*)redCconc, NULL)/strtod((const char*)masswater, NULL);
 //		printf("%g\n%g\n", oxC, redC);
 
-		// React with seafloor: add EQUILIBRIUM_PHASES and SELECTED_OUTPUT blocks from Seafloor.txt
-		ClearAccumulatedLines(phreeqc);
-		AccumulateLine(phreeqc, GetDumpString(phreeqc)); // SOLUTION_RAW block
-		AccumulateLine(phreeqc, "END\n");
+		if (!staglid) {
+			// React with seafloor: add EQUILIBRIUM_PHASES and SELECTED_OUTPUT blocks from Seafloor.txt
+			ClearAccumulatedLines(phreeqc);
+			AccumulateLine(phreeqc, GetDumpString(phreeqc)); // SOLUTION_RAW block TODO unnecessary?
+			AccumulateLine(phreeqc, "END\n");                // TODO unneeded?
 
-		AccumulateLine(phreeqc, "TITLE Seafloor weathering\n");
-		AccumulateLine(phreeqc, "USE solution 5");
+			AccumulateLine(phreeqc, "TITLE Seafloor weathering\n");
+			AccumulateLine(phreeqc, "USE solution 5");
+
+			infile[0] = '\0';
+			strncat(infile,dbase,strlen(dbase)-19);
+			strcat(infile, "io/Seafloor_platetect.txt");
+
+			FILE *fin = fopen (infile,"r"); 	// Open input file
+			if (fin == NULL) printf("WritePHREEQCInput: Missing input file. Path: %s\n", infile);
+
+			while (fgets(line, line_length, fin)) {
+				line_no++;
+				if (line_no > 0) {
+					fgets(line, 0, fin);  // Simulation time step (years)
+					AccumulateLine(phreeqc, line);
+				}
+			}
+			fclose (fin);
+
+			AccumulateLine(phreeqc, "SAVE solution 6\n");
+			AccumulateLine(phreeqc, "DUMP");
+			AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump6SeafReact.txt");
+			AccumulateLine(phreeqc, "\t-solution 6");
+			AccumulateLine(phreeqc, "END\n");
+
+	//		OutputAccumulatedLines(phreeqc); // Check everything looks good before running
+			printf("Running PHREEQC to react ocean with seafloor...\n");
+			if (RunAccumulated(phreeqc) != 0) OutputErrorString(phreeqc);
+			else printf("PHREEQC ran successfully\n");
+
+
+			// Mix hydrothermal plume and ocean water
+			ClearAccumulatedLines(phreeqc);
+			AccumulateLine(phreeqc, "TITLE Hydrothermal plume mixing\n");
+			AccumulateLine(phreeqc, "REACTION_PRESSURE 2");
+			sprintf(seafPressure, "\t %g", (*P)/1.01325); // Back to Psurf, PHREEQC uses atm, not bar
+			AccumulateLine(phreeqc, seafPressure);
+			AccumulateLine(phreeqc, "MIX\n");
+			                                    //   Contribution       * New mass to match sol 5 / Old mass
+			sprintf(RiverOceanRatio, "\t 4 %g\n", (1.0-dtime/tcirc)     * mass_w_seaf             / ((*mass_w)/nAir0)/((*mass_w)/nAir0));
+			AccumulateLine(phreeqc, RiverOceanRatio);     // Solution 4 is bulk ocean, contribution should be 1-dtime/tcirc if the two solutions had the same mass, it has mass M^2
+			sprintf(RiverOceanRatio, "\t 6 %g\n", (    dtime/tcirc));// * mass_w_seaf             / mass_w_seaf));
+			AccumulateLine(phreeqc, RiverOceanRatio);     // Solution 6 is hydrothermal plume, contribution should be dtime/tcirc if the two solutions had the same mass, it has mass mass_w_seaf*(dtime/tcirc) minus what went into hydrating the seafloor
+			AccumulateLine(phreeqc, "SAVE solution 7\n");
+			AccumulateLine(phreeqc, "DUMP");
+			AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump7HydMix.txt"); // Can comment this
+			AccumulateLine(phreeqc, "\t-solution 7");
+			AccumulateLine(phreeqc, "END\n");
+
+			printf("Running PHREEQC to mix hydrothermal plume with ocean...\n");
+			if (RunAccumulated(phreeqc) != 0) OutputErrorString(phreeqc);
+			else printf("PHREEQC ran successfully\n");
+		}
+
+		// Allow for mineral precipitation if ocean is supersaturated
+		ClearAccumulatedLines(phreeqc);
+		AccumulateLine(phreeqc, "TITLE Mineral precipitation if ocean is supersaturated\n");
+		if (!staglid) AccumulateLine(phreeqc, "USE solution 7");
+		else AccumulateLine(phreeqc, "USE solution 5");
+
+		infile[0] = '\0';
+		strncat(infile,dbase,strlen(dbase)-19);
+		strcat(infile, "io/Seafloor_staglid.txt");
 
 		FILE *fin = fopen (infile,"r"); 	// Open input file
 		if (fin == NULL) printf("WritePHREEQCInput: Missing input file. Path: %s\n", infile);
@@ -205,14 +267,14 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 		}
 		fclose (fin);
 
-//		AccumulateLine(phreeqc, "SAVE solution 6\n"); // Debug, make sure to remove "END" at end of Seafloor.txt when uncommenting this
-//		AccumulateLine(phreeqc, "DUMP");
-//		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dumpSeafReact.txt");
-//		AccumulateLine(phreeqc, "\t-solution 6");
+		AccumulateLine(phreeqc, "SAVE solution 8\n");
+		AccumulateLine(phreeqc, "DUMP");
+		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump8FinalOcean.txt");
+		AccumulateLine(phreeqc, "\t-solution 8");
 		AccumulateLine(phreeqc, "END\n");
 
 //		OutputAccumulatedLines(phreeqc); // Check everything looks good before running
-		printf("Running PHREEQC to react ocean with seafloor...\n");
+		printf("Running PHREEQC to allow for mineral precipitation if ocean is supersaturated...\n");
 		if (RunAccumulated(phreeqc) != 0) OutputErrorString(phreeqc);
 		else printf("PHREEQC ran successfully\n");
 

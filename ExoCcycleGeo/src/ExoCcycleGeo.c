@@ -280,7 +280,7 @@ int main(int argc, char *argv[]) {
 	double xaq0 = 0.0;                 // Memory of xaq[0] (mol/kg) before seafloor weathering calculation to avoid removing oxidized C twice (during PHREEQC calculation and from netFC)
 	double xaq1 = 0.0;                 // Memory of xaq[1] (mol/kg) before seafloor weathering calculation to avoid removing reduced C twice (during PHREEQC calculation and from netFC)
 	double volSeafCrust = 0.0;         // Volume of seafloor reacting with ocean water (m3)
-	double tcirc = 1.0e7*Yr2sec;	   // Timescale of ocean cycling through seafloor hydrothermal systems (Mottl 1983; Kadko et al. 1995) (s)
+//	double tcirc = 1.0e7*Yr2sec;	   // Timescale of ocean cycling through seafloor hydrothermal systems (Mottl 1983; Kadko et al. 1995) (s)
 
 	double *xaq = (double*) malloc(nAqSpecies*sizeof(double));
 	if (xaq == NULL) printf("ExoCcycleGeo: Not enough memory to create xaq[nAqSpecies]\n"); // Molalities of aqueous species (mol (kg H2O)-1)
@@ -547,7 +547,7 @@ int main(int argc, char *argv[]) {
 		if (xgas[i] > 0.0 && xaq[i] == 0.0) xaq[i] = 1.0; // xaq must be >0 otherwise PHREEQC ignores it, set to 1 mol/kgw (initial guess).
 	}
 
-	AqueousChem(path, "io/OceanStart.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 1, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid);
+	AqueousChem(path, "io/OceanStart.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 1, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
 
 	RCocean = (xaq[0]+xaq[1])*Mocean;
 	RCatmoc = RCatm + RCocean;
@@ -643,7 +643,7 @@ int main(int argc, char *argv[]) {
 	printf("Starting time loop...\n");
 	while (realtime < tend) {
 
-		dtime = fmin(10.0*Myr2sec, 0.1*fmin(RCatmoc, RCmantle)/fabs(netFC));
+		dtime = fmin(1.0*Myr2sec, 0.1*fmin(RCatmoc, RCmantle)/fabs(netFC));
 		if (realtime < tstart + 1.0*Myr2sec) dtime = fmin(dtime, 0.2*Myr2sec); // Start slow
 		if (realtime < tstart) dtime = 10.0*Myr2sec;                           // Sufficient to achieve numerical convergence for geodynamics alone
 		realtime += dtime;
@@ -715,7 +715,7 @@ int main(int argc, char *argv[]) {
 		if (Tsurf > Tfreeze) {
 			printf("\nTime: %g Gyr. Equilibrating ocean and atmosphere... ", realtime/Myr2sec/1000.0);
 
-			AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid);
+			AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
 
 			if (Psurf < 0.01) {
 				printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
@@ -1206,7 +1206,7 @@ int main(int argc, char *argv[]) {
 			WRcontW = 5000.0*runoff/runoff_0;
 
 			printf("Continental weathering... ");
-			AqueousChem(path, "io/ContWeather.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin, 0.0, 0.0, &deltaCreac, staglid);
+			AqueousChem(path, "io/ContWeather.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin, 0.0, 0.0, &deltaCreac, staglid, dtime);
 
 			rainpH = xriver[1][3]; // xriver[0][3], the initial rain speciation, is returned as = 0, so this is as close as it gets (smallest reaction time)
 			massH2Oriver = xriver[iResTime][7];
@@ -1263,7 +1263,7 @@ int main(int argc, char *argv[]) {
 //			dtSeafW = dtime/(double)iterSeafW;
 			mix = Mocean/Mriver * dtime/dtSeafW;
 
-			LplateBnd = 6.5*2.0*PI_greek*r_p;
+			LplateBnd = 6.5*2.0*PI_greek*r_p; // TODO that's both MOR and subduction, MOR alone is less, 1.5*2 pi r?
 //			LplateBnd = pow(Ra/2.3e6,1.0/3.0) * 6.5*2.0*PI_greek*r_p;
 			// 2.3e6 is canonical Ra for Earth today. Scaling with Ra^1/3 is consistent with scaling with Nu and also consistent with 3-5 times greater ridge length in Archean from Kadko et al. (1995).
 			// Today indicative size of 7 major plates is 70e6 km2, corresponding to diameter 2*sqrt(70e6/(4*pi)) = 4720 km > mantle depth, even though (isoviscous) convection cell should have aspect ratio of 1 (Bercovici et al. 2015).
@@ -1275,7 +1275,7 @@ int main(int argc, char *argv[]) {
 //			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*(vConv*fmin(1.0,realtime/(1.5*Gyr2sec)))*zCrack*dtime; // vConv*fmin() term represents sluggish convection until full plate tectonics
 
 			Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth TODO scale with land coverage
-			tcirc = dtime; // Effectively, only a fraction dtime/tcirc of the ocean reacts with seafloor crust during a timestep. This is equivalent to the full ocean reacting at an effective water:rock ratio (tcirc/dtime)*W:R
+//			tcirc = dtime; // Effectively, only a fraction dtime/tcirc of the ocean reacts with seafloor crust during a timestep. This is equivalent to the full ocean reacting at an effective water:rock ratio (tcirc/dtime)*W:R
 			WRseafW = Mocean*dtime/tcirc / volSeafCrust; // Will be multiplied in AqueousChem() by (mass rock input to PHREEQC / seafloor crust density) = volume rock input to PHREEQC. 1e7 yr is hydrothermal circulation timescale (Kadko et al. 1995)
 
 			// Memorize aqueous C abundances
@@ -1286,7 +1286,7 @@ int main(int argc, char *argv[]) {
 //			for (i=0;i<iterSeafW;i++) {
 				printf("Mixing river input into ocean...\n");
 				printf("Ocean will react with seafloor crust at W/R by vol. = %g\n", Mocean*dtime/tcirc / 1000.0 / volSeafCrust);
-				AqueousChem(path, "io/MixRiverOcean.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq, Pseaf, WRseafW, &deltaCreac, staglid);
+				AqueousChem(path, "io/MixRiverOcean.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq, Pseaf, WRseafW, &deltaCreac, 0, dtime);
 				printf("deltaCreac = %g mol/kg\n", deltaCreac);
 //				deltaCreac = xaq[0]+xaq[1]-xaq0-xaq1;
 //				deltaCreacTot += deltaCreac;
@@ -1296,8 +1296,8 @@ int main(int argc, char *argv[]) {
 			xaq[1] = xaq1;
 
 //			FCseafsubd = volSeafCrust/dtime * deltaCreac * WRseafW; // m3 rock/s * mol/kg water * kg water/m3 rock = mol/s, otherwise expressed below:
-			FCseafsubd = deltaCreac * Mocean / tcirc; // If plate tectonics (some spontaneous preciptation from supersaturated oceans is also expected to take place if plate tectonics, but in negligible relative amounts)
-//			FCseafsubd = deltaCreac * Mocean / dtime; // If no plate tectonics
+//			FCseafsubd = deltaCreac * Mocean / tcirc; // If plate tectonics (some spontaneous preciptation from supersaturated oceans is also expected to take place if plate tectonics, but in negligible relative amounts)
+			FCseafsubd = deltaCreac * Mocean / dtime; // If no plate tectonics
 		}
 
 		//-------------------------------------------------------------------
@@ -1306,6 +1306,10 @@ int main(int argc, char *argv[]) {
 		if (!staglid) farc = 0.25;
 		netFC = FCoutgas + (1.0-farc)*FCseafsubd; // FCcontw < 0, FCseafsubd < 0, ignore FCcontW since that's a flux to the ocean manifested in seafW
 		RCmantle = RCmantle - dtime*netFC; // Assuming plate = mantle (unlike Foley et al. 2015) and instantaneous mixing into the mantle once subducted (in practice could take 1 Gyr)
+		if (RCmantle < 0.0) {
+			printf("Mantle reservoir depleted\n");
+			exit(0);
+		}
 
 		// Life. On Earth today, org C sequesters today 1e5 x more carbon than atmosphere. Org C has had same level since Archean, maybe was 2x lower back then (Martin et al. 2008 Fig. 2B)
 //		if (realtime > tstart && realtime <= tend && RCorg < 1.0e21) { // Reservoir size is of order 1e21 mol today (Hayes and Waldbauer 2006 Table 2)
@@ -1314,6 +1318,10 @@ int main(int argc, char *argv[]) {
 //		}
 
 		RCatmoc = RCatmoc + dtime*netFC; // Sum of atmospheric and ocean reservoirs, still needs partitioning
+		if (RCatmoc < 0.0) {
+			printf("Atmosphere-ocean reservoir depleted\n");
+			exit(0);
+		}
 
 		// Write outputs
 		title[0] = '\0';
