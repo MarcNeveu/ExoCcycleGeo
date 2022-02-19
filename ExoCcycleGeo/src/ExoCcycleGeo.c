@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
 
 	// User-specified grid parameters
 	double dtime = 0.0;                // Time step (s)
+	double dtime0 = 0.0;			   // Input time step (s)
 	double tstart = 0.0;               // Time at which to start alphaMELTS calculations (s)
 	double tend = 0.0;                 // Time at which to end alphaMELTS calculations (s)
 
@@ -317,7 +318,7 @@ int main(int argc, char *argv[]) {
 
 	i = 0;
 	// Grid inputs
-	dtime = input[i]*Myr2sec; i++;     // Timestep
+	dtime0 = input[i]*Myr2sec; i++;     // Timestep
 	tstart = input[i]*Gyr2sec; i++;    // Simulation start time
 	tend = input[i]*Gyr2sec; i++;      // Simulation end time
 	// Interior inputs
@@ -345,13 +346,13 @@ int main(int argc, char *argv[]) {
     xgas[4] = input[i]; i++;           // H2O mixing ratio
 
 	printf("\n");
-	printf("ExoCcycleGeo v22.1\n");
+	printf("ExoCcycleGeo v22.2\n");
 	if (cmdline == 1) printf("Command line mode\n");
 
 	printf("|--------------------------------------------------------------|\n");
 	printf("| Grid |||||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
 	printf("|-----------------------------------------------|--------------|\n");
-	printf("| Simulation time step (Myr, default 10)        | %g \n", dtime/Myr2sec);
+	printf("| Simulation time step (Myr, default 1, adapts) | %g \n", dtime0/Myr2sec);
 	printf("| Simulation start time (Gyr, default 0.6)      | %g \n", tstart/Gyr2sec);
 	printf("| Simulation end   time (Gyr, default 5)        | %g \n", tend/Gyr2sec);
 	printf("|-----------------------------------------------|--------------|\n");
@@ -639,7 +640,7 @@ int main(int argc, char *argv[]) {
 	printf("Starting time loop...\n");
 	while (realtime < tend) {
 
-		dtime = fmin(1.0*Myr2sec, 0.1*fmin(RCatmoc, RCmantle)/fabs(netFC));
+		dtime = fmin(dtime0, 0.1*fmin(RCatmoc, RCmantle)/fabs(netFC));
 		if (realtime < tstart + 1.0*Myr2sec) dtime = fmin(dtime, 0.2*Myr2sec); // Start slow
 		if (realtime < tstart) dtime = 10.0*Myr2sec;                           // Sufficient to achieve numerical convergence for geodynamics alone
 		realtime += dtime;
