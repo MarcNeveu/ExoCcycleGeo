@@ -3,7 +3,7 @@ ExoCcycleGeo v20.x Input File
 |--------------------------------------------------------------|
 | Grid |||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |-----------------------------------------------|--------------|
-| Simulation time step (Myr, default 10, adapts)| 0.1           |
+| Simulation time step (Myr, default 1, adapts) | 0.5          |
 | Simulation start time (Gyr, default 0.6)      | 0.6          |
 | Simulation end   time (Gyr, default 5)        | 4.57         |
 |-----------------------------------------------|--------------|

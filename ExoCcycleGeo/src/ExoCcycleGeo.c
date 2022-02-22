@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
 	//-------------------------------------------------------------------
 
 	int i = 0;
+	int recover = 0;
 
 	int n_inputs = 23;
 	double *input = (double*) malloc(n_inputs*sizeof(double));
@@ -531,105 +532,221 @@ int main(int argc, char *argv[]) {
 	// Initialize reservoirs
 	//-------------------------------------------------------------------
 
-	RCatm = (xgas[0]+xgas[1])*nAir;
+	if (!recover) { // New simulation start
+		RCatm = (xgas[0]+xgas[1])*nAir;
 
-	// Equilibrate ocean and atmosphere at input pressure and atmospheric C/N ratio
-	if (Psurf < 0.01) {
-		printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
-		exit(0);
+		// Equilibrate ocean and atmosphere at input pressure and atmospheric C/N ratio
+		if (Psurf < 0.01) {
+			printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
+			exit(0);
+		}
+
+		printf("Equilibrating ocean and atmosphere at input pressure and atmospheric C/N ratio...\n");
+		for (i=0;i<nAtmSpecies;i++) {
+			if (xgas[i] > 0.0 && xaq[i] == 0.0) xaq[i] = 1.0; // xaq must be >0 otherwise PHREEQC ignores it, set to 1 mol/kgw (initial guess).
+		}
+
+		AqueousChem(path, "io/OceanStart.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 1, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
+
+		RCocean = (xaq[0]+xaq[1])*Mocean;
+		RCatmoc = RCatm + RCocean;
+		RCmantle = 1.0e4*(RCatmoc); // Dasgupta and Hirschmann (2010): 0.8 to 12.5 e23 g = 0.07 to 1.04 e23 mol
+		RCmantle = (m_p-m_c)*magmaCmassfrac/10.0/0.012; // Dasgupta and Hirschmann (2010): parent mantle of magma is depleted in C relative to magma, has 20-1800 ppm. Choosing 200 ppm by default (0.002/10)
+
+		// Print first line of outputs
+		title[0] = '\0';
+		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+		else strncat(title,path,strlen(path)-18);
+		strcat(title,"Outputs/ReservoirsFluxes.txt");
+		fout = fopen(title,"w");
+		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+		else {
+			fprintf(fout, "'Reservoirs in mol, fluxes in mol s-1'\n");
+			fprintf(fout, "'Time (Gyr)' \t 'Tmantle (K)' \t RCmantle \t RCatm \t RCocean \t RCatm+RCoc \t RCatmoc \t FCoutgas \t FCcontw \t FCseafsubd \t 'Net C flux' \t "
+					"'Total N g+aq' \t RCorg\n");
+			fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					Tmantle, RCmantle, RCatm, RCocean, RCatm+RCocean, RCatmoc, FCoutgas, FCcontW, FCseafsubd, netFC, xaq[3]*Mocean + xgas[3]*2.0*nAir, RCorg);
+		}
+		fclose (fout);
+
+		title[0] = '\0';
+		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+		else strncat(title,path,strlen(path)-18);
+		strcat(title,"Outputs/CompoAtmosph.txt");
+		fout = fopen(title,"w");
+		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+		else {
+			fprintf(fout, "'Atmospheric species in mixing ratio (by mol, i.e. by volume for ideal gases), total C and N in mol'\n");
+			fprintf(fout, "'Time (Gyr)' \t CO2(g) \t CH4(g) \t O2(g) \t N2(g) \t H2O(g) \t 'P_surface (bar)' \t 'T_surface (K)' \t 'DeltaT GHE (K)' \t 'nAir (mol)'\n");
+			fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, Tsurf, DeltaTghe, nAir);
+		}
+		fclose (fout);
+
+		title[0] = '\0';
+		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+		else strncat(title,path,strlen(path)-18);
+		strcat(title,"Outputs/Geotherm.txt");
+		fout = fopen(title,"w");
+		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+		fclose (fout);
+
+		title[0] = '\0';
+		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+		else strncat(title,path,strlen(path)-18);
+		strcat(title,"Outputs/Outgassing.txt");
+		fout = fopen(title,"w");
+		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+		else fprintf(fout, "Time (Gyr) \t Tmantle (K) \t Ra \t Visc (Pa s) \t Heat flux (mW m-2) \t Lithospheric thickness (km) \t Boundary layer thickness coef \t Outgassing flux (mol C s-1) \t Convective velocity (m yr-1) \t "
+				"Convective timescale (s) \t Crustal thickness (m) \t Crust generation timescale (s) \t Stagnant lid?\n");
+		fclose (fout);
+
+		title[0] = '\0';
+		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+		else strncat(title,path,strlen(path)-18);
+		strcat(title,"Outputs/ContWeatherFluxes.txt");
+		fout = fopen(title,"w");
+		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+		else {
+			fprintf(fout, "'Continental weathering fluxes in mol s-1 = bicarbonate trapping capacity due to dissolved cations'; river abundances in mol kg-1\n");
+			fprintf(fout, "'Time (Gyr)' \t 'Land areal fraction' \t 'Residence time of water on land' \t 'Total Mg' \t 'Mg from silicates' \t 'Mg from carbonates' \t 'Total Ca' \t 'Ca from silicates' \t 'Ca from carbonates' \t 'Ca from sulfates'"
+					" \t 'Total Fe' \t 'Fe from silicates' \t 'Fe from sulfides' \t 'Total C flux' \t 'River pH' \t HCO3-(aq) \t CO3-2(aq) \t CO2(aq) \t Na+(aq) \t Mg+2(aq) \t SiO2(aq) \t Ca+2(aq) \t Fe+2(aq)\n");
+			fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					L, tResLand, FC_Mg, FC_Mg_sil, FC_Mg_carb, FC_Ca, FC_Ca_sil, FC_Ca_carb, FC_Ca_sulf, FC_Fe, FC_Fe_sil, FC_Fe_sulf, FC_Mg+FC_Ca+FC_Fe,
+					xriver[iResTime][3], xriver[iResTime][17], xriver[iResTime][18], xriver[iResTime][19], xriver[iResTime][20], xriver[iResTime][21], xriver[iResTime][22], xriver[iResTime][23], xriver[iResTime][24]);
+
+		}
+		fclose (fout);
+
+		title[0] = '\0';
+		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+		else strncat(title,path,strlen(path)-18);
+		strcat(title,"Outputs/CompoOcean.txt");
+		fout = fopen(title,"w");
+		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+		else {
+			fprintf(fout, "'Ocean concentrations in mol/(kg H2O)'\n");
+			fprintf(fout, "'Time (Gyr)' \t 'Mocean (kg)' \t 'Mriver (kg)' \t 'Seafloor weathering volume (m3)' \t 'Ocean pH' \t 'Seawater-seafloor equil pH' \t 'Ocean log f(O2) at Tsurf0' \t 'Rain pH' \t 'Ox C(aq)' \t 'Red C(aq)' \t Mg(aq) \t "
+					"Ca(aq) \t Fe(aq) \t Si(aq) \t Na(aq) \t S(aq) \t Cl(aq)\n");
+			fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					Mocean, Mriver, volSeafCrust, pHout, pH, 4.0*(pe+pH)-logKO2H2O, rainpH, xaq[0], xaq[1], xaq[6], xaq[7], xaq[8], xaq[9], xaq[10], xaq[11], xaq[12]);
+		}
+		fclose (fout);
 	}
-
-	printf("Equilibrating ocean and atmosphere at input pressure and atmospheric C/N ratio...\n");
-	for (i=0;i<nAtmSpecies;i++) {
-		if (xgas[i] > 0.0 && xaq[i] == 0.0) xaq[i] = 1.0; // xaq must be >0 otherwise PHREEQC ignores it, set to 1 mol/kgw (initial guess).
+	else { // Recover where simulation left off
+		printf("Recovering previous output from PHREEQC-3.1.2/io/OceanDiss.txtExec.txt...\n");
+		int line_no = 0;
+		int line_length = 300;
+		char line[line_length];
+		char buffer[30]; buffer[0] = '\0';
+		title[0] = '\0';
+		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+		else strncat(title,path,strlen(path)-18);
+		strcat(title,"PHREEQC-3.1.2/io/OceanDiss.txtExec.txt");
+		fout = fopen(title,"r");
+		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+		else {
+			while (fgets(line, line_length, fout)) {
+				line_no++;
+				if (line[1] == 'p' && line[2] == 'H') {
+					for (i=0;i<10;i++) buffer[i] = line[i+7];
+					pH = strtod((const char*)buffer, NULL); buffer[0] = '\0'; printf("pH \t %g\n", pH);
+				}
+				if (line[1] == 't' && line[2] == 'e' && line[3] == 'm' && line[4] == 'p') {
+					for (i=0;i<10;i++) buffer[i] = line[i+9];
+					Tsurf = strtod((const char*)buffer, NULL)+Kelvin; buffer[0] = '\0'; printf("Tsurf(K) \t %g\n", Tsurf);
+				}
+				if (line[1] == 'p' && line[2] == 'r' && line[3] == 'e' && line[4] == 's') {
+					for (i=0;i<10;i++) buffer[i] = line[i+11];
+					Psurf = strtod((const char*)buffer, NULL)*1.01325; buffer[0] = '\0'; printf("Psurf(bar) \t %g\n", Psurf);
+				}
+				if (line[1] == 'p' && line[2] == 'e') {
+					for (i=0;i<10;i++) buffer[i] = line[i+7];
+					pe = strtod((const char*)buffer, NULL); buffer[0] = '\0'; printf("pe \t %g\n", pe);
+				}
+				if (line[1] == 'C' && line[2] == 'a') {
+					for (i=0;i<10;i++) buffer[i] = line[i+6];
+					xaq[7] = strtod((const char*)buffer, NULL); buffer[0] = '\0'; printf("Ca \t %g\n", xaq[7]);
+				}
+				if (line[1] == 'M' && line[2] == 'g') {
+					for (i=0;i<10;i++) buffer[i] = line[i+6];
+					xaq[6] = strtod((const char*)buffer, NULL); buffer[0] = '\0'; printf("Mg \t %g\n", xaq[6]);
+				}
+				if (line[1] == 'N' && line[2] == 'a') {
+					for (i=0;i<10;i++) buffer[i] = line[i+6];
+					xaq[10] = strtod((const char*)buffer, NULL); buffer[0] = '\0'; printf("Na \t %g\n", xaq[10]);
+				}
+				if (line[1] == 'F' && line[2] == 'e') {
+					for (i=0;i<10;i++) buffer[i] = line[i+6];
+					xaq[8] = strtod((const char*)buffer, NULL); buffer[0] = '\0'; printf("Fe \t %g\n", xaq[8]);
+				}
+				if (line[1] == 'S' && line[2] == 'i') {
+					for (i=0;i<10;i++) buffer[i] = line[i+6];
+					xaq[9] = strtod((const char*)buffer, NULL); buffer[0] = '\0'; printf("Si \t %g\n", xaq[9]);
+				}
+				if (line[1] == 'C' && line[2] == 'l') {
+					for (i=0;i<10;i++) buffer[i] = line[i+6];
+					xaq[12] = strtod((const char*)buffer, NULL); buffer[0] = '\0'; printf("Cl \t %g\n", xaq[12]);
+				}
+				if (line[1] == 'S' && line[2] == '(' && line[3] == '6' && line[4] == ')') {
+					for (i=0;i<10;i++) buffer[i] = line[i+8];
+					xaq[11] = strtod((const char*)buffer, NULL); buffer[0] = '\0'; printf("S(6) \t %g\n", xaq[11]);
+				}
+				if (line[1] == 'C' && line[2] == '(' && line[3] == '4' && line[4] == ')') {
+					for (i=0;i<10;i++) buffer[i] = line[i+8];
+					xaq[0] = strtod((const char*)buffer, NULL); buffer[0] = '\0'; printf("C(4) \t %g\n", xaq[0]);
+				}
+				if (line[1] == 'N' && line[2] == 't' && line[3] == 'g' && line[4] == ' ') {
+					for (i=0;i<10;i++) buffer[i] = line[i+7];
+					xaq[3] = strtod((const char*)buffer, NULL); buffer[0] = '\0'; printf("Ntg \t %g\n", xaq[3]);
+				}
+				if (line[1] == 'N' && line[2] == 't' && line[3] == 'g' && line[4] == '(') {
+					for (i=0;i<10;i++) buffer[i] = line[i+10];
+					xgas[3] = strtod((const char*)buffer, NULL)*1.01325/Psurf; buffer[0] = '\0'; printf("Ntg(g) \t %g\n", xgas[3]);
+				}
+				if (line[1] == 'O' && line[2] == '2' && line[3] == '(' && line[4] == 'g') {
+					for (i=0;i<10;i++) buffer[i] = line[i+9];
+					xgas[2] = strtod((const char*)buffer, NULL)*1.01325/Psurf; buffer[0] = '\0'; printf("O2(g) \t %g\n", xgas[2]);
+				}
+				if (line[1] == 'C' && line[2] == 'O' && line[3] == '2' && line[4] == '(') {
+					for (i=0;i<10;i++) buffer[i] = line[i+10];
+					xgas[0] = strtod((const char*)buffer, NULL)*1.01325/Psurf; buffer[0] = '\0'; printf("CO2(g) \t %g\n", xgas[0]);
+				}
+				if (line[1] == 'C' && line[2] == 'H' && line[3] == '4' && line[4] == '(') {
+					for (i=0;i<10;i++) buffer[i] = line[i+10];
+					xgas[1] = strtod((const char*)buffer, NULL)*1.01325/Psurf; buffer[0] = '\0'; printf("CH4(g) \t %g\n", xgas[1]);
+				}
+				if (line[1] == 'H' && line[2] == '2' && line[3] == 'O' && line[4] == '(') {
+					for (i=0;i<10;i++) buffer[i] = line[i+10];
+					xgas[4] = strtod((const char*)buffer, NULL)*1.01325/Psurf; buffer[0] = '\0'; printf("H2O(g) \t %g\n", xgas[4]);
+				}
+				nAir = Psurf*bar2Pa*Asurf/g[NR]/molmass_atm(xgas);
+			}
+		}
+		fclose (fout);
+		title[0] = '\0';
+		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+		else strncat(title,path,strlen(path)-18);
+		strcat(title,"Outputs/ReservoirsFluxes.txt");
+		fout = fopen(title,"r");
+		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+		else {
+			int scan = 0;
+			i = 0;
+			while (fgets(line, line_length, fout)) { // Divert realtime to tstart and Tmantle, all fluxes, and total N to dtime since dtime will be reset momentarily
+				fgets(line, 1, fout);
+				scan = fscanf(fout, "%lg %lg %lg %lg %lg %lg %lg %lg %lg %lg %lg %lg %lg",
+						&tstart, &dtime, &RCmantle, &RCatm, &RCocean, &RCatmoc, &RCatmoc, &dtime, &dtime, &dtime, &dtime, &dtime, &RCorg);
+//				if (scan != 1) printf("tail(): Error scanning %s output file at entry i = %d\n", title, i);
+				i++;
+			}
+			printf("RCmantle \t %g\n", RCmantle);
+			printf("Tmantle \t %g\n", Tmantle);
+			printf("netFC \t %g\n", netFC);
+			printf("Rcorg \t %g\n", RCorg);
+		}
+		fclose (fout);
 	}
-
-	AqueousChem(path, "io/OceanStart.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 1, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
-
-	RCocean = (xaq[0]+xaq[1])*Mocean;
-	RCatmoc = RCatm + RCocean;
-	RCmantle = 1.0e4*(RCatmoc); // Dasgupta and Hirschmann (2010): 0.8 to 12.5 e23 g = 0.07 to 1.04 e23 mol
-	RCmantle = (m_p-m_c)*magmaCmassfrac/10.0/0.012; // Dasgupta and Hirschmann (2010): parent mantle of magma is depleted in C relative to magma, has 20-1800 ppm. Choosing 200 ppm by default (0.002/10)
-
-	// Print first line of outputs
-	title[0] = '\0';
-	if (cmdline == 1) strncat(title,path,strlen(path)-20);
-	else strncat(title,path,strlen(path)-18);
-	strcat(title,"Outputs/ReservoirsFluxes.txt");
-	fout = fopen(title,"w");
-	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-	else {
-		fprintf(fout, "'Reservoirs in mol, fluxes in mol s-1'\n");
-		fprintf(fout, "'Time (Gyr)' \t 'Tmantle (K)' \t RCmantle \t RCatm \t RCocean \t RCatm+RCoc \t RCatmoc \t FCoutgas \t FCcontw \t FCseafsubd \t 'Net C flux' \t "
-				"'Total N g+aq' \t RCorg\n");
-		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-				Tmantle, RCmantle, RCatm, RCocean, RCatm+RCocean, RCatmoc, FCoutgas, FCcontW, FCseafsubd, netFC, xaq[3]*Mocean + xgas[3]*2.0*nAir, RCorg);
-	}
-	fclose (fout);
-
-	title[0] = '\0';
-	if (cmdline == 1) strncat(title,path,strlen(path)-20);
-	else strncat(title,path,strlen(path)-18);
-	strcat(title,"Outputs/CompoAtmosph.txt");
-	fout = fopen(title,"w");
-	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-	else {
-		fprintf(fout, "'Atmospheric species in mixing ratio (by mol, i.e. by volume for ideal gases), total C and N in mol'\n");
-		fprintf(fout, "'Time (Gyr)' \t CO2(g) \t CH4(g) \t O2(g) \t N2(g) \t H2O(g) \t 'P_surface (bar)' \t 'T_surface (K)' \t 'DeltaT GHE (K)' \t 'nAir (mol)'\n");
-		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-				xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, Tsurf, DeltaTghe, nAir);
-	}
-	fclose (fout);
-
-	title[0] = '\0';
-	if (cmdline == 1) strncat(title,path,strlen(path)-20);
-	else strncat(title,path,strlen(path)-18);
-	strcat(title,"Outputs/Geotherm.txt");
-	fout = fopen(title,"w");
-	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-	fclose (fout);
-
-	title[0] = '\0';
-	if (cmdline == 1) strncat(title,path,strlen(path)-20);
-	else strncat(title,path,strlen(path)-18);
-	strcat(title,"Outputs/Outgassing.txt");
-	fout = fopen(title,"w");
-	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-	else fprintf(fout, "Time (Gyr) \t Tmantle (K) \t Ra \t Visc (Pa s) \t Heat flux (mW m-2) \t Lithospheric thickness (km) \t Boundary layer thickness coef \t Outgassing flux (mol C s-1) \t Convective velocity (m yr-1) \t "
-			"Convective timescale (s) \t Crustal thickness (m) \t Crust generation timescale (s) \t Stagnant lid?\n");
-	fclose (fout);
-
-	title[0] = '\0';
-	if (cmdline == 1) strncat(title,path,strlen(path)-20);
-	else strncat(title,path,strlen(path)-18);
-	strcat(title,"Outputs/ContWeatherFluxes.txt");
-	fout = fopen(title,"w");
-	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-	else {
-		fprintf(fout, "'Continental weathering fluxes in mol s-1 = bicarbonate trapping capacity due to dissolved cations'; river abundances in mol kg-1\n");
-		fprintf(fout, "'Time (Gyr)' \t 'Land areal fraction' \t 'Residence time of water on land' \t 'Total Mg' \t 'Mg from silicates' \t 'Mg from carbonates' \t 'Total Ca' \t 'Ca from silicates' \t 'Ca from carbonates' \t 'Ca from sulfates'"
-				" \t 'Total Fe' \t 'Fe from silicates' \t 'Fe from sulfides' \t 'Total C flux' \t 'River pH' \t HCO3-(aq) \t CO3-2(aq) \t CO2(aq) \t Na+(aq) \t Mg+2(aq) \t SiO2(aq) \t Ca+2(aq) \t Fe+2(aq)\n");
-		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-				L, tResLand, FC_Mg, FC_Mg_sil, FC_Mg_carb, FC_Ca, FC_Ca_sil, FC_Ca_carb, FC_Ca_sulf, FC_Fe, FC_Fe_sil, FC_Fe_sulf, FC_Mg+FC_Ca+FC_Fe,
-				xriver[iResTime][3], xriver[iResTime][17], xriver[iResTime][18], xriver[iResTime][19], xriver[iResTime][20], xriver[iResTime][21], xriver[iResTime][22], xriver[iResTime][23], xriver[iResTime][24]);
-
-	}
-	fclose (fout);
-
-	title[0] = '\0';
-	if (cmdline == 1) strncat(title,path,strlen(path)-20);
-	else strncat(title,path,strlen(path)-18);
-	strcat(title,"Outputs/CompoOcean.txt");
-	fout = fopen(title,"w");
-	if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-	else {
-		fprintf(fout, "'Ocean concentrations in mol/(kg H2O)'\n");
-		fprintf(fout, "'Time (Gyr)' \t 'Mocean (kg)' \t 'Mriver (kg)' \t 'Seafloor weathering volume (m3)' \t 'Ocean pH' \t 'Seawater-seafloor equil pH' \t 'Ocean log f(O2) at Tsurf0' \t 'Rain pH' \t 'Ox C(aq)' \t 'Red C(aq)' \t Mg(aq) \t "
-				"Ca(aq) \t Fe(aq) \t Si(aq) \t Na(aq) \t S(aq) \t Cl(aq)\n");
-		fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-				Mocean, Mriver, volSeafCrust, pHout, pH, 4.0*(pe+pH)-logKO2H2O, rainpH, xaq[0], xaq[1], xaq[6], xaq[7], xaq[8], xaq[9], xaq[10], xaq[11], xaq[12]);
-	}
-	fclose (fout);
 
 	//-------------------------------------------------------------------
 	// Start time loop
