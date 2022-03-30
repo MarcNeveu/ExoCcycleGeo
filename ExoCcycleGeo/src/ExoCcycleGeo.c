@@ -57,8 +57,9 @@ int main(int argc, char *argv[]) {
 	double Lnow = 0.0;                 // Present-day areal fraction covered by land
 	double Tsurf0 = 0.0;               // Initial surface temperature (K)
 	double Psurf = 0.0;                // Surface pressure (bar)
-	double runoff = 0.0;               // Atmospheric runoff (m s-1), default runoff_0 = 0.665e-3 m day-1 (Broeker & Peng 1982 instead have 0.7 m per year left after evaporation)
-	double tResLand = 0.0;       // Residence time of water on continents (s)
+	double runoff = 0.0;               // Global mean river runoff rate (m s-1), default runoff_Earth = 0.67e-3 m day-1 (consistent, with 65% of evaporation, with Broeker & Peng 1982 p. 247 who have 0.7 m of rainfall per year)
+	double runoff0 = 0.0;			   // Input global mean runoff rate (m s-1)
+	double tResLand = 0.0;             // Residence time of water on continents (s)
 	double tResLandNow = 0.0;		   // Present-day residence time of water on continents (s)
 
     // User-specified planet atmosphere parameters
@@ -322,32 +323,32 @@ int main(int argc, char *argv[]) {
 
 	i = 0;
 	// Grid inputs
-	dtime0 = input[i]*Myr2sec; i++;     // Timestep
-	tstart = input[i]*Gyr2sec; i++;    // Simulation start time
-	tend = input[i]*Gyr2sec; i++;      // Simulation end time
+	dtime0 = input[i]*Myr2sec; i++;      // Timestep
+	tstart = input[i]*Gyr2sec; i++;      // Simulation start time
+	tend = input[i]*Gyr2sec; i++;        // Simulation end time
 	// Interior inputs
 	m_p = input[i]*mEarth; i++;
 	m_c = input[i]*m_p; i++;
-	layerCode1 = (int) input[i]; i++;  // Inner layer material code (see planmat dbase)
-	layerCode2 = (int) input[i]; i++;  // Middle layer material code (see planmat dbase)
-	layerCode3 = (int) input[i]; i++;  // Outer layer material code (see planmat dbase)
+	layerCode1 = (int) input[i]; i++;    // Inner layer material code (see planmat dbase)
+	layerCode2 = (int) input[i]; i++;    // Middle layer material code (see planmat dbase)
+	layerCode3 = (int) input[i]; i++;    // Outer layer material code (see planmat dbase)
 	radionuclides = (int) input[i]; i++; // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
-	rheology = (int) input[i]; i++;    // 0 = dry olivine (KK08), 1 = wet olivine (KK08)
-    redox = (int) input[i]; i++;       // 1 = current Earth surface, 2 = hematite-magnetite, 3 = fayalite-magnetite-quartz, 4 = iron-wustite, code won't run with other values
-    magmaCmassfrac = input[i]; i++;    // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; Hartley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
+	rheology = (int) input[i]; i++;      // 0 = dry olivine (KK08), 1 = wet olivine (KK08)
+    redox = (int) input[i]; i++;         // 1 = current Earth surface, 2 = hematite-magnetite, 3 = fayalite-magnetite-quartz, 4 = iron-wustite, code won't run with other values
+    magmaCmassfrac = input[i]; i++;      // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; Hartley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
     // Surface inputs
-	Mocean = input[i]; i++;            // Mass of ocean (kg, default: Earth=1.4e21)
-	Lnow = input[i]; i++;                 // Areal fraction of planet surface covered by land
-	Tsurf0 = input[i]; i++;            // Initial surface temperature (K)
-	Psurf = input[i]; i++;             // Surface pressure (bar)
-	runoff = input[i]/86400.0; i++;    // Atmospheric runoff (m s-1), default runoff_0 = 0.665e-3 m day-1 (Broeker & Peng 1982 instead have 0.7 m per year left after evaporation)
-	tResLandNow = input[i]*Yr2sec; i++; // Residence time of rain- and river water on continents (s)
+	Mocean = input[i]; i++;              // Mass of ocean (kg, default: Earth=1.4e21)
+	Lnow = input[i]; i++;                // Areal fraction of planet surface covered by land
+	Tsurf0 = input[i]; i++;              // Initial surface temperature (K)
+	Psurf = input[i]; i++;               // Surface pressure (bar)
+	runoff0 = input[i]/86400.0; i++;     // River runoff (m s-1)
+	tResLandNow = input[i]*Yr2sec; i++;  // Residence time of rain- and river water on continents (s)
 	// Atmospheric inputs
-	xgas[0] = input[i]; i++;           // CO2 mixing ratio
-    xgas[1] = input[i]; i++;           // CH4 mixing ratio
-    xgas[2] = input[i]; i++;           // O2 mixing ratio
-    xgas[3] = input[i]; i++;           // N2 mixing ratio
-    xgas[4] = input[i]; i++;           // H2O mixing ratio
+	xgas[0] = input[i]; i++;             // CO2 mixing ratio
+    xgas[1] = input[i]; i++;             // CH4 mixing ratio
+    xgas[2] = input[i]; i++;             // O2 mixing ratio
+    xgas[3] = input[i]; i++;             // N2 mixing ratio
+    xgas[4] = input[i]; i++;             // H2O mixing ratio
 
 	printf("\n");
 	printf("ExoCcycleGeo v22.2\n");
@@ -378,7 +379,7 @@ int main(int argc, char *argv[]) {
 	printf("| Areal land fraction (default 0.29)            | %g \n", Lnow);
 	printf("| Initial temperature (K, default 288)          | %g \n", Tsurf0);
 	printf("| Initial pressure (bar)                        | %g \n", Psurf);
-	printf("| Runoff rate (m/day, default 0.67e-3)          | %g \n", runoff*86400.0);
+	printf("| Runoff rate (m/day, default 0.67e-3)          | %g \n", runoff0*86400.0);
 	printf("| Water residence time, continents (yr, def. 10)| %g \n", tResLandNow/Yr2sec);
 	printf("|-----------------------------------------------|--------------|\n");
 	printf("| Initial Atmosphere |||||||||||||||||||||||||||||||||||||||||||\n");
@@ -403,6 +404,7 @@ int main(int argc, char *argv[]) {
 
 	printf("\nPlanet radius = %g km, Core radius = %g km, Mid-mantle density = %g kg m-3, avg density = %g kg m-3\n", r_p/km2m, r_c/km2m, rho[(NR+iCMB)/2], m_p/(4.0/3.0*PI_greek*pow(r_p,3.0)));
 	Tsurf = Tsurf0;
+	runoff = runoff0;
 	Asurf = 4.0*PI_greek*r_p*r_p;
 	nAir = Psurf*bar2Pa*Asurf/g[NR]/molmass_atm(xgas);
 
@@ -580,9 +582,9 @@ int main(int argc, char *argv[]) {
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 		else {
 			fprintf(fout, "'Atmospheric species in mixing ratio (by mol, i.e. by volume for ideal gases), total C and N in mol'\n");
-			fprintf(fout, "'Time (Gyr)' \t CO2(g) \t CH4(g) \t O2(g) \t N2(g) \t H2O(g) \t 'P_surface (bar)' \t 'T_surface (K)' \t 'DeltaT GHE (K)' \t 'nAir (mol)'\n");
-			fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-					xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, Tsurf, DeltaTghe, nAir);
+			fprintf(fout, "'Time (Gyr)' \t CO2(g) \t CH4(g) \t O2(g) \t N2(g) \t H2O(g) \t 'P_surface (bar)' \t 'T_surface (K)' \t 'DeltaT GHE (K)' \t 'Mean rainfall (m/yr) \t 'nAir (mol)'\n");
+			fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, Tsurf, DeltaTghe, runoff/(1-fracEvap)*Yr2sec, nAir);
 		}
 		fclose (fout);
 
@@ -1321,7 +1323,7 @@ int main(int argc, char *argv[]) {
 		FCcontW = 0.0;
 		if (Tsurf > Tfreeze+0.01 && realtime > tstart && realtime <= tend) {
 			// Analytical calculation from Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
-//			FCcontW = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7);
+//			FCcontW = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_Earth * exp((Tsurf-TsurfEarth)/17.7);
 			L = Lnow*realtime/(4.56*Gyr2sec);
 			tResLand = tResLandNow*realtime/(4.56*Gyr2sec);
 //			tResLand = tResLandNow;
@@ -1333,7 +1335,8 @@ int main(int argc, char *argv[]) {
 				for (j=0;j<nvarKin;j++) xriver[i][j] = 0.0;
 			}
 
-			WRcontW = 5000.0*runoff/runoff_0;
+			runoff = runoff0*pow(1.025,Tsurf-Tsurf0); // 2.5% increase in global mean precipitation per K of temperature increase (Allen and Ingram 2002, Trenberth et al. 2005, Pendergrass 2020)
+			WRcontW = 5000.0*runoff/runoff_Earth;
 
 			printf("Continental weathering... ");
 			AqueousChem(path, "io/ContWeather.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin, 0.0, 0.0, &deltaCreac, staglid, dtime);
@@ -1390,8 +1393,8 @@ int main(int argc, char *argv[]) {
 			mix = Mocean/Mriver;
 
 //			LplateRdg = 1.5*2.0*PI_greek*r_p; // Current length of mid-ocean ridges = length of subduction zones = 60000-65000 km
-			LplateRdg = pow(Ra/2.3e6,1.0/3.0) * 1.5*2.0*PI_greek*r_p;
-			// 2.3e6 is canonical Ra for Earth today. Scaling with Ra^1/3 is consistent with scaling with Nu and also consistent with 3-5 times greater ridge length in Archean from Kadko et al. (1995).
+			LplateRdg = pow(Ra/2.3e6,beta) * 1.5*2.0*PI_greek*r_p;
+			// 2.3e6 is canonical Ra for Earth today. Scaling with Ra^beta is consistent with scaling with Nu and also consistent with 3-5 times greater ridge length in Archean from Kadko et al. (1995).
 			// Today indicative size of 7 major plates is 70e6 km2, corresponding to diameter 2*sqrt(70e6/(4*pi)) = 4720 km > mantle depth, even though (isoviscous) convection cell should have aspect ratio of 1 (Bercovici et al. 2015).
 			// For Earth inputs it is = mantle depth (2900 km) for Ra = 1e7, i.e., 2 billion years ago (oldest evidence of plate tectonics 2-3 Ga; Brown et al. 2020)
 
@@ -1467,8 +1470,8 @@ int main(int argc, char *argv[]) {
 		strcat(title,"Outputs/CompoAtmosph.txt");
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
-				realtime/Gyr2sec, xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, Tsurf, DeltaTghe, nAir);
+		else fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+				realtime/Gyr2sec, xgas[0], xgas[1], xgas[2], xgas[3], xgas[4], Psurf, Tsurf, DeltaTghe, runoff/(1-fracEvap)*Yr2sec, nAir);
 		fclose (fout);
 
 		title[0] = '\0';

@@ -375,7 +375,7 @@ SOLUTION 1 Rainwater
 	pH 	 	7 charge
 	temp 	 	14.3888
 	pressure 	0.515335
-	-water 	 	709.924
+	-water 	 	701.885
 	-units		mol/kgw
 	C(4) 		0.00534661 mol/kgw	CO2(g) 	-0.950055
 	C(-4) 		3.56926e-07 mol/kgw	CH4(g) 	-3.69694

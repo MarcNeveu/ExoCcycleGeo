@@ -49,8 +49,8 @@
 #define h_frac 0.1                      // Fraction of impactor energy deposited at depth
 
 // Geodynamics parameters
-#define k 4.18                          // Mantle thermal conductivity (W m-1 K-1)
-#define alpha 3.0e-5                    // Mantle thermal expansivity (K-1)
+#define k 4.18                          // Mantle thermal conductivity (W m-1 K-1) (Turcotte and Schubert 2002)
+#define alpha 3.0e-5                    // Mantle thermal expansivity (K-1) (Turcotte and Schubert 2002)
 #define Cp 1295.0                       // Mantle specific heat capacity (J kg-1 K-1) (Akaogi & Ito 1993)
 #define beta 1.0/3.0                    // Exponent for scaling Nusselt number to Rayleigh number, 1/4 to 1/3 (Schubert et al. 2001)
 #define Ra_c 1707.762                   // Critical Rayleigh number for convection, http://home.iitk.ac.in/~sghorai/NOTES/benard/node15.html, see also Koschmieder EL (1993) Benard cells and Taylor vortices, Cambridge U Press, p. 20.
@@ -58,7 +58,7 @@
 
 // Atmosphere parameters
 //#define xCO2g0 355.0e-6                 // Reference atmospheric CO2 mixing ratio (ppmv)
-#define runoff_0 7.75e-9                // Reference runoff (m s-1) = 0.67e-3 m day-1 (Edson et al. 2012, http://dx.doi.org/10.1089/ast.2011.0762)
+#define runoff_Earth 7.75e-9                // Reference runoff (m s-1) = 0.67e-3 m day-1 (Edson et al. 2012, http://dx.doi.org/10.1089/ast.2011.0762)
 
 // Geochem parameters
 #define nAtmSpecies 5                   // Number of atmospheric species whose abundances are passed between the physical and chemical models
