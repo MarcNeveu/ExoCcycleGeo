@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
 	// User-specified grid parameters
 	double dtime = 0.0;                // Time step (s)
 	double dtime0 = 0.0;			   // Input time step (s)
+	double dtime_old = 0.0;
 	double tstart = 0.0;               // Time at which to start alphaMELTS calculations (s)
 	double tend = 0.0;                 // Time at which to end alphaMELTS calculations (s)
 
@@ -118,9 +119,11 @@ int main(int argc, char *argv[]) {
 	// Reservoirs
 //	double RCplate = 0.0;              // Plate/crust C reservoir (mol)
 	double RCmantle = 0.0;             // Mantle C reservoir (mol)
+	double RCmantle_old = 0.0;
 	double RCatm = 0.0;                // Atmospheric C reservoir (mol)
 	double RCocean = 0.0;              // Ocean C reservoir (mol)
 	double RCatmoc = RCatm + RCocean;  // Combined atmospheric and ocean C reservoir (mol)
+	double RCatmoc_old = RCatmoc;
 	double RCorg = 0.0;			   	   // Organic carbon (biomass)
 
 	// Fluxes
@@ -270,7 +273,7 @@ int main(int argc, char *argv[]) {
 
 
 	// Quantities to be computed by seafloor weathering model
-	double LplateBnd = 0.0;            // Length of tectonic plate boundaries, today 6.5*Earth circumference (m)
+	double LplateRdg = 0.0;            // Length of tectonic plate boundaries, today 6.5*Earth circumference (m)
 	double zCrack = 6000.0;            // Depth of fracturing below seafloor (m), default 6000 m (Vance et al. 2007)
 	double Pseaf = 0.0;                // Avg. seafloor pressure calculated assuming avg. ocean depth
 	double WRseafW = 1.0;              // Water to rock ratio of seafloor weathering, here multiplied by rock mass
@@ -763,6 +766,8 @@ int main(int argc, char *argv[]) {
 		realtime += dtime;
 //		realtime = 4.55*Gyr2sec; // Present day
 
+		printf("\nTime: %g Gyr\n", realtime/Gyr2sec);
+
 		//-------------------------------------------------------------------
 		// Update surface temperature (unnecessary once coupled to Atmos)
 		//-------------------------------------------------------------------
@@ -803,12 +808,20 @@ int main(int argc, char *argv[]) {
 
 		// Redox of outgassing (see e.g. Gaillard and Scaillet 2014 EPSL or Scaillet and Gaillard 2011 Nature comment)
 		if (redox <= 4) {
-			if (xgas[0]*nAir + 1.0*dtime*netFC < 0.0) netFC = -xgas[0]*nAir/(1.0*dtime)*(1.0-1.0e-8);
+			if (xgas[0]*nAir + 1.0*dtime*netFC < 0.0) {
+				netFC = -xgas[0]*nAir/(1.0*dtime)*(1.0-1.0e-8);
+				RCmantle = RCmantle_old - dtime_old*netFC; // Re-adjust reservoirs accordingly
+				RCatmoc  = RCatmoc_old  + dtime_old*netFC;
+			}
 			xgas[0] = (xgas[0]*nAir + 1.0*dtime*netFC)/(nAir + dtime*netFC); // CO2 dominates over CH4, assume 100% added gas is CO2 and let equilibration with ocean speciate accurately
 			xgas[1] = xgas[1]*nAir/(nAir + dtime*netFC);                     // Dilute CH4 (or concentrate if netFC < 0)
 		}
 		else {
-			if (xgas[1]*nAir + 1.0*dtime*netFC < 0.0) netFC = -xgas[1]*nAir/(1.0*dtime)*(1.0-1.0e-8);
+			if (xgas[1]*nAir + 1.0*dtime*netFC < 0.0) {
+				netFC = -xgas[1]*nAir/(1.0*dtime)*(1.0-1.0e-8);
+				RCmantle = RCmantle_old - dtime_old*netFC; // Re-adjust reservoirs accordingly
+				RCatmoc  = RCatmoc_old  + dtime_old*netFC;
+			}
 			xgas[1] = (xgas[1]*nAir + 1.0*dtime*netFC)/(nAir + dtime*netFC); // CH4 dominates over CO2, assume 100% added gas is CH4
 			xgas[0] = xgas[0]*nAir/(nAir + dtime*netFC);                     // Dilute CO2 (or concentrate if netFC < 0)
 		}
@@ -828,8 +841,8 @@ int main(int argc, char *argv[]) {
 		// Equilibrate ocean and atmosphere
 		//-------------------------------------------------------------------
 
-		if (Tsurf > Tfreeze) {
-			printf("\nTime: %g Gyr. Equilibrating ocean and atmosphere... ", realtime/Myr2sec/1000.0);
+		if (Tsurf > Tfreeze+0.01) {
+			printf("Equilibrating ocean and atmosphere... ");
 
 			AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
 
@@ -1306,7 +1319,7 @@ int main(int argc, char *argv[]) {
 		//-------------------------------------------------------------------
 
 		FCcontW = 0.0;
-		if (Tsurf > Tfreeze && realtime > tstart && realtime <= tend) {
+		if (Tsurf > Tfreeze+0.01 && realtime > tstart && realtime <= tend) {
 			// Analytical calculation from Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
 //			FCcontW = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_0 * exp((Tsurf-TsurfEarth)/17.7);
 			L = Lnow*realtime/(4.56*Gyr2sec);
@@ -1372,20 +1385,21 @@ int main(int argc, char *argv[]) {
 		//-------------------------------------------------------------------
 
 		FCseafsubd = 0.0;
-		if (Tsurf > Tfreeze && realtime > tstart && realtime <= tend) {
+		if (Tsurf > Tfreeze+0.01 && realtime > tstart && realtime <= tend) {
 
 			mix = Mocean/Mriver;
 
-//			LplateBnd = 1.5*2.0*PI_greek*r_p; // Current length of mid-ocean ridges = length of subduction zones = 60000-65000 km
-			LplateBnd = pow(Ra/2.3e6,1.0/3.0) * 1.5*2.0*PI_greek*r_p;
+//			LplateRdg = 1.5*2.0*PI_greek*r_p; // Current length of mid-ocean ridges = length of subduction zones = 60000-65000 km
+			LplateRdg = pow(Ra/2.3e6,1.0/3.0) * 1.5*2.0*PI_greek*r_p;
 			// 2.3e6 is canonical Ra for Earth today. Scaling with Ra^1/3 is consistent with scaling with Nu and also consistent with 3-5 times greater ridge length in Archean from Kadko et al. (1995).
 			// Today indicative size of 7 major plates is 70e6 km2, corresponding to diameter 2*sqrt(70e6/(4*pi)) = 4720 km > mantle depth, even though (isoviscous) convection cell should have aspect ratio of 1 (Bercovici et al. 2015).
 			// For Earth inputs it is = mantle depth (2900 km) for Ra = 1e7, i.e., 2 billion years ago (oldest evidence of plate tectonics 2-3 Ga; Brown et al. 2020)
 
-			zCrack = realtime/Myr2sec; // Reflects secular cooling below crust, which prevents cracks from healing as fast
+//			zCrack = realtime/Myr2sec; // Reflects secular cooling below crust, which prevents cracks from healing as fast
+			zCrack = 6000.0;
 
-//			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*vConv*zCrack*dtime; // MOR length = 6.5*Earth circumference, crust assumed fully cracked
-			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateBnd*(vConv*fmin(1.0,realtime/(1.5*Gyr2sec)))*zCrack*dtime; // vConv*fmin() term represents sluggish convection until full plate tectonics
+			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateRdg*vConv*zCrack*dtime;
+//			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateRdg*(vConv*fmin(1.0,realtime/(1.5*Gyr2sec)))*zCrack*dtime; // vConv*fmin() term represents sluggish convection until full plate tectonics
 
 			Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth TODO scale with land coverage
 			WRseafW = Mocean*dtime/tcirc / volSeafCrust; // Will be multiplied in AqueousChem() by (mass rock input to PHREEQC / seafloor crust density) = volume rock input to PHREEQC. 1e7 yr is hydrothermal circulation timescale (Kadko et al. 1995)
@@ -1403,7 +1417,7 @@ int main(int argc, char *argv[]) {
 			xaq[0] = xaq0;
 			xaq[1] = xaq1;
 
-			FCseafsubd = deltaCreac * Mocean / dtime; // *dtime in updating reservoirs through netFC, so this is time-independent (chemical equilibrium)
+			FCseafsubd = deltaCreac * Mocean / tcirc;
 		}
 
 		//-------------------------------------------------------------------
@@ -1411,6 +1425,11 @@ int main(int argc, char *argv[]) {
 		//-------------------------------------------------------------------
 		if (!staglid) farc = 0.25;
 		netFC = FCoutgas + (1.0-farc)*FCseafsubd; // FCcontw < 0, FCseafsubd < 0, ignore FCcontW since that's a flux to the ocean manifested in seafW
+
+		dtime_old = dtime; // Memorize in case reservoirs need to be readjusted at the next time step so a negative netFC*dtime doesn't exceed xgas*nAir
+		RCmantle_old = RCmantle;
+		RCatmoc_old = RCatmoc;
+
 		RCmantle = RCmantle - dtime*netFC; // Assuming plate = mantle (unlike Foley et al. 2015) and instantaneous mixing into the mantle once subducted (in practice could take 1 Gyr)
 		if (RCmantle < 0.0) {
 			printf("Mantle reservoir depleted\n");
