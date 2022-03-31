@@ -1398,11 +1398,11 @@ int main(int argc, char *argv[]) {
 			// Today indicative size of 7 major plates is 70e6 km2, corresponding to diameter 2*sqrt(70e6/(4*pi)) = 4720 km > mantle depth, even though (isoviscous) convection cell should have aspect ratio of 1 (Bercovici et al. 2015).
 			// For Earth inputs it is = mantle depth (2900 km) for Ra = 1e7, i.e., 2 billion years ago (oldest evidence of plate tectonics 2-3 Ga; Brown et al. 2020)
 
-//			zCrack = realtime/Myr2sec; // Reflects secular cooling below crust, which prevents cracks from healing as fast
-			zCrack = 6000.0;
+			zCrack = realtime/Myr2sec; // Reflects secular cooling below crust, which prevents cracks from healing as fast
+//			zCrack = 6000.0;
 
-			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateRdg*vConv*zCrack*dtime;
-//			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateRdg*(vConv*fmin(1.0,realtime/(1.5*Gyr2sec)))*zCrack*dtime; // vConv*fmin() term represents sluggish convection until full plate tectonics
+//			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateRdg*vConv*zCrack*dtime;
+			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateRdg*(vConv*fmin(1.0,realtime/(1.5*Gyr2sec)))*zCrack*dtime; // vConv*fmin() term represents sluggish convection until full plate tectonics
 
 			Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth TODO scale with land coverage
 			WRseafW = Mocean*dtime/tcirc / volSeafCrust; // Will be multiplied in AqueousChem() by (mass rock input to PHREEQC / seafloor crust density) = volume rock input to PHREEQC. 1e7 yr is hydrothermal circulation timescale (Kadko et al. 1995)
@@ -1420,8 +1420,8 @@ int main(int argc, char *argv[]) {
 			xaq[0] = xaq0;
 			xaq[1] = xaq1;
 
-			FCseafsubd = deltaCreac * Mocean / tcirc;
-		}
+			FCseafsubd = deltaCreac * Mocean / dtime; // Essentially independent of dtime because deltaCreac, for an ocean saturated in C before and after reaction, is essentially proportional to Mriver, i.e., dtime.
+		}                                             // There is a slight dependence on dtime if there was no saturation before reaction and because the solubility of C changes slightly with slight changes in ocean pressure, temperature, and composition, but it should be acceptable
 
 		//-------------------------------------------------------------------
 		// Compute net geo C fluxes
