@@ -324,7 +324,6 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 	else printf("Successfully set up path of executable in alphaMELTS files.\n");
-	exit(0);
 
 	// Read input file
 	input = exoCinput(input, path);
@@ -359,7 +358,7 @@ int main(int argc, char *argv[]) {
     xgas[4] = input[i]; i++;             // H2O mixing ratio
 
 	printf("\n");
-	printf("ExoCcycleGeo v22.2\n");
+	printf("ExoCcycleGeo v22.4\n");
 	if (cmdline == 1) printf("Command line mode\n");
 
 	printf("|--------------------------------------------------------------|\n");

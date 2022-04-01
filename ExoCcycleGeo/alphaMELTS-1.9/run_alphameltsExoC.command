@@ -7,7 +7,7 @@ my (@argv2, $in_file, $melts_file, $out_file, $log_file, $batch_file, $column_fi
 my ($path, $run_path, $batch, $subsol, %com, $oxide_list, @phases, @used_oxides, %all_oxides, @all_pt, @all_masses);
 my ($windows, $program, $rs, $run, $delim, $line, @lines, @oldlines, $title);
 
-$in_file = '/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/Lith_bndry_env.txt';
+$in_file = '/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoC_env.txt';
 
 @argv2 = ();
 until (@argv2) {

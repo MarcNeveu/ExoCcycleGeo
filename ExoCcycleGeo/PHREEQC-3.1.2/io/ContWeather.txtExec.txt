@@ -365,7 +365,7 @@ Halite
 	-tol		1e-8
 
 #-steps	6.32e8 in 400 steps # 20 years
--steps	1.49863e+08 in 1000 steps
+-steps	1.50213e+08 in 1000 steps
 -cvode	true
 
 INCREMENTAL_REACTIONS true
@@ -373,15 +373,15 @@ INCREMENTAL_REACTIONS true
 SOLUTION 1 Rainwater
 
 	pH 	 	7 charge
-	temp 	 	8.65636
-	pressure 	0.413969
-	-water 	 	609.245
+	temp 	 	8.92711
+	pressure 	0.412195
+	-water 	 	613.332
 	-units		mol/kgw
-	C(4) 		0.250141 mol/kgw	CO2(g) 	-1.81726
+	C(4) 		0.246143 mol/kgw	CO2(g) 	-1.87662
 	C(-4) 		0 mol/kgw
-	Ntg 		0.000240632 mol/kgw	Ntg(g) 	-0.408892
+	Ntg 		0.000239022 mol/kgw	Ntg(g) 	-0.408877
 #	N(-3)		1.0 NH3(g) -20     # Archean Earth composition, Catling &  Zahnle 2020
-	O(0) 		7.73811e-11 mol/kgw	O2(g) 	-7.50158
+	O(0) 		7.71651e-11 mol/kgw	O2(g) 	-7.49964
 	S		250.0e-6 as SO4-2  # Scaled from computed volcanic outgassing in Archean vs. abiotic modern (Berner et al. 1983)
 
 SELECTED_OUTPUT
