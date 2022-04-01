@@ -37,8 +37,8 @@ int main(int argc, char *argv[]) {
 	double dtime = 0.0;                // Time step (s)
 	double dtime0 = 0.0;			   // Input time step (s)
 	double dtime_old = 0.0;
-	double tstart = 0.0;               // Time at which to start alphaMELTS calculations (s)
-	double tend = 0.0;                 // Time at which to end alphaMELTS calculations (s)
+	double tstart = 0.0;               // Time at which to start carbon cycling calculations (s)
+	double tend = 0.0;                 // Time at which to end carbon cycling calculations (s)
 
 	// User-specified planet interior parameters
 	double m_p = 0.0;                  // Planet mass (kg)
@@ -317,6 +317,14 @@ int main(int argc, char *argv[]) {
 	path[0] = '\0';
 	if (_NSGetExecutablePath(path, &size) == 0) printf("\n");
 	else printf("ExoCcycleGeo: Couldn't retrieve executable directory. Buffer too small; need size %u\n", size);
+
+	// Set up path of executable in alphaMELTS files
+	if (alphaMELTS_init(path) == 1) {
+		printf("ExoCcycleGeo: Couldn't successfully set up path of executable in alphaMELTS files. Exiting.\n");
+		exit(0);
+	}
+	else printf("Successfully set up path of executable in alphaMELTS files.\n");
+	exit(0);
 
 	// Read input file
 	input = exoCinput(input, path);

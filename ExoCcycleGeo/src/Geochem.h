@@ -22,6 +22,7 @@ int WritePHREEQCInput(const char *TemplateFile, double temp, double pressure, do
 		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput);
 int cleanup (char path[1024]);
 double molmass_atm (double *xgas);
+int alphaMELTS_init (char *path);
 int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, double ***sys_tbl);
 
 /*--------------------------------------------------------------------
@@ -782,6 +783,164 @@ double molmass_atm (double *xgas) {
 					 /(xgas[0]+xgas[1]+xgas[2]+xgas[3]+xgas[4])*0.001;
 
 	return molmass;
+}
+
+
+/*--------------------------------------------------------------------
+ *
+ * Subroutine alphaMELTS_init
+ *
+ * Set up correct paths in alphaMELTS files.
+ *
+ *--------------------------------------------------------------------*/
+
+int alphaMELTS_init (char *path) {
+
+	int line_length = 300;
+	char line[line_length]; // Individual line
+	char str[line_length];
+	int entry2 = 0; // Two lines of run_alphamelts.command that need to be modified start the same way all the way to the string to be inserted. Use this switch to change them one by one.
+
+	FILE *fin;
+	FILE *fout;
+	char *aMELTStmp = (char*)malloc(1024);  // Temporary path
+	char *tmp = (char*)malloc(1024);  // Temporary path
+	char *cmd = (char*)malloc(1024);  // Temporary command
+
+	tmp[0] = '\0';
+	if (cmdline == 1) strncat(tmp,path,strlen(path)-20);
+	else strncat(tmp,path,strlen(path)-18);
+	strcat(tmp,"alphaMELTS-1.9/ExoC/tmp.txt");
+
+	// Edit ExoC_env.txt by copying its modified version to tmp.txt and then overwriting it with tmp.txt using a system command
+	aMELTStmp[0] = '\0';
+	if (cmdline == 1) strncat(aMELTStmp,path,strlen(path)-20);
+	else strncat(aMELTStmp,path,strlen(path)-18);
+	strcat(aMELTStmp,"alphaMELTS-1.9/ExoC/ExoC_env.txt");
+
+	str[0] = '\0';
+	if (cmdline == 1) strncat(str,path,strlen(path)-21);
+	else strncat(str,path,strlen(path)-19);
+
+	fin = fopen (aMELTStmp,"r"); 	// Open input file
+	if (fin == NULL) printf("alphaMELTS_init: File not found. Path: %s\n", aMELTStmp);
+
+	fout = fopen (tmp,"w"); 	// Open input file
+	if (fout == NULL) printf("alphaMELTS_init: File not found. Path: %s\n", tmp);
+
+	while (fgets(line, line_length, fin)) {
+		if (line[11] == 'P' && line[12] == 'T' && line[13] == 'P')
+			fprintf(fout, "ALPHAMELTS_PTPATH_FILE %s/alphaMELTS-1.9/ExoC/PTexoC.txt\n", str);
+		else fputs(line, fout);
+	}
+	if (ferror(fin)) {
+		printf("alphaMELTS_init: Error reading template input file %s\n", aMELTStmp); // Really it's not BLAHexec.txt but BLAH.txt
+		return 1;
+	}
+	fclose(fin);
+	fclose(fout);
+
+	cmd[0] = '\0';
+	strcat(cmd,"cp ");
+	strcat(cmd,tmp);
+	strcat(cmd," ");
+	strcat(cmd,aMELTStmp);
+	system(cmd);
+
+	// Edit ExoCbatch.txt by copying its modified version to tmp.txt and then overwriting it with tmp.txt using a system command
+	aMELTStmp[0] = '\0';
+	if (cmdline == 1) strncat(aMELTStmp,path,strlen(path)-20);
+	else strncat(aMELTStmp,path,strlen(path)-18);
+	strcat(aMELTStmp,"alphaMELTS-1.9/ExoC/ExoCbatch.txt");
+
+	fin = fopen (aMELTStmp,"r"); 	// Open input file
+	if (fin == NULL) printf("alphaMELTS_init: File not found. Path: %s\n", aMELTStmp);
+
+	fout = fopen (tmp,"w"); 	// Open input file
+	if (fout == NULL) printf("alphaMELTS_init: File not found. Path: %s\n", tmp);
+
+	while (fgets(line, line_length, fin)) {
+		if (line[0] == '/')
+			fprintf(fout, "%s/alphaMELTS-1.9/ExoC/ExoCcycleGeo.melts\n", str);
+		else fputs(line, fout);
+	}
+	if (ferror(fin)) {
+		printf("alphaMELTS_init: Error reading template input file %s\n", aMELTStmp); // Really it's not BLAHexec.txt but BLAH.txt
+		return 1;
+	}
+	fclose(fin);
+	fclose(fout);
+
+	cmd[0] = '\0';
+	strcat(cmd,"cp ");
+	strcat(cmd,tmp);
+	strcat(cmd," ");
+	strcat(cmd,aMELTStmp);
+	system(cmd);
+
+	// Remove temporary file tmp.txt
+	cmd[0] = '\0';
+	strcat(cmd,"rm ");
+	strcat(cmd,tmp);
+	system(cmd);
+
+	// Move path to tmp.txt in parent folder
+	tmp[0] = '\0';
+	if (cmdline == 1) strncat(tmp,path,strlen(path)-20);
+	else strncat(tmp,path,strlen(path)-18);
+	strcat(tmp,"alphaMELTS-1.9/tmp.txt");
+
+	// Edit run_alphameltsExoC.command by copying its modified version to tmp.txt and then overwriting it with tmp.txt using a system command
+	aMELTStmp[0] = '\0';
+	if (cmdline == 1) strncat(aMELTStmp,path,strlen(path)-20);
+	else strncat(aMELTStmp,path,strlen(path)-18);
+	strcat(aMELTStmp,"alphaMELTS-1.9/run_alphameltsExoC.command");
+
+	fin = fopen (aMELTStmp,"r"); 	// Open input file
+	if (fin == NULL) printf("alphaMELTS_init: File not found. Path: %s\n", aMELTStmp);
+
+	fout = fopen (tmp,"w"); 	// Open input file
+	if (fout == NULL) printf("alphaMELTS_init: File not found. Path: %s\n", tmp);
+
+	while (fgets(line, line_length, fin)) {
+		if (line[0] == '$' && line[1] == 'i' && line[2] == 'n' && line[3] == '_')
+			fprintf(fout, "$in_file = '%s/alphaMELTS-1.9/ExoC/ExoC_env.txt';\n", str);
+		else if (line[1] == '(' && line[2] && '(' && line[3] == '-' && line[4] == 'f' && line[5] == ' ' && line[6] == '\"' && line[7] == '/') {
+			if (!entry2) {
+				fprintf(fout, "\t((-f \"%s/alphaMELTS-1.9/alphamelts_macos64\") && !(system \"%s/alphaMELTS-1.9/alphamelts_macos64 < alphaMELTS-1.9/ExoC/ExoCbatch.txt\")) ||\n", str, str);
+				entry2 = 1;
+			}
+			else {
+				fprintf(fout, "\t((-f \"%s/alphaMELTS-1.9/alphamelts_macos64\") && !(system \"%s/alphaMELTS-1.9/alphamelts_macos64\")) ||\n", str, str);
+			}
+		}
+		else fputs(line, fout);
+	}
+	if (ferror(fin)) {
+		printf("alphaMELTS_init: Error reading template input file %s\n", aMELTStmp); // Really it's not BLAHexec.txt but BLAH.txt
+		return 1;
+	}
+	fclose(fin);
+	fclose(fout);
+
+	cmd[0] = '\0';
+	strcat(cmd,"cp ");
+	strcat(cmd,tmp);
+	strcat(cmd," ");
+	strcat(cmd,aMELTStmp);
+	system(cmd);
+
+	// Remove temporary file tmp.txt
+	cmd[0] = '\0';
+	strcat(cmd,"rm ");
+	strcat(cmd,tmp);
+	system(cmd);
+
+	free(aMELTStmp);
+	free(tmp);
+	free(cmd);
+
+	return 0;
 }
 
 /*--------------------------------------------------------------------
