@@ -834,7 +834,7 @@ int alphaMELTS_init (char *path) {
 		else fputs(line, fout);
 	}
 	if (ferror(fin)) {
-		printf("alphaMELTS_init: Error reading template input file %s\n", aMELTStmp); // Really it's not BLAHexec.txt but BLAH.txt
+		printf("alphaMELTS_init: Error reading template input file %s\n", aMELTStmp);
 		return 1;
 	}
 	fclose(fin);
@@ -865,7 +865,7 @@ int alphaMELTS_init (char *path) {
 		else fputs(line, fout);
 	}
 	if (ferror(fin)) {
-		printf("alphaMELTS_init: Error reading template input file %s\n", aMELTStmp); // Really it's not BLAHexec.txt but BLAH.txt
+		printf("alphaMELTS_init: Error reading template input file %s\n", aMELTStmp);
 		return 1;
 	}
 	fclose(fin);
@@ -917,7 +917,7 @@ int alphaMELTS_init (char *path) {
 		else fputs(line, fout);
 	}
 	if (ferror(fin)) {
-		printf("alphaMELTS_init: Error reading template input file %s\n", aMELTStmp); // Really it's not BLAHexec.txt but BLAH.txt
+		printf("alphaMELTS_init: Error reading template input file %s\n", aMELTStmp);
 		return 1;
 	}
 	fclose(fin);

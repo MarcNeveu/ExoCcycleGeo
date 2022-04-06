@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 	int i = 0;
 	int recover = 0;
 
-	int n_inputs = 23;
+	int n_inputs = 24;
 	double *input = (double*) malloc(n_inputs*sizeof(double));
 	if (input == NULL) printf("IcyDwarf: Not enough memory to create input[%d]\n", n_inputs);
 	for (i=0;i<n_inputs;i++) input[i] = 0.0;
@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
 	int rheology = 0;                  // 0 = dry olivine (KK08), 1 = wet olivine (KK08)
     int redox = 0;                     // 1: current Earth surface, 2: hematite-magnetite, 3: fayalite-magnetite-quartz, 4: iron-wustite, code won't run with other values.
     double magmaCmassfrac = 0.0;       // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; HArtley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
+    double fCH4 = 0.0;                 // Mole fraction of C outgassed as CH4, relative to CH4+CO2
 
     // User-specified planet surface parameters
 	double Mocean = 0.0;               // Mass of ocean (kg, default: Earth=1.4e21)
@@ -343,6 +344,7 @@ int main(int argc, char *argv[]) {
 	rheology = (int) input[i]; i++;      // 0 = dry olivine (KK08), 1 = wet olivine (KK08)
     redox = (int) input[i]; i++;         // 1 = current Earth surface, 2 = hematite-magnetite, 3 = fayalite-magnetite-quartz, 4 = iron-wustite, code won't run with other values
     magmaCmassfrac = input[i]; i++;      // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; Hartley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
+    fCH4 = input[i]; i++;				 // Mole fraction of C outgassed as CH4, relative to CH4+CO2
     // Surface inputs
 	Mocean = input[i]; i++;              // Mass of ocean (kg, default: Earth=1.4e21)
 	Lnow = input[i]; i++;                // Areal fraction of planet surface covered by land
@@ -379,6 +381,7 @@ int main(int argc, char *argv[]) {
 	printf("| Rheology (0 dry oliv, 1 wet oliv KK08)        | %d \n", rheology);
 	printf("| Upper mantle redox (1 surf, 2 HM, 3 FMQ, 4 IW)| %d \n", redox);
 	printf("| Mass fraction of C in the mantle (def. 0.002) | %g \n", magmaCmassfrac);
+	printf("| Mole fraction of C outgassed as CH4/(CH4+CO2) | %g \n", fCH4);
 	printf("|-----------------------------------------------|--------------|\n");
 	printf("| Surface ||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
 	printf("|-----------------------------------------------|--------------|\n");
@@ -816,24 +819,14 @@ int main(int argc, char *argv[]) {
 		Vatm = Vatm1*Tsurf/Tsurf1; // After 2nd time step, keep Vatm constant
 
 		// Redox of outgassing (see e.g. Gaillard and Scaillet 2014 EPSL or Scaillet and Gaillard 2011 Nature comment)
-		if (redox <= 4) {
-			if (xgas[0]*nAir + 1.0*dtime*netFC < 0.0) {
-				netFC = -xgas[0]*nAir/(1.0*dtime)*(1.0-1.0e-8);
-				RCmantle = RCmantle_old - dtime_old*netFC; // Re-adjust reservoirs accordingly
-				RCatmoc  = RCatmoc_old  + dtime_old*netFC;
-			}
-			xgas[0] = (xgas[0]*nAir + 1.0*dtime*netFC)/(nAir + dtime*netFC); // CO2 dominates over CH4, assume 100% added gas is CO2 and let equilibration with ocean speciate accurately
-			xgas[1] = xgas[1]*nAir/(nAir + dtime*netFC);                     // Dilute CH4 (or concentrate if netFC < 0)
+
+		if (xgas[0]*nAir + 1.0*dtime*netFC < 0.0) {
+			netFC = -xgas[0]*nAir/(1.0*dtime)*(1.0-1.0e-8);
+			RCmantle = RCmantle_old - dtime_old*netFC; // Re-adjust reservoirs accordingly
+			RCatmoc  = RCatmoc_old  + dtime_old*netFC;
 		}
-		else {
-			if (xgas[1]*nAir + 1.0*dtime*netFC < 0.0) {
-				netFC = -xgas[1]*nAir/(1.0*dtime)*(1.0-1.0e-8);
-				RCmantle = RCmantle_old - dtime_old*netFC; // Re-adjust reservoirs accordingly
-				RCatmoc  = RCatmoc_old  + dtime_old*netFC;
-			}
-			xgas[1] = (xgas[1]*nAir + 1.0*dtime*netFC)/(nAir + dtime*netFC); // CH4 dominates over CO2, assume 100% added gas is CH4
-			xgas[0] = xgas[0]*nAir/(nAir + dtime*netFC);                     // Dilute CO2 (or concentrate if netFC < 0)
-		}
+		xgas[0] = (xgas[0]*nAir + (1.0-fCH4)*dtime*netFC)/(nAir + dtime*netFC); // CO2 dominates over CH4, assume 100% added gas is CO2 and let equilibration with ocean speciate accurately
+		xgas[1] = (xgas[1]*nAir +      fCH4 *dtime*netFC)/(nAir + dtime*netFC); // Dilute CH4 (or concentrate if netFC < 0)
 
 		for (i=2;i<nAtmSpecies;i++) xgas[i] = xgas[i]*nAir/(nAir + dtime*netFC); // Dilute other gases accordingly
 
