@@ -854,9 +854,9 @@ int main(int argc, char *argv[]) {
 				exit(0);
 			}
 
-			// If CH4 mixing ratio > 1.0 CO2, organic haze (Haqq-Misra et al. 2008) (really Photochem should be telling ExoCcycleGeo this)
+			// If CH4 mixing ratio > 1.0 CO2, organic haze (Haqq-Misra et al. 2008, https://doi.org/10.1089/ast.2007.0197) (really Photochem should be telling ExoCcycleGeo this)
 			if (xgas[1] > 1.0*xgas[0]) {
-				hChazeFallout += (xgas[1]-1.0*xgas[0])*nAir/128.0*1320.7/Asurf;
+				hChazeFallout += (xgas[1]-1.0*xgas[0])*nAir/128.0*1320.7*1.0e-6/Asurf; // 1320.7 cm3/mol is the molar volume of KerogenC128 (Helgeson et al. 2009, https://doi.org/10.1016/j.gca.2008.03.004)
 				// Thickness of aerosol deposit, output, in what reservoir to put it?, decrease riverine flux accordingly
 				xgas[1] = 1.0*xgas[0];
 
@@ -1401,6 +1401,11 @@ int main(int argc, char *argv[]) {
 //			printf("%g %g %g %g %g %g %g %g\n", xriver_Ca_evap, Ca_carb_consumed, Ca_sulf_consumed, massH2Oriver, FC_Ca_carb/1.0e12*Yr2sec, FC_Ca_sulf/1.0e12*Yr2sec, FC_Ca_sil/1.0e12*Yr2sec, FC_Ca/1.0e12*Yr2sec); // Tmol/yr
 //			printf("%g %g %g %g %g %g\n", xriver_Fe_evap, Fe_sulf_consumed, massH2Oriver, FC_Fe_sulf/1.0e12*Yr2sec, FC_Fe_sil/1.0e12*Yr2sec, FC_Fe/1.0e12*Yr2sec); // Tmol/yr
 		}
+
+		// Runoff removes part of the haze deposit at erosion rate scaled from modern Earth (assuming physical erosion here)
+		hChazeFallout -= 20.0e12/Yr2sec /2730.0 /0.29 /Asurf *dtime *runoff/runoff_Earth; // 20e12 kg: modern erosion rate on Earth (Borrelli et al. 2017, https://doi.org/10.1038/s41467-017-02142-7),
+		                                                                                  // scaled to global thickness using continental crust density of 2730 kg/m3 from Rudnick & Gao 2003 and modern Earth land areal fraction of 0.29
+		if (hChazeFallout < 0.0) hChazeFallout = 0.0;
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from seafloor weathering and subduction
