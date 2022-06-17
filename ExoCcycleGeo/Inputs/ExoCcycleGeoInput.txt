@@ -18,6 +18,7 @@ ExoCcycleGeo v20.x Input File
 | Rheology (0 dry oliv, 1 wet oliv KK08)        | 0            |
 | Upper mantle redox (1 surf, 2 HM, 3 FMQ, 4 IW)| 2            |
 | Mass fraction of C in the mantle (def. 0.002) | 0.002        |
+| Mole fraction of C outgassed as CH4/(CH4+CO2) | 0.5          |
 |-----------------------------------------------|--------------|
 | Surface ||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |-----------------------------------------------|--------------|

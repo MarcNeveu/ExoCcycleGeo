@@ -127,6 +127,7 @@ int main(int argc, char *argv[]) {
 	double RCatmoc = RCatm + RCocean;  // Combined atmospheric and ocean C reservoir (mol)
 	double RCatmoc_old = RCatmoc;
 	double RCorg = 0.0;			   	   // Organic carbon (biomass)
+	double hChazeFallout = 0.0;	       // Cumulative thickness of haze fallout deposit (m)
 
 	// Fluxes
 	double FCoutgas = 0.0;             // C flux from outgassing (subaerial+submarine) (mol s-1)
@@ -360,7 +361,7 @@ int main(int argc, char *argv[]) {
     xgas[4] = input[i]; i++;             // H2O mixing ratio
 
 	printf("\n");
-	printf("ExoCcycleGeo v22.4\n");
+	printf("ExoCcycleGeo v22.6\n");
 	if (cmdline == 1) printf("Command line mode\n");
 
 	printf("|--------------------------------------------------------------|\n");
@@ -625,10 +626,10 @@ int main(int argc, char *argv[]) {
 		else {
 			fprintf(fout, "'Continental weathering fluxes in mol s-1 = bicarbonate trapping capacity due to dissolved cations'; river abundances in mol kg-1\n");
 			fprintf(fout, "'Time (Gyr)' \t 'Land areal fraction' \t 'Residence time of water on land' \t 'Total Mg' \t 'Mg from silicates' \t 'Mg from carbonates' \t 'Total Ca' \t 'Ca from silicates' \t 'Ca from carbonates' \t 'Ca from sulfates'"
-					" \t 'Total Fe' \t 'Fe from silicates' \t 'Fe from sulfides' \t 'Total C flux' \t 'River pH' \t HCO3-(aq) \t CO3-2(aq) \t CO2(aq) \t Na+(aq) \t Mg+2(aq) \t SiO2(aq) \t Ca+2(aq) \t Fe+2(aq)\n");
-			fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+					" \t 'Total Fe' \t 'Fe from silicates' \t 'Fe from sulfides' \t 'Total C flux' \t 'River pH' \t HCO3-(aq) \t CO3-2(aq) \t CO2(aq) \t Na+(aq) \t Mg+2(aq) \t SiO2(aq) \t Ca+2(aq) \t Fe+2(aq) \t hChazeFallout\n");
+			fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
 					L, tResLand, FC_Mg, FC_Mg_sil, FC_Mg_carb, FC_Ca, FC_Ca_sil, FC_Ca_carb, FC_Ca_sulf, FC_Fe, FC_Fe_sil, FC_Fe_sulf, FC_Mg+FC_Ca+FC_Fe,
-					xriver[iResTime][3], xriver[iResTime][17], xriver[iResTime][18], xriver[iResTime][19], xriver[iResTime][20], xriver[iResTime][21], xriver[iResTime][22], xriver[iResTime][23], xriver[iResTime][24]);
+					xriver[iResTime][3], xriver[iResTime][17], xriver[iResTime][18], xriver[iResTime][19], xriver[iResTime][20], xriver[iResTime][21], xriver[iResTime][22], xriver[iResTime][23], xriver[iResTime][24], hChazeFallout);
 
 		}
 		fclose (fout);
@@ -825,7 +826,7 @@ int main(int argc, char *argv[]) {
 			RCmantle = RCmantle_old - dtime_old*netFC; // Re-adjust reservoirs accordingly
 			RCatmoc  = RCatmoc_old  + dtime_old*netFC;
 		}
-		xgas[0] = (xgas[0]*nAir + (1.0-fCH4)*dtime*netFC)/(nAir + dtime*netFC); // CO2 dominates over CH4, assume 100% added gas is CO2 and let equilibration with ocean speciate accurately
+		xgas[0] = (xgas[0]*nAir + (1.0-fCH4)*dtime*netFC)/(nAir + dtime*netFC); // (1-fCH4) fraction of added gas is CO2. Let equilibration with ocean speciate accurately
 		xgas[1] = (xgas[1]*nAir +      fCH4 *dtime*netFC)/(nAir + dtime*netFC); // Dilute CH4 (or concentrate if netFC < 0)
 
 		for (i=2;i<nAtmSpecies;i++) xgas[i] = xgas[i]*nAir/(nAir + dtime*netFC); // Dilute other gases accordingly
@@ -851,6 +852,20 @@ int main(int argc, char *argv[]) {
 			if (Psurf < 0.01) {
 				printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
 				exit(0);
+			}
+
+			// If CH4 mixing ratio > 1.0 CO2, organic haze (Haqq-Misra et al. 2008) (really Photochem should be telling ExoCcycleGeo this)
+			if (xgas[1] > 1.0*xgas[0]) {
+				hChazeFallout += (xgas[1]-1.0*xgas[0])*nAir/128.0*1320.7/Asurf;
+				// Thickness of aerosol deposit, output, in what reservoir to put it?, decrease riverine flux accordingly
+				xgas[1] = 1.0*xgas[0];
+
+				AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
+
+				if (Psurf < 0.01) {
+					printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
+					exit(0);
+				}
 			}
 
 			RCatm = (xgas[0]+xgas[1])*nAir;
@@ -1344,6 +1359,10 @@ int main(int argc, char *argv[]) {
 			rainpH = xriver[1][3]; // xriver[0][3], the initial rain speciation, is returned as = 0, so this is as close as it gets (smallest reaction time)
 			massH2Oriver = xriver[iResTime][7];
 
+			if (hChazeFallout > 1.0) {
+				for (i=9;i<nvarKin;i++) xriver[iResTime][i] /= hChazeFallout; // Continental weathering decreasingly effective with increasing haze fallout thickness
+			}
+
 			// River abundances of cations (mol/kg)
 //			xriver_Mg_evap = xriver[iResTime][11]/(1.0-fracEvap);
 //			xriver_Ca_evap = xriver[iResTime][13]/(1.0-fracEvap);
@@ -1357,7 +1376,7 @@ int main(int argc, char *argv[]) {
 			Ca_sulf_consumed = - xriver[iResTime][nvarKin-4] - xriver[iResTime][nvarKin-3]; // Anhydrite and gypsum
 			Fe_sulf_consumed = - xriver[iResTime][nvarKin-2] - xriver[iResTime][nvarKin-1]; // Pyrite and pyrrhotite
 
-			Mriver = 4.0*PI_greek*r_p*r_p*L*runoff/(1.0-fracEvap)*rhoH2O*dtime;
+			Mriver = Asurf*L*runoff/(1.0-fracEvap)*rhoH2O*dtime;
 
 			// Individual carbon fluxes (mol/s). Rainout = (river runoff)/(1-fracEvap).
 			FC_Mg_carb =     Mg_carb_consumed/massH2Oriver*Mriver/dtime; // Factor of 1 because despite divalent cation vs. monovalent bicarbonate, 1 biarbonate is released in dissolution, so net 1
@@ -1493,9 +1512,9 @@ int main(int argc, char *argv[]) {
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 		else {
-			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
+			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
 					realtime/Gyr2sec, L, tResLand/Yr2sec, FC_Mg, FC_Mg_sil, FC_Mg_carb, FC_Ca, FC_Ca_sil, FC_Ca_carb, FC_Ca_sulf, FC_Fe, FC_Fe_sil, FC_Fe_sulf, FC_Mg+FC_Ca+FC_Fe,
-					xriver[iResTime][3], xriver[iResTime][17], xriver[iResTime][18], xriver[iResTime][19], xriver[iResTime][20], xriver[iResTime][21], xriver[iResTime][22], xriver[iResTime][23], xriver[iResTime][24]);
+					xriver[iResTime][3], xriver[iResTime][17], xriver[iResTime][18], xriver[iResTime][19], xriver[iResTime][20], xriver[iResTime][21], xriver[iResTime][22], xriver[iResTime][23], xriver[iResTime][24], hChazeFallout);
 		}
 		fclose (fout);
 

@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define cmdline 1						// If execution from terminal as "./ExoCcycleGeo"
+#define cmdline 0						// If execution from terminal as "./ExoCcycleGeo"
 
 // Constants and conversion factors
 #define PI_greek 3.14159265358979323846
