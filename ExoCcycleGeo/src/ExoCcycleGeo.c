@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 	//-------------------------------------------------------------------
 
 	int i = 0;
-	int recover = 0;
+	int recover = 1;
 
 	int n_inputs = 24;
 	double *input = (double*) malloc(n_inputs*sizeof(double));
@@ -626,7 +626,7 @@ int main(int argc, char *argv[]) {
 		else {
 			fprintf(fout, "'Continental weathering fluxes in mol s-1 = bicarbonate trapping capacity due to dissolved cations'; river abundances in mol kg-1\n");
 			fprintf(fout, "'Time (Gyr)' \t 'Land areal fraction' \t 'Residence time of water on land' \t 'Total Mg' \t 'Mg from silicates' \t 'Mg from carbonates' \t 'Total Ca' \t 'Ca from silicates' \t 'Ca from carbonates' \t 'Ca from sulfates'"
-					" \t 'Total Fe' \t 'Fe from silicates' \t 'Fe from sulfides' \t 'Total C flux' \t 'River pH' \t HCO3-(aq) \t CO3-2(aq) \t CO2(aq) \t Na+(aq) \t Mg+2(aq) \t SiO2(aq) \t Ca+2(aq) \t Fe+2(aq) \t hChazeFallout\n");
+					" \t 'Total Fe' \t 'Fe from silicates' \t 'Fe from sulfides' \t 'Total C flux' \t 'River pH' \t HCO3-(aq) \t CO3-2(aq) \t CO2(aq) \t Na+(aq) \t Mg+2(aq) \t SiO2(aq) \t Ca+2(aq) \t Fe+2(aq) \t 'Haze fallout height (m)'\n");
 			fprintf(fout, "0 \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g\n",
 					L, tResLand, FC_Mg, FC_Mg_sil, FC_Mg_carb, FC_Ca, FC_Ca_sil, FC_Ca_carb, FC_Ca_sulf, FC_Fe, FC_Fe_sil, FC_Fe_sulf, FC_Mg+FC_Ca+FC_Fe,
 					xriver[iResTime][3], xriver[iResTime][17], xriver[iResTime][18], xriver[iResTime][19], xriver[iResTime][20], xriver[iResTime][21], xriver[iResTime][22], xriver[iResTime][23], xriver[iResTime][24], hChazeFallout);
@@ -759,7 +759,7 @@ int main(int argc, char *argv[]) {
 			printf("RCmantle \t %g\n", RCmantle);
 			printf("Tmantle \t %g\n", Tmantle);
 			printf("netFC \t %g\n", netFC);
-			printf("Rcorg \t %g\n", RCorg);
+			printf("RCorg \t %g\n", RCorg);
 		}
 		fclose (fout);
 	}
@@ -856,9 +856,9 @@ int main(int argc, char *argv[]) {
 
 			// If CH4 mixing ratio > 1.0 CO2, organic haze (Haqq-Misra et al. 2008, https://doi.org/10.1089/ast.2007.0197) (really Photochem should be telling ExoCcycleGeo this)
 			if (xgas[1] > 1.0*xgas[0]) {
-				hChazeFallout += (xgas[1]-1.0*xgas[0])*nAir/128.0*1320.7*1.0e-6/Asurf; // 1320.7 cm3/mol is the molar volume of KerogenC128 (Helgeson et al. 2009, https://doi.org/10.1016/j.gca.2008.03.004)
+				hChazeFallout += 1.0e-4*xgas[1]*nAir/128.0*1320.7*1.0e-6/Asurf; // 1320.7 cm3/mol is the molar volume of KerogenC128 (Helgeson et al. 2009, https://doi.org/10.1016/j.gca.2008.03.004)
 				// Thickness of aerosol deposit, output, in what reservoir to put it?, decrease riverine flux accordingly
-				xgas[1] = 1.0*xgas[0];
+				xgas[1] -= 1.0e-4*xgas[1];
 
 				AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
 
