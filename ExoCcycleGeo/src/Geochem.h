@@ -278,12 +278,13 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 
 		// Update ocean concentrations
 		(*pH) = simdata[0][1]; // Closed-system pH, does not correspond to pH of ocean equilibrated with atmosphere
-//		(*pe) = simdata[0][2]; // Redox seems set by relative abundances of C(4) and C(-4)
+		(*pe) = simdata[0][2];
 		// Scale by (original water mass)/(new water mass) under assumption that hydration and dehydration (but not carbonation/decarbonation) of ocean crust are balanced
 		printf("Water mass scaling before/after: %g\n", mass_w_seaf/simdata[0][5]);
 		(*xaq)[0] = simdata[0][23] * simdata[0][5] / mass_w_seaf; // C(4), i.e. dissolved CO2 and carbonate
 		(*xaq)[1] = simdata[0][21] * simdata[0][5] / mass_w_seaf; // C(-4), i.e. dissolved methane
-//		(*xaq)[2] = simdata[0][36] * simdata[0][5] / mass_w_seaf; // O(0), commented out so as not to throw off redox
+		(*xaq)[2] = simdata[0][36] * simdata[0][5] / mass_w_seaf; // O(0), commented out so as not to throw off redox
+		if ((*xaq)[2] < 1.0e-15) (*xaq)[2] = 0.0; // PHREEQC can bookkeep negative O(0) in reducing conditions; don't translate this to negative molalities
 //		(*xaq)[3] = simdata[0][46] * simdata[0][5] / mass_w_seaf; // Ntg, commented out otherwise N is not quite conserved
 //		(*xaq)[4] = 0.0;                                          // N excluding Ntg
 //		(*xaq)[5] = 0.0;                                          // N(-3), i.e. dissolved NH3 and NH4+
@@ -907,11 +908,13 @@ int alphaMELTS_init (char *path) {
 			fprintf(fout, "$in_file = '%s/alphaMELTS-1.9/ExoC/ExoC_env.txt';\n", str);
 		else if (line[1] == '(' && line[2] && '(' && line[3] == '-' && line[4] == 'f' && line[5] == ' ' && line[6] == '\"' && line[7] == '/') {
 			if (!entry2) {
-				fprintf(fout, "\t((-f \"%s/alphaMELTS-1.9/alphamelts_macos64\") && !(system \"%s/alphaMELTS-1.9/alphamelts_macos64 < alphaMELTS-1.9/ExoC/ExoCbatch.txt\")) ||\n", str, str);
+				fprintf(fout, "\t((-f \"%s/alphaMELTS-1.9/alphamelts_macosx64\") &&\n", str);
+				fprintf(fout, "!(system \"%s/alphaMELTS-1.9/alphamelts_macosx64 < %s/alphaMELTS-1.9/ExoC/ExoCbatch.txt\")) ||\n", str, str);
 				entry2 = 1;
+				fgets(line, line_length, fin); // Move one down further since we wrote two lines
 			}
 			else {
-				fprintf(fout, "\t((-f \"%s/alphaMELTS-1.9/alphamelts_macos64\") && !(system \"%s/alphaMELTS-1.9/alphamelts_macos64\")) ||\n", str, str);
+				fprintf(fout, "\t((-f \"%s/alphaMELTS-1.9/alphamelts_macosx64\") && !(system \"%s/alphaMELTS-1.9/alphamelts_macosx64\")) ||\n", str, str);
 			}
 		}
 		else fputs(line, fout);
@@ -974,9 +977,11 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
 	aMELTStmp[0] = '\0';
 	char *doalarm = (char*)malloc(256);
 	doalarm[0] = '\0';
-	strcpy(doalarm, "doalarm () { perl -e 'alarm shift; exec @ARGV' \"$@\"; }"); // To kill alphaMELTS if it takes longer than X seconds to run (usually alphaMELTS runs successfully but gets hung up toward the end of a run)
+	strcpy(doalarm, "doalarm () { perl -e 'alarm shift; exec @ARGV' \"$@\"; } ; "); // To kill alphaMELTS if it takes longer than X seconds to run (usually alphaMELTS runs successfully but gets hung up toward the end of a run). ";" at the end is to run second command to run alphaMELTS in the same terminal line
 
-	strcpy(aMELTStmp, "doalarm 30 ");
+//	strcpy(aMELTStmp, "doalarm 30 ");
+	strcpy(aMELTStmp, doalarm);
+	strcat(aMELTStmp, "doalarm 30 ");
 
 	// Executable
 	if (cmdline == 1) strncat(aMELTStmp,path,strlen(path)-20);
@@ -1011,6 +1016,7 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
 	// --- Run alphaMELTS ---
 	printf("Running alphaMELTS\n");
 	system(doalarm);
+	printf("%s\n", aMELTSsys);
 	system(aMELTSsys);
 	printf("alphaMELTS ran successfully\n");
 	// Alternative if ever needed: echo [interactive inputs] |.

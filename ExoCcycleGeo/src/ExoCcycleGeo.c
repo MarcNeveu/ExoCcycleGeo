@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 	//-------------------------------------------------------------------
 
 	int i = 0;
-	int recover = 1;
+	int recover = 0;
 
 	int n_inputs = 24;
 	double *input = (double*) malloc(n_inputs*sizeof(double));
@@ -775,6 +775,8 @@ int main(int argc, char *argv[]) {
 
 		dtime = fmin(dtime0, 0.1*fmin(RCatmoc, RCmantle)/fabs(netFC));
 		if (realtime < tstart + 1.0*Myr2sec) dtime = fmin(dtime, 0.2*Myr2sec); // Start slow
+//		dtime = dtime0; // TODO remove and uncomment adaptable time step (2 lines above)
+
 		if (realtime < tstart) dtime = 10.0*Myr2sec;                           // Sufficient to achieve numerical convergence for geodynamics alone
 		realtime += dtime;
 //		realtime = 4.55*Gyr2sec; // Present day
@@ -807,7 +809,7 @@ int main(int argc, char *argv[]) {
 
 		Tsurf = Teff + DeltaTghe;
 
-		if (Tsurf < Tfreeze+0.01) printf("ExoCcycleGeo: Surface temperature = %g K < 0.01 C. DeltaTghe=%g K.\n", Tsurf, DeltaTghe);
+		if (Tsurf <= Tfreeze+0.01) printf("ExoCcycleGeo: Surface temperature = %g K <= 0.01 C. DeltaTghe=%g K.\n", Tsurf, DeltaTghe);
 
 		//-------------------------------------------------------------------
 		// Update atmosphere
@@ -1460,7 +1462,7 @@ int main(int argc, char *argv[]) {
 		RCmantle = RCmantle - dtime*netFC; // Assuming plate = mantle (unlike Foley et al. 2015) and instantaneous mixing into the mantle once subducted (in practice could take 1 Gyr)
 		if (RCmantle < 0.0) {
 			printf("Mantle reservoir depleted\n");
-			exit(0);
+			exit(0); // TODO uncomment
 		}
 
 		// Life. On Earth today, org C sequesters today 1e5 x more carbon than atmosphere. Org C has had same level since Archean, maybe was 2x lower back then (Martin et al. 2008 Fig. 2B)

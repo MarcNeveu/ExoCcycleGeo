@@ -429,9 +429,10 @@ until (@argv2) {
 	#    warn "RUN_ALPHAMELTS.COMMAND WARNING: alphamelts may have crashed!\n";
 
 	# $program does not have spaces etc. but $run_path might
-	((-f "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macos64") && !(system "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macos64 < alphaMELTS-1.9/ExoC/ExoCbatch.txt")) ||
-xt")) || 
-	    (!(-f "$run_path$program") && !(system "$run$program < $batch_file")) ||
+	((-f "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macosx64") &&
+!(system "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macosx64 < /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCbatch.txt")) ||
+	    (!(-f "$run_path$program") && 
+!(system "$run$program < $batch_file")) ||
 	    warn "RUN_ALPHAMELTS.COMMAND WARNING: alphamelts may have crashed!\n";
 
     }
@@ -455,7 +456,7 @@ xt")) ||
 	#    warn "RUN_ALPHAMELTS.COMMAND WARNING: alphamelts may have crashed!\n";
 
 	# Try $run_path first as can test for the file; then try path (e.g. for Mac double-click)
-	((-f "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macos64") && !(system "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macos64")) ||
+	((-f "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macosx64") && !(system "/Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/alphamelts_macosx64")) ||
 	    (!(-f "$run_path$program") && !(system "$run$program")) ||
 	    warn "RUN_ALPHAMELTS.COMMAND WARNING: alphamelts may have crashed!\n";
 	
