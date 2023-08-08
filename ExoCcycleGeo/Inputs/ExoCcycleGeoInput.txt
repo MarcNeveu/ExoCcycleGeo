@@ -3,13 +3,13 @@ ExoCcycleGeo v20.x Input File
 |--------------------------------------------------------------|
 | Grid |||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |-----------------------------------------------|--------------|
-| Simulation time step (Myr, default 1, adapts) | 10            | 1
+| Simulation time step (Myr, default 1, adapts) | 10           | 1
 | Simulation start time (Gyr, default 0.6)      | 0.6          |
-| Simulation end   time (Gyr, default 5)        | 5         | 4.57
+| Simulation end   time (Gyr, default 5)        | 5            | 4.57
 |-----------------------------------------------|--------------|
 | Planet Interior ||||||||||||||||||||||||||||||||||||||||||||||
 |-----------------------------------------------|--------------|
-| Planet mass (Earth masses, min 0.5, max 2)    | 0.5            |
+| Planet mass (Earth masses, min 0.5, max 2)    | 0.5          |
 | Core mass fraction (default 0.325)            | 0.325        |
 | Inner layer material code (see planmat dbase) | 101          |
 | Mid   layer material code (see planmat dbase) | 107          |
