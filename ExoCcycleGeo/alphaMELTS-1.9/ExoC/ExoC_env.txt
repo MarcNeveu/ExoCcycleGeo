@@ -1,7 +1,7 @@
 !Default values of environment variables (version 1.6)
 !Variables preceded by '!' are 'unset' (i.e. 'false')
 
-ALPHAMELTS_VERSION MELTS
+ALPHAMELTS_VERSION pMELTS
 ALPHAMELTS_MODE ptfile
 ALPHAMELTS_PTPATH_FILE /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/PTexoC.txt
 ALPHAMELTS_DELTAP +1000

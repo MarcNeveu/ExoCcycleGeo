@@ -9,14 +9,15 @@ ExoCcycleGeo v20.x Input File
 |-----------------------------------------------|--------------|
 | Planet Interior ||||||||||||||||||||||||||||||||||||||||||||||
 |-----------------------------------------------|--------------|
-| Planet mass (Earth masses, min 0.5, max 2)    | 0.5          |
+| Planet mass (Earth masses, min 0.5, max 2)    | 1            |
 | Core mass fraction (default 0.325)            | 0.325        |
 | Inner layer material code (see planmat dbase) | 101          |
 | Mid   layer material code (see planmat dbase) | 107          |
 | Outer layer material code (see planmat dbase) | 201          |
 | Radionuclides (1 hi, 2 int, 3 lo, def. int)   | 1            |
 | Rheology (0 dry oliv, 1 wet oliv KK08)        | 0            |
-| Upper mantle redox (1 surf, 2 HM, 3 FMQ, 4 IW)| 2            |
+| Tectonic mode (0 plate tecton, 1 stagnant lid)| 1            |
+| Upper mantle redox (1 surf, 2 HM, 3 FMQ, 4 IW)| 3            |
 | Mass fraction of C in the mantle (def. 0.002) | 0.002        |
 | Mole fraction of C outgassed as CH4/(CH4+CO2) | 0.5          |
 |-----------------------------------------------|--------------|
@@ -25,15 +26,15 @@ ExoCcycleGeo v20.x Input File
 | Mass of surface ocean (kg, mod Earth 1.4e21)  | 1.4e21       |
 | Areal land fraction (modern Earth 0.29)       | 0.29         |
 | Initial temperature (K, modern Earth 288)     | 288          | Archean
-| Initial pressure (bar)                        | 0.5          | 0.5
+| Initial pressure (bar)                        | 1            | 0.5
 | Runoff rate (m/day, modern Earth 0.67e-3)     | 0.67e-3      |
 | Water residence time, continents (yr, mdrn 10)| 10           |
 |-----------------------------------------------|--------------|
 | Initial Atmosphere Mixing Ratios |||||||||||||||||||||||||||||
 |-----------------------------------------------|--------------|
-| CO2 (pre-industrial Earth 280e-6)             | 0.2          | 0.2
-| CH4 (modern 1e-6)                             | 1e-3         | 3e-3
-| O2  (modern Earth 0.2)                        | 1e-7         | 1e-7
-| N2  (modern Earth 0.79)                       | 0.79         |
-| H2O                                           | 0.01         |
+| CO2 (pre-industrial Earth 280e-6)             | 280e-6       | 0.2
+| CH4 (modern 1e-6)                             | 1e-6         | 1 to 3e-3
+| O2  (modern Earth 0.2)                        | 0.2          | 1e-7
+| N2  (modern Earth 0.79)                       | 0.79         | 0.79
+| H2O                                           | 0.01         | 0.01
 |--------------------------------------------------------------|

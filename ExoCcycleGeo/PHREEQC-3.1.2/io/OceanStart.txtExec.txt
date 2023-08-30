@@ -4,14 +4,14 @@ SOLUTION 1 Planetary ocean surface waters (PHREEQC v3 manual p. 282)
 
 	pH 	 	8.22 charge
 	temp 	 	14.85
-	pressure 	0.493462
-	pe 	 	3.168
+	pressure 	0.986923
+	pe 	 	0.833199
 # Mass of Earth’s atmosphere: 5.1480e18 kg
 # Mean molecular mass of Earth’s atmosphere: 29 g mol -1
 # Moles of air in Earth’s atmosphere: 1.775e20 mol
 # Mass of Earth’s oceans: 1.4e21 kg (/(1-L): water-world)
 # Mass of ocean per mole of air: 7.9 kg
-	-water 	 	18.1163
+	-water 	 	7.35696
 	units		mol/kgw
 	Ca		0.010287     # 412.3 ppm -> 412.3e-6 kg / 40.078 g/mol * 1000
 	Mg		0.05315      # 1291.8e-6/(24.305/1000)
@@ -22,9 +22,9 @@ SOLUTION 1 Planetary ocean surface waters (PHREEQC v3 manual p. 282)
 	Cl		0.5459       # 19353.0e-6/(35.4527/1000)
 	S(6)		0.02824      # 2712.0e-6/((32.066+4*15.994)/1000), SO4 is master species
 # C, N, O set by atmospheric composition
-	C(4) 		1 mol/kgw	CO2(g) 	-1.00572
-	Ntg 		1 mol/kgw	Ntg(g) 	-0.40912
-	O(0) 		1 mol/kgw	O2(g) 	-7.30675
+	C(4) 		1 mol/kgw	CO2(g) 	-3.55856
+	Ntg 		1 mol/kgw	Ntg(g) 	-0.10809
+	O(0) 		1 mol/kgw	O2(g) 	-0.704687
 
 SELECTED_OUTPUT 1
 	

@@ -77,7 +77,6 @@ int main(int argc, char *argv[]) {
 	int imin = 0;                      // Index of innermost grid zone of melting in MELTS output
 	int imax = 0;                      // Index of outermost grid zone of melting in MELTS output
 	int iCMB = 0;                      // Index of grid zone that corresponds to core-mantle boundary
-	int iBDT = 0;                      // Index of grid zone of the brittleo-ductile transition
 
 	int nslopeAvg = 5;                 // Target number of data points used for averaging melt fraction slope in the mantle
 	int islope = 0;                    // Actual numbers of data points used for averaging melt fraction slope in the mantle
@@ -159,7 +158,6 @@ int main(int argc, char *argv[]) {
 
 	// Quantities to be computed by thermal/geodynamic model
 	int staglid = 1;                   // 1 if stagnant-lid, 0 if mobile-lid
-	int n_iter = 0, n_iter_max = 100;  // Iteration counter and max for the Bisection/Newton-Raphson loop to determine T_BDT
     double Tmantle = 0.0;              // Temperature at mid-mantle depth (K), initially set by accretion
 	double H = 0.0;                    // Specific radiogenic heating rate (J s-1 kg-1)
 	double x40K = 0.0;                 // Abundance of the radionuclide 40 K by mass
@@ -170,23 +168,12 @@ int main(int argc, char *argv[]) {
 	double nu = 0.0;                   // Mantle kinematic viscosity (m2 s-1)
 	double zCrust = 0.0;               // Crustal thickness (m), i.e. depth of layer crystallized from a melt
 	double Ra = 0.0;                   // Rayleigh number for mantle convection (no dim)
-	double Nu = 0.0;                   // Nusselt number (no dim)
+	double Nu = 1.0;                   // Nusselt number (no dim)
 	double Tref = 0.0;                 // Temperature at outer boundary of convective zone (surface or base of stagnant lid)
-	double driveStress = 0.0;          // Driving stress at the base of lithosphere, used to switch between stagnant and mobile-lid modes
-	double yieldStress = 0.0;          // Lithospheric yield stress, taken to be the strength at the brittle-ductile transition (brittle strength = ductile strength)
-	double T_INF = 0.0, T_SUP = 0.0, T_TEMP = 0.0; // Intermediate temperatures used in determination of T_BDT by Bisection/Newton-Raphson loop
-	double dT = 0.0, dTold = 0.0;      // Intermediate temperature changes used in determination of T_BDT by Bisection/Newton-Raphson loop
-	double f_inf = 0.0, f_sup = 0.0;   // Differences between brittle and ductile strengths, used in determination of T_BDT by Bisection/Newton-Raphson loop (P)
-	double f_x = 0.0, f_prime_x = 0.0; // Derivatives of the above (Pa K-1)
-	double NewtRaphThresh = 1.0e5;     // Threshold for the Bisection/Newton-Raphson loop, here in Pa
-	double T_BDT = 0.0;                // Temperature at brittle-ductile transition (K)
-	double P_BDT = 0.0;                // Pressure at brittle-ductile transition (Pa)
 	double meltmass = 0.0;             // Total mass of outgassing mantle melt (kg)
 	double rhomelt = 0.0;              // Density of the melt (kg m-3)
 	double zNewcrust = 0.0;            // Thickness of crust generated from mantle melt (km)
-	double Tadiab = 0.0;               // Temperature in mantle adiabat (K)
 	double Tupbnd = 0.0;               // Temperature in conductive upper boundary layer (K)
-	double bndcoef = 0.0;              // Coefficient linking boundary layer thickness and (height of convection cell / Nusselt number)
 	double zLith = 0.0;                // Depth of lithosphere (both thermal: geotherm inflexion to adiabat and mechanical: brittle-ductile transition) (m)
 	double tConv = 0.0;                // Convection timescale (s), 200 Myr for deep Earth mantle today
 	double vConv = 0.0;                // Convective velocity (m s-1)
@@ -286,6 +273,9 @@ int main(int argc, char *argv[]) {
 	double xaq1 = 0.0;                 // Memory of xaq[1] (mol/kg) before seafloor weathering calculation to avoid removing reduced C twice (during PHREEQC calculation and from netFC)
 	double volSeafCrust = 0.0;         // Volume of seafloor reacting with ocean water (m3)
 
+	double Tadiab[NR]; // Mantle adiabat temperature profile (K) TODO dynamically allocate memory
+	for (i=0;i<NR;i++) Tadiab[i] = 0.0;
+
 	double *xaq = (double*) malloc(nAqSpecies*sizeof(double));
 	if (xaq == NULL) printf("ExoCcycleGeo: Not enough memory to create xaq[nAqSpecies]\n"); // Molalities of aqueous species (mol (kg H2O)-1)
     for (i=0;i<nAqSpecies;i++) xaq[i] = 0.0;
@@ -343,7 +333,8 @@ int main(int argc, char *argv[]) {
 	layerCode3 = (int) input[i]; i++;    // Outer layer material code (see planmat dbase)
 	radionuclides = (int) input[i]; i++; // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
 	rheology = (int) input[i]; i++;      // 0 = dry olivine (KK08), 1 = wet olivine (KK08)
-    redox = (int) input[i]; i++;         // 1 = current Earth surface, 2 = hematite-magnetite, 3 = fayalite-magnetite-quartz, 4 = iron-wustite, code won't run with other values
+	staglid = (int) input[i]; i++;       // 0 = plate tectonics, 1 = stagnant lid
+	redox = (int) input[i]; i++;         // 1 = current Earth surface, 2 = hematite-magnetite, 3 = fayalite-magnetite-quartz, 4 = iron-wustite, code won't run with other values
     magmaCmassfrac = input[i]; i++;      // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; Hartley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
     fCH4 = input[i]; i++;				 // Mole fraction of C outgassed as CH4, relative to CH4+CO2
     // Surface inputs
@@ -361,7 +352,7 @@ int main(int argc, char *argv[]) {
     xgas[4] = input[i]; i++;             // H2O mixing ratio
 
 	printf("\n");
-	printf("ExoCcycleGeo v22.6\n");
+	printf("ExoCcycleGeo v23.8\n");
 	if (cmdline == 1) printf("Command line mode\n");
 
 	printf("|--------------------------------------------------------------|\n");
@@ -380,6 +371,7 @@ int main(int argc, char *argv[]) {
 	printf("| Outer layer material code (see planmat dbase) | %d \n", layerCode3);
 	printf("| Radionuclides (1 hi, 2 int, 3 lo, def. int)   | %d \n", radionuclides);
 	printf("| Rheology (0 dry oliv, 1 wet oliv KK08)        | %d \n", rheology);
+	printf("| Tectonic mode (0 plate tecton, 1 stagnant lid)| %d \n", staglid);
 	printf("| Upper mantle redox (1 surf, 2 HM, 3 FMQ, 4 IW)| %d \n", redox);
 	printf("| Mass fraction of C in the mantle (def. 0.002) | %g \n", magmaCmassfrac);
 	printf("| Mole fraction of C outgassed as CH4/(CH4+CO2) | %g \n", fCH4);
@@ -419,7 +411,10 @@ int main(int argc, char *argv[]) {
 	Asurf = 4.0*PI_greek*r_p*r_p;
 	nAir = Psurf*bar2Pa*Asurf/g[NR]/molmass_atm(xgas);
 
-	zLith = 100.0*km2m;                // Initial value
+	zLith = (r_p-r_c)/Nu;              // Initial value, thickness of entire mantle since Nu is initiated to 1
+	for (i=0;i<NR;i++) {
+		if (r[i] <= r_p - zLith && r[i+1] > r_p-zLith) iLith = i;
+	}
 	tConv = 10.0*Myr2sec;              // Initial value
 	vConv = (r_p-zLith-r[iCMB])/tConv;
 
@@ -427,20 +422,11 @@ int main(int argc, char *argv[]) {
 	Tmantle = Tsurf0 + 0.6*4.0*h_frac*chi*G*PI_greek*rho_p*r_p*r_p/(3.0*Cp);
 
 	// Calculate temperatures (not computed in the core)
-	for (i=iCMB;i<NR;i++) {
-		Tadiab = Tmantle - alpha*g[(int)(0.5*(NR+iCMB))]*Tmantle/Cp * (r[i] - 0.5*(r_p+r_c)); // Mantle adiabat (Katsura et al. (2010) eq. 1 or TS02 eq. 4.254 at mid-mantle depth), technically stops at r[iCMB] + (zLith-zBDT) but that's OK.
-		Tupbnd = Tmantle + (Tsurf - Tmantle)*erfc((r_p-r[i])/2.0*sqrt(vConv/(kappa*(r_p-r_c)/2.0))); // Upper mantle boundary, Turcotte & Schubert 2002 eq. 6.347 at midpoint between ascending and descending plumes
-		if (Tadiab < Tupbnd) {
-			T[i] = Tadiab;
-			iLith = i+1;
-			zLith = r_p-r[i+1];
-		}
-		else T[i] = Tupbnd;
+	for (i=0   ;i<iCMB;i++) T[i] = 0.0; // Temperatures not computed in the core
+	for (i=iCMB;i<NR  ;i++) {
+		if (r[i] < r_p - zLith) T[i] = Tmantle - alpha*g[(int)(0.5*(NR+iCMB))]*Tmantle/Cp * (r[i] - (r_p - zLith));
+		else T[i] = Tsurf + (Tmantle-Tsurf)*(r_p-r[i])/zLith; // Linear profile (Foley et al. 2020)
 	}
-
-	// Initial guess: BDT = base of upper boundary layer
-	T_BDT = T[iLith];
-	P_BDT = P[iLith];
 
 	// Radionuclides
 	switch (radionuclides) {
@@ -613,7 +599,7 @@ int main(int argc, char *argv[]) {
 		strcat(title,"Outputs/Outgassing.txt");
 		fout = fopen(title,"w");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-		else fprintf(fout, "Time (Gyr) \t Tmantle (K) \t Ra \t Visc (Pa s) \t Heat flux (mW m-2) \t Lithospheric thickness (km) \t Boundary layer thickness coef \t Outgassing flux (mol C s-1) \t Convective velocity (m yr-1) \t "
+		else fprintf(fout, "Time (Gyr) \t Tmantle (K) \t Ra \t Visc (Pa s) \t Heat flux (mW m-2) \t Lithospheric thickness (km) \t Frank-Kamenetskii parameter \t Outgassing flux (mol C s-1) \t Convective velocity (m yr-1) \t "
 				"Convective timescale (s) \t Crustal thickness (m) \t Crust generation timescale (s) \t Stagnant lid?\n");
 		fclose (fout);
 
@@ -777,7 +763,7 @@ int main(int argc, char *argv[]) {
 		if (realtime < tstart + 1.0*Myr2sec) dtime = fmin(dtime, 0.2*Myr2sec); // Start slow
 //		dtime = dtime0; // TODO remove and uncomment adaptable time step (2 lines above)
 
-		if (realtime < tstart) dtime = 10.0*Myr2sec;                           // Sufficient to achieve numerical convergence for geodynamics alone
+		if (realtime < tstart) dtime = 0.1*Myr2sec;                           // Sufficient to achieve numerical convergence for geodynamics alone
 		realtime += dtime;
 //		realtime = 4.55*Gyr2sec; // Present day
 
@@ -883,408 +869,349 @@ int main(int argc, char *argv[]) {
 		// Calculate surface C flux from outgassing
 		//-------------------------------------------------------------------
 
-		// 1. Determine tectonic mode
-		// If convective driving stress > lithospheric yield stress, mobile-lid (plate tectonics) regime. Otherwise, stagnant lid regime (O'Neill & Lenardic 2007).
+		// 1. Determine the base of the lithosphere, temperature profile, and vigor of convection as a function of tectonic mode
+		// In stagnant lid mode, melting at base of lithosphere.
+		// In plate tectonics mode, melting at base of lithosphere away from mid-ocean ridges (MOR)
+		//                        + melting at surface at MOR.
 
-		// 1a. Determine T and P at the brittle-ductile transition (base of lithosphere)
-		// Solve for brittleStrength-ductileStrength = f(P,T) = f(T) = 0
-		// Binary search polished with Newton-Raphson (see Numerical Recipes and Neveu et al. 2015 Icarus Appendix)
+		for (i=0;i<NR;i++) Tadiab[i] = Tmantle - alpha*g[(int)(0.5*(NR+iCMB))]*Tmantle/Cp * (r[i] - (r_p - zLith));
+		double Tp = Tadiab[NR-1]; // Mantle potential temperature TODO give it a tiny bit of depth for seafloor? NR-1 or NR-2?
+		printf("Tmantle=%g T_CMB=%g Tp=%g\n", Tmantle, Tadiab[iCMB], Tp);
 
-		// Initialize bounds for T_BDT
-		T_INF = Tsurf;
-		T_SUP = Tmantle;
+		// Solomatov (1995) equation (24) stagnant lid scaling
+		double p = 0.0;
+		p = flowLawDiff[0]/(R_G*Tmantle*Tmantle)*(Tmantle-Tsurf); // TODO change flowlaw[0] based on rheology (combo, composition-dependent)
+		printf("Solomatov p = %g\n",p);
 
-		// Ensure that f(T_INF)<0 and f(T_SUP)>0
-		f_inf = brittleDuctile(T_INF, P_BDT, flowLawDiff, flowLawDisl, grainSize, tConv);
-		f_sup = brittleDuctile(T_SUP, P_BDT, flowLawDiff, flowLawDisl, grainSize, tConv);
+		//  Upper mantle viscosity
+		nu = combVisc(Tmantle, P[iLith], flowLawDiff, flowLawDisl, grainSize, tConv)/rho[iLith];
+//		nu = 1.0e19/3500.0;
+//		nu = 1.0e16*exp((2.0e5 + P[(int)((iBDT+iCMB)/2.0)]*1.1e-6)/(R_G*Tmantle))/rho[(int)((iBDT+iCMB)/2)]; // Cízková et al. (2012)
+//		nu = 1.0e16*exp((2.0e5 + P[iCMB]*1.1e-6)/(R_G*(Tmantle - alpha*g[iCMB]*Tmantle/Cp * (r[iCMB] - 0.5*(r_p+r_c)))))/rho[iCMB]; // Cízková et al. (2012) for CMB depth
 
-		if (f_inf*f_sup > 0.0) {
-			if (f_sup < 0.0) printf("ExoCcycleGeo: Brittle strength < ductile strength, i.e. brittle regime even at Tmantle=%g K.\n"
-					                 "Brittle-ductile transition could not be determined.\n", Tmantle); // Brittle regime in mantle
-			else P_BDT = Psurf*bar2Pa; // Ductile regime at surface
-		}
-		else {
-			if (f_inf > 0.0) {         // Swap INF and SUP if f_inf > 0 and f_sup < 0
-				T_TEMP = T_INF;
-				T_INF = T_SUP;
-				T_SUP = T_TEMP;
-			}
-			T_BDT = 0.5*(T_INF+T_SUP); // Initialize the guess for the root T_BDT,
-			dTold = fabs(T_INF-T_SUP); // Initialize the "stepsize before last"
-			dT = dTold;                // Initialize the last stepsize
-
-			f_x = brittleDuctile(T_BDT, P_BDT, flowLawDiff, flowLawDisl, grainSize, tConv);
-			f_prime_x = brittleDuctile_prime(T_BDT, P_BDT, Tsurf, Psurf*bar2Pa, flowLawDiff, flowLawDisl, grainSize, tConv);
-
-			// Loop over allowed iterations to find T_BDT that is a root of f
-			n_iter = 0;
-			while (fabs(f_x) > NewtRaphThresh) {
-
-				// Bisect if Newton is out of range, or if not decreasing fast enough
-				if ((((T_BDT-T_SUP)*f_prime_x-f_x)*((T_BDT-T_INF)*f_prime_x-f_x) > 0.0) || (fabs(2.0*f_x) > fabs(dTold*f_prime_x))) {
-					dTold = dT;
-					dT = 0.5*(T_SUP-T_INF);
-					T_BDT = T_INF + dT;
-				}
-				else { // Do Newton-Raphson
-					dTold = dT;
-					dT = f_x/f_prime_x;
-					T_BDT = T_BDT - dT;
-				}
-				// Calculate updated f and f'
-				f_x = brittleDuctile(T_BDT, P_BDT, flowLawDiff, flowLawDisl, grainSize, tConv);
-				f_prime_x = brittleDuctile_prime(T_BDT, P_BDT, Tsurf, Psurf*bar2Pa, flowLawDiff, flowLawDisl, grainSize, tConv);
-
-				if (f_x < 0.0) T_INF = T_BDT; // Maintain the bracket on the root
-				else T_SUP = T_BDT;
-
-				n_iter++;
-				if (n_iter>=n_iter_max) {
-					printf("ExoCcycleGeo: could not find the brittle-ductile transition after %d iterations\n",n_iter_max);
+		// Vigor of convection, assuming whole-mantle convection (Kite et al. 2009)
+		if (staglid) {
+			// Delta_Tth that drives stagnant lid convection
+			for (i=iLith;i<NR;i++) {
+				if ((Tmantle-T[i])/(Tmantle-Tsurf) > 1.0/p) {
+					Tref = T[i];
 					break;
 				}
 			}
-
-			for (i=NR;i>=0;i--) {
-				if (T[i-1] > T_BDT && T[i] <= T_BDT) break;
-			}
-			iBDT = i;
-			P_BDT = P[i];
 		}
-
-		// 1b. Determine yield stress, equated to brittle strength at BDT (equivalently, ductile strength)
-		if (P_BDT < 200.0e6) yieldStress = 0.85*P_BDT;
-		else yieldStress = 0.6*P_BDT + 50.0e6;
-
-		// 1c. Determine convective drive stress
-
-		// Mid-mantle:
-		nu = combVisc(Tmantle, P[(int)((iBDT+iCMB)/2.0)], flowLawDiff, flowLawDisl, grainSize, tConv)/rho[(int)((iBDT+iCMB)/2)];
-		// BDT:
-//		nu = combVisc(Tmantle - alpha*g[iBDT]*Tmantle/Cp * (r[iBDT] - 0.5*(r_p+r_c)), P[iBDT], flowLawDiff, flowLawDisl, grainSize, tConv)/rho[iBDT];
-		// Lower mantle:
-//		nu = 1.0e16*exp((2.0e5 + P[(int)((iBDT+iCMB)/2.0)]*1.1e-6)/(R_G*Tmantle))/rho[(int)((iBDT+iCMB)/2)]; // Cízková et al. (2012)
-		// CMB:
-//		nu = 1.0e16*exp((2.0e5 + P[iCMB]*1.1e-6)/(R_G*(Tmantle - alpha*g[iCMB]*Tmantle/Cp * (r[iCMB] - 0.5*(r_p+r_c)))))/rho[iCMB]; // Cízková et al. (2012)
-
-		// Compute vigor of convection, assuming whole-mantle convection (Kite et al. 2009)
-		if (staglid) Tref = T_BDT; // Instead of scaling used by Kite et al. (2009, equation 8)
 		else Tref = Tsurf;
 
-		Ra = alpha*g[(int)((iBDT+iCMB)/2.0)]*(Tmantle-Tref)*pow(r[iBDT]-r_c,3.0)/(kappa*nu);
-		Nu = pow(Ra/Ra_c, beta);
+		Ra = alpha*g[iLith]*(Tmantle-Tref)*pow(r_p-r_c,3.0)/(kappa*nu);
+		if (Ra < Ra_c) {
+			printf("No convection\n");
+			Ra = Ra_c;
+		}
+		Nu = pow(Ra/Ra_c, beta); // TODO should be Nu(staglid=0) = p^(1/3)*Nu(staglid=1) per Solomatov (1995)
+		printf("nu=%g, Ra=%g, Nu=%g\n", nu, Ra, Nu);
+
+		zLith = (r_p-r_c)/Nu; // zLith = d/Nu per equation 4.3 of Foley et al. (2020). If Nu = 1, Tmantle = T_CMB (initialization).
+		for (i=iCMB;i<NR;i++) {
+			if (r[i] < r_p-zLith && r[i+1] > r_p-zLith) iLith = i;
+		}
+		printf("Lithospheric thickness is d/Nu=%g km\n", zLith/km2m);
 
 		// Convective velocity
-//		vConv = 2.0*(Nu-1.0) * k / (rho[(int)((iBDT+iCMB)/2)]*Cp*(r[iBDT]-r_c)) * (Tmantle-Tsurf) / (Tmantle-Tref); // Kite et al. 2009 equation 24
-		vConv = 0.0 * 0.271*kappa/(r[iBDT]-r[iCMB])*pow(Ra,2.0/3.0) // Eq. (6.369) of Turcotte & Schubert (2002), p. 511, fluid heated from below, which is true in part for Earth's mantle, see Romanowicz et al. 2002; Lay et al. 2008
-		      + 1.0 * 0.354*kappa/(r[iBDT]-r[iCMB])*sqrt(Ra); // Eq. (6.379) of Turcotte & Schubert (2002), p. 514, fluid heated from within
-		tConv = (r[iBDT]-r[iCMB])/vConv; // Update convection timescale
-		driveStress = nu / tConv;
+//		vConv = 2.0*(Nu-1.0) * k / (rho[(int)((iBDT+iCMB)/2)]*Cp*(r[iBDT]-r_c)) * (Tmantle-Tsurf) / (Tmantle-Tref); // Kite et al. (2009) equation (24)
+		vConv = 0.0 * 0.271*kappa/(r_p-r_c)*pow(Ra,2.0/3.0) // Eq. (6.369) of Turcotte & Schubert (2002), p. 511, fluid heated from below, which is true in part for Earth's mantle, see Romanowicz et al. 2002; Lay et al. 2008
+		      + 1.0 * 0.354*kappa/(r_p-r_c)*sqrt(Ra); // Eq. (6.379) of Turcotte & Schubert (2002), p. 514, fluid heated from within
+		tConv = (r_p-r_c)/vConv; // Update convection timescale
 
-		// 1d. Determine tectonic regime
-		if (yieldStress < driveStress) staglid = 0; // Mobile-lid regime, i.e. plate tectonics, also requires surface liquid water to weaken the lithosphere.
-		else staglid = 1;                           // Stagnant-lid regime
-
+//		if (realtime > 0.05*Myr2sec) exit(0);
 		// ------------------------------------
 		// 2. Melting & outgassing model (Kite et al. 2009)
 
-		// 2a. Calculate temperatures
-		for (i=0    ;i<iCMB ;i++) T[i] = 0.0; // Temperatures not computed in the core
-		for (i=iCMB ;i<NR;i++) {
-			Tadiab = Tmantle - alpha*g[(int)(0.5*(iBDT+iCMB))]*Tmantle/Cp * (r[i] - 0.5*(r[iBDT]+r_c)); // Mantle adiabat, technically stops at r[iCMB] + (zLith-zBDT) but that's OK
-			Tupbnd = Tmantle + (Tsurf - Tmantle)*erfc((r_p-r[i])/2.0*sqrt(vConv/(kappa*(r[iBDT]-r_c)/2.0))); // Upper mantle boundary, Turcotte & Schubert 2002 eq. 6.347 at midpoint between ascending and descending plumes
-			if (Tadiab < Tupbnd) {
-				T[i] = Tadiab;
-				iLith = i+1;
-				zLith = r_p-r[i+1];
-			}
-			else T[i] = Tupbnd;
-		}
-//		for (i=iBDT;i<NR;i++) T[i] = Tsurf + (T_BDT-Tsurf)*(P[i]-Psurf)/(P_BDT-Psurf); // Assumes linear relationship between P and T
-
-		bndcoef = (zLith-r[iBDT]) / (pow(Ra/Ra_c,-beta)*(r_p-r[iBDT]-r_c)); // Turcotte & Schubert 2002 eq. 6.387 and Fig. 6.39; Shi et al. (2012) eq. 1
-		if (bndcoef < 0.15 || bndcoef > 0.5) printf("ExoCcycleGeo: convective boundary layer thickness coefficient %g outside common bounds 0.15 to 0.5\n", bndcoef);
-
-		// 2b. Update alphaMELTS input files
-		// Output P-T profile in lithosphere+boundary layer to be fed into alphaMELTS through PTexoC.txt
-		// MELTS crashes below solidus for default composition, but that's enough to capture all depths above BDT at which melting occurs.
-
-		title[0] = '\0';
-		if (cmdline == 1) strncat(title,path,strlen(path)-20);
-		else strncat(title,path,strlen(path)-18);
-		strcat(title,"alphaMELTS-1.9/ExoC/PTexoC.txt");
-
-		fout = fopen (title,"w");
-		if (fout == NULL) printf("ExoCcycleGeo: Missing PT file path: %s\n", title);
-
-		ir = 0;
-		for (i=iCMB;i<NR;i++) {
-			if (P[i] < 1.0e10) { // 10 GPa is above MELTS upper limit.
-				if (T[i]-Kelvin > TminMELTS) {
-					fprintf(fout, "%g %g\n", P[i]/bar2Pa, T[i]-Kelvin); // Don't input below 750 C to avoid MELTS crashing.
-					ir++;
-				}
-				else break;
-			}
-		}
-		fclose(fout);
-
-		// 2c. Run alphaMELTS to compute melt fraction along P-T profile in lithosphere and mantle
-		// Reset sys_tbl
-		for (i=0;i<NR;i++) {
-			for (j=0;j<18;j++) sys_tbl[i][j] = 0.0;
+		// 2a. Calculate average temperatures: conductive profile in lid, adiabat below
+		for (i=0   ;i<iCMB;i++) T[i] = 0.0; // Temperatures not computed in the core
+		for (i=iCMB;i<NR  ;i++) {
+			if (r[i] < r_p - zLith) T[i] = Tadiab[i];
+			else T[i] = Tsurf + (Tmantle-Tsurf)*(r_p-r[i])/zLith; // Linear profile (Foley et al. 2020)
 		}
 
-		// Call alphaMELTS
-		if (realtime > tstart && realtime <= tend) {
-			printf("Outgassing... ");
-			alphaMELTS(path, 0, ir, "ExoC/ExoC_env.txt", &sys_tbl);
-		}
-
-		imin = 0;
-		imax = 0;
-		j = 0;
-		for (i=iCMB+1;i<NR;i++) {
-			Meltfrac[i] = 0.0;
-			if (P[i] < 1.0e10) { // 10 GPa is above MELTS upper limit.
-				if (sys_tbl[j][4] > 0.0 && (sys_tbl[j][13] < 1.5*sys_tbl[j][14] || sys_tbl[j][4] == 1.0)) { // Don't store if volume melt fraction negative or if density of melt > n*density of solid
-					if (T[i]-Kelvin > TminMELTS) { // There was no input below 750 C to avoid MELTS crashing.
-						if (fabs(1.0-P[i]/(sys_tbl[j][0]*bar2Pa)) > 1.0e-3) printf("ExoCcycleGeo: pressures from grid (%g bar) and MELTS (%g bar) misaligned at grid index %d\n", P[i]/bar2Pa, sys_tbl[j][0], i);
-						if (fabs(1.0-T[i]/ sys_tbl[j][1]        ) > 1.0e-3) printf("ExoCcycleGeo: temperatures from grid (%g K) and MELTS (%g K) misaligned at grid index %d\n", T[i], sys_tbl[j][1], i);
-						Meltfrac[i] = sys_tbl[j][3];
-						rhomelt = sys_tbl[j][13]*1000.0; // g cm-3 to kg m-3, taken at depth of highest melt fraction, for calculation of thickness of new crust generated
-						if (imin == 0) imin = i;
-					}
-					imax = i;
-				}
-				j++;
-			}
-		}
-
-		meltmass = 0.0;
-		slope = 0.0;
-		islope = 0;
-		ir = 0;
-		if (imax > imin) {
-			if (Meltfrac[imin] > 0.0) {
-//				printf("ExoCcycleGeo: alphaMELTS could only calculate melting down to depth %g km (melt fraction %.2g > 0.1), extrapolating melting curve to 0 linearly with depth\n", (r_p-r[imin])/km2m, Meltfrac[imin]);
-				// Extrapolate starting from last 5 indices, provided melt fraction of all is < 1 (otherwise, use less indices)
-				if (imax-imin > 5) { // Only do this if there are > 5 grid zones of melt, otherwise chances are the slope will be skewed.
-					for (i=imin;i<imin+nslopeAvg;i++) {
-						if (P[i+1]-P[i] == 0) printf("ExoCcycleGeo: Can't extrapolate rock melting curve with pressure because denominator is zero\n");
-						else {
-							if (Meltfrac[i] < Meltfrac[i+1]) { // Ensure we're below depth of max melt
-								slope = slope + (Meltfrac[i+1]-Meltfrac[i])/(P[i+1]-P[i]);
-								islope++;
-							}
-						}
-					}
-					slope = slope/(double) islope;
-
-					if (islope) {
-						for (i=imin-1;i>iCMB;i--) {
-							meltfrac = Meltfrac[i+1] + slope*(P[i]-P[i+1]);
-							if (meltfrac > 0.0) Meltfrac[i] = meltfrac;
-							else break;
-							ir++;
-						}
-					}
-				}
-			}
-		}
-
-//		// 2d. Alternatively, use analytical formulation of McKenzie & Bickle (1988) at the expense of compositional versatility?
-//		// McKenzie & Bickle (1988): determine Tsolidus at P, then Tliquidus at P, then T'(T, Tsol, Tliq), then X(T')
-//		//2c-1 Geotherm
-//		double Tsolidus = 0.0;  // Solidus temperature (Kelvin)
-//		double Tliquidus = 0.0; // Liquidus temperature (Kelvin)
-//		double Tprime = 0.0;    // Temperature used in calculation of Xmelt (dimensionless)
-//		double Xmelt[100];      // Melt fraction (dimensionless)
-//		for (i=0;i<100;i++) Xmelt[i] = 0.0;
+//		// 2b. Update alphaMELTS input files
+//		// Output P-T profile in lithosphere+boundary layer to be fed into alphaMELTS through PTexoC.txt
+//		// MELTS crashes below solidus for default composition, but that's enough to capture all depths above BDT at which melting occurs.
 //
-//		for (i=0;i<100;i++) {
-//			// Determine Tsolidus
+//		title[0] = '\0';
+//		if (cmdline == 1) strncat(title,path,strlen(path)-20);
+//		else strncat(title,path,strlen(path)-18);
+//		strcat(title,"alphaMELTS-1.9/ExoC/PTexoC.txt");
 //
-//			// Initialize bounds for Tsolidus
-//			T_INF = Tsurf;
-//			T_SUP = Tmantle;
+//		fout = fopen (title,"w");
+//		if (fout == NULL) printf("ExoCcycleGeo: Missing PT file path: %s\n", title);
 //
-//			// Ensure that f(T_INF)<0 and f(T_SUP)>0 TODO Ductile strength depends on time step (deps/dt). Make time step-independent?
-//			f_inf = Psolidus(T_INF) - Pgeotherm[i];
-//			f_sup = Psolidus(T_SUP) - Pgeotherm[i];
-//
-//			if (f_inf*f_sup > 0.0) {
-//				printf("ExoCcycleGeo: Solidus not between Tsurf = %g K and Tmantle = %g K, cannot determine Tsolidus and melt fraction!\n", Tsurf, Tmantle);
-//			}
-//			else {
-//				if (f_inf > 0.0) { // Swap INF and SUP if f_inf > 0 and f_sup < 0
-//					T_TEMP = T_INF;
-//					T_INF = T_SUP;
-//					T_SUP = T_TEMP;
+//		ir = 0;
+//		for (i=iCMB;i<NR;i++) {
+//			if (P[i] < 1.0e10) { // 10 GPa is above MELTS upper limit.
+//				if (T[i]-Kelvin > TminMELTS) {
+//					fprintf(fout, "%g %g\n", P[i]/bar2Pa, T[i]-Kelvin); // Don't input below 750 C to avoid MELTS crashing.
+//					ir++;
 //				}
-//				Tsolidus = 0.5*(T_INF+T_SUP); // Initialize the guess for the root T_BDT,
-//				dTold = fabs(T_INF-T_SUP); // Initialize the "stepsize before last"
-//				dT = dTold;                // Initialize the last stepsize
-//
-//				f_x = Psolidus(Tgeotherm[i]) - Pgeotherm[i];
-//				f_prime_x = dPsolidusdT(Tgeotherm[i]);
-//
-//				// Loop over allowed iterations to find T_BDT that is a root of f
-//				n_iter = 0;
-//				while (fabs(f_x) > NewtRaphThresh) {
-//
-//					// Bisect if Newton is out of range, or if not decreasing fast enough
-//					if ((((Tsolidus-T_SUP)*f_prime_x-f_x)*((Tsolidus-T_INF)*f_prime_x-f_x) > 0.0) || (fabs(2.0*f_x) > fabs(dTold*f_prime_x))) {
-//						dTold = dT;
-//						dT = 0.5*(T_SUP-T_INF);
-//						Tsolidus = T_INF + dT;
-//					}
-//					else { // Do Newton-Raphson
-//						dTold = dT;
-//						dT = f_x/f_prime_x;
-//						Tsolidus = Tsolidus - dT;
-//					}
-//					// Calculate updated f and f'
-//					f_x = Psolidus(Tsolidus) - Pgeotherm[i];
-//					f_prime_x = dPsolidusdT(Tsolidus);
-//
-//					if (f_x < 0.0) T_INF = Tsolidus; // Maintain the bracket on the root
-//					else T_SUP = Tsolidus;
-//
-//					n_iter++;
-//					if (n_iter>=n_iter_max) {
-//						printf("ExoCcycleGeo: could not find the brittle-ductile transition after %d iterations\n",n_iter_max);
-//						break;
-//					}
-//				}
-//			}
-//
-//			if (Tgeotherm[i] < Tsolidus) Xmelt[i] = 0.0;
-//			else {
-//				// Determine Tliquidus
-//				Tliquidus = Kelvin + 1736.2 + 4.343*Pgeotherm[i]/1.0e9 + 180.0 * atan(Pgeotherm[i]/1.0e9/2.2169);
-//				if (Tgeotherm[i] > Tliquidus) {
-//					Xmelt[i] = 1.0;
-//				}
-//				else {
-//					Tprime = (Tgeotherm[i] - (Tsolidus+Tliquidus)/2.0) / (Tliquidus-Tsolidus); // K or C doesn't matter as the numerator and the denominator are both temp differences
-//					Xmelt[i] = 0.5 + Tprime + (Tprime*Tprime - 0.25)*(0.4256+2.988*Tprime); // Again, K or C doesn't matter, Tprime is dimensionless
-//				}
-//			}
-//			printf("%g \t %g \t %g\n", Pgeotherm[i]/bar2Pa, Xmelt[i], Tgeotherm[i]);
-//		}
-//
-//		//2c-2 Mantle adiabat
-//		double T[NR]; // Temperature (K)
-//		for (ir=0;ir<NR;ir++) T[ir] = 0.0;
-//
-//		for (ir=NR-1;ir>=0;ir--) {
-//			if (P[ir] > P_BDT && P[ir] < 100000.0*bar2Pa) {
-//				// Adiabat
-//				T[ir] = T_BDT + gsurf*alpha*Tmantle/Cp*(r_p-zLith-r[ir]);
-//
-//				// Determine Tsolidus
-//
-//				// Initialize bounds for Tsolidus
-//				T_INF = Tsurf;
-//				T_SUP = 10000.0;
-//
-//				// Ensure that f(T_INF)<0 and f(T_SUP)>0 TODO Ductile strength depends on time step (deps/dt). Make time step-independent?
-//				f_inf = Psolidus(T_INF) - P[ir];
-//				f_sup = Psolidus(T_SUP) - P[ir];
-//
-//				if (f_inf*f_sup > 0.0) {
-//					printf("ExoCcycleGeo: Solidus not between Tsurf = %g K and Tmantle = %g K, cannot determine Tsolidus and melt fraction!\n", Tsurf, Tmantle);
-//				}
-//				else {
-//					if (f_inf > 0.0) { // Swap INF and SUP if f_inf > 0 and f_sup < 0
-//						T_TEMP = T_INF;
-//						T_INF = T_SUP;
-//						T_SUP = T_TEMP;
-//					}
-//					Tsolidus = 0.5*(T_INF+T_SUP); // Initialize the guess for the root T_BDT,
-//					dTold = fabs(T_INF-T_SUP); // Initialize the "stepsize before last"
-//					dT = dTold;                // Initialize the last stepsize
-//
-//					f_x = Psolidus(T[ir]) - P[ir];
-//					f_prime_x = dPsolidusdT(T[ir]);
-//
-//					// Loop over allowed iterations to find T_BDT that is a root of f
-//					n_iter = 0;
-//					while (fabs(f_x) > NewtRaphThresh) {
-//
-//						// Bisect if Newton is out of range, or if not decreasing fast enough
-//						if ((((Tsolidus-T_SUP)*f_prime_x-f_x)*((Tsolidus-T_INF)*f_prime_x-f_x) > 0.0) || (fabs(2.0*f_x) > fabs(dTold*f_prime_x))) {
-//							dTold = dT;
-//							dT = 0.5*(T_SUP-T_INF);
-//							Tsolidus = T_INF + dT;
-//						}
-//						else { // Do Newton-Raphson
-//							dTold = dT;
-//							dT = f_x/f_prime_x;
-//							Tsolidus = Tsolidus - dT;
-//						}
-//						// Calculate updated f and f'
-//						f_x = Psolidus(Tsolidus) - P[ir];
-//						f_prime_x = dPsolidusdT(Tsolidus);
-//
-//						if (f_x < 0.0) T_INF = Tsolidus; // Maintain the bracket on the root
-//						else T_SUP = Tsolidus;
-//
-//						n_iter++;
-//						if (n_iter>=n_iter_max) {
-//							printf("ExoCcycleGeo: could not find the brittle-ductile transition after %d iterations\n",n_iter_max);
-//							break;
-//						}
-//					}
-//				}
-//
-//				if (T[ir] < Tsolidus) Xmelt[i] = 0.0;
-//				else {
-//					// Determine Tliquidus
-//					Tliquidus = Kelvin + 1736.2 + 4.343*P[ir]/1.0e9 + 180.0 * atan(P[ir]/1.0e9/2.2169);
-//					if (T[ir] > Tliquidus) {
-//						Xmelt[i] = 1.0;
-//					}
-//					else {
-//						Tprime = (T[ir] - (Tsolidus+Tliquidus)/2.0) / (Tliquidus-Tsolidus); // K or C doesn't matter as the numerator and the denominator are both temp differences
-//						Xmelt[i] = 0.5 + Tprime + (Tprime*Tprime - 0.25)*(0.4256+2.988*Tprime); // Again, K or C doesn't matter, Tprime is dimensionless
-//					}
-//				}
-//				printf("%g \t %g \t %g\n", P[ir]/bar2Pa, Xmelt[i], T[ir]);
+//				else break;
 //			}
 //		}
-
-		// 2e. Convert to melt fraction vs. depth and determine amount of melt generated.
-		// Assumes all melt generated reaches the surface and all ascending mantle parcels reach pressures < Psolidus (Kite et al. 2009)
-
-		if (imax > imin) {
-
-//			printf("Pressure (bar) \t Depth (km) \t Melt fraction \t Temp (K) \t Density (kg m-3)\n");
-//			for (i=imin-ir-100;i<=NR;i++) printf("%g \t %g \t %g \t %g \t %g\n", P[i]/bar2Pa, (r_p-r[i])/km2m, Meltfrac[i], T[i], rho[i]);
-
-			title[0] = '\0';
-			if (cmdline == 1) strncat(title,path,strlen(path)-20);
-			else strncat(title,path,strlen(path)-18);
-			strcat(title,"Outputs/Geotherm.txt");
-			fout = fopen(title,"a");
-			if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-			else {
-				fprintf(fout, "Time (Gyr) \t Pressure (bar) \t Depth (km) \t Melt fraction \t Temp (K) \t Density (kg m-3)\n");
-				for (i=imin-ir-100;i<=NR;i++) fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g\n", realtime/Gyr2sec, P[i]/bar2Pa, (r_p-r[i])/km2m, Meltfrac[i], T[i], rho[i]);
-			}
-			fclose (fout);
-
-			for (i=imin-ir;i<=imax;i++) {
-				meltmass = meltmass + Meltfrac[i]*4.0/3.0*PI_greek*(pow(r[i+1],3)-pow(r[i],3))*rho[i];
-			}
-		}
-
-		if (rhomelt > 0.0 && r[iBDT] > r[iCMB]) zNewcrust = meltmass/rhomelt/(4.0*PI_greek*r_p*r_p) / tConv;
-		else zNewcrust = 0.0;
-		zCrust = zCrust + zNewcrust*dtime;
-
-		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iBDT]-r[iCMB]); // mol C s-1
+//		fclose(fout);
+//
+//		// 2c. Run alphaMELTS to compute melt fraction along P-T profile in lithosphere and mantle
+//		// Reset sys_tbl
+//		for (i=0;i<NR;i++) {
+//			for (j=0;j<18;j++) sys_tbl[i][j] = 0.0;
+//		}
+//
+//		// Call alphaMELTS
+//		if (realtime > tstart && realtime <= tend) {
+//			printf("Outgassing... ");
+//			alphaMELTS(path, 0, ir, "ExoC/ExoC_env.txt", &sys_tbl);
+//		}
+//
+//		imin = 0;
+//		imax = 0;
+//		j = 0;
+//		for (i=iCMB+1;i<NR;i++) {
+//			Meltfrac[i] = 0.0;
+//			if (P[i] < 1.0e10) { // 10 GPa is above MELTS upper limit.
+//				if (sys_tbl[j][4] > 0.0 && (sys_tbl[j][13] < 1.5*sys_tbl[j][14] || sys_tbl[j][4] == 1.0)) { // Don't store if volume melt fraction negative or if density of melt > n*density of solid
+//					if (T[i]-Kelvin > TminMELTS) { // There was no input below 750 C to avoid MELTS crashing.
+//						if (fabs(1.0-P[i]/(sys_tbl[j][0]*bar2Pa)) > 1.0e-3) printf("ExoCcycleGeo: pressures from grid (%g bar) and MELTS (%g bar) misaligned at grid index %d\n", P[i]/bar2Pa, sys_tbl[j][0], i);
+//						if (fabs(1.0-T[i]/ sys_tbl[j][1]        ) > 1.0e-3) printf("ExoCcycleGeo: temperatures from grid (%g K) and MELTS (%g K) misaligned at grid index %d\n", T[i], sys_tbl[j][1], i);
+//						Meltfrac[i] = sys_tbl[j][3];
+//						rhomelt = sys_tbl[j][13]*1000.0; // g cm-3 to kg m-3, taken at depth of highest melt fraction, for calculation of thickness of new crust generated
+//						if (imin == 0) imin = i;
+//					}
+//					imax = i;
+//				}
+//				j++;
+//			}
+//		}
+//
+//		meltmass = 0.0;
+//		slope = 0.0;
+//		islope = 0;
+//		ir = 0;
+//		if (imax > imin) {
+//			if (Meltfrac[imin] > 0.0) {
+////				printf("ExoCcycleGeo: alphaMELTS could only calculate melting down to depth %g km (melt fraction %.2g > 0.1), extrapolating melting curve to 0 linearly with depth\n", (r_p-r[imin])/km2m, Meltfrac[imin]);
+//				// Extrapolate starting from last 5 indices, provided melt fraction of all is < 1 (otherwise, use less indices)
+//				if (imax-imin > 5) { // Only do this if there are > 5 grid zones of melt, otherwise chances are the slope will be skewed.
+//					for (i=imin;i<imin+nslopeAvg;i++) {
+//						if (P[i+1]-P[i] == 0) printf("ExoCcycleGeo: Can't extrapolate rock melting curve with pressure because denominator is zero\n");
+//						else {
+//							if (Meltfrac[i] < Meltfrac[i+1]) { // Ensure we're below depth of max melt
+//								slope = slope + (Meltfrac[i+1]-Meltfrac[i])/(P[i+1]-P[i]);
+//								islope++;
+//							}
+//						}
+//					}
+//					slope = slope/(double) islope;
+//
+//					if (islope) {
+//						for (i=imin-1;i>iCMB;i--) {
+//							meltfrac = Meltfrac[i+1] + slope*(P[i]-P[i+1]);
+//							if (meltfrac > 0.0) Meltfrac[i] = meltfrac;
+//							else break;
+//							ir++;
+//						}
+//					}
+//				}
+//			}
+//		}
+//
+////		// 2d. Alternatively, use analytical formulation of McKenzie & Bickle (1988) at the expense of compositional versatility?
+////		// McKenzie & Bickle (1988): determine Tsolidus at P, then Tliquidus at P, then T'(T, Tsol, Tliq), then X(T')
+////		//2c-1 Geotherm
+////		double Tsolidus = 0.0;  // Solidus temperature (Kelvin)
+////		double Tliquidus = 0.0; // Liquidus temperature (Kelvin)
+////		double Tprime = 0.0;    // Temperature used in calculation of Xmelt (dimensionless)
+////		double Xmelt[100];      // Melt fraction (dimensionless)
+////		for (i=0;i<100;i++) Xmelt[i] = 0.0;
+////
+////		for (i=0;i<100;i++) {
+////			// Determine Tsolidus
+////
+////			// Initialize bounds for Tsolidus
+////			T_INF = Tsurf;
+////			T_SUP = Tmantle;
+////
+////			// Ensure that f(T_INF)<0 and f(T_SUP)>0 TODO Ductile strength depends on time step (deps/dt). Make time step-independent?
+////			f_inf = Psolidus(T_INF) - Pgeotherm[i];
+////			f_sup = Psolidus(T_SUP) - Pgeotherm[i];
+////
+////			if (f_inf*f_sup > 0.0) {
+////				printf("ExoCcycleGeo: Solidus not between Tsurf = %g K and Tmantle = %g K, cannot determine Tsolidus and melt fraction!\n", Tsurf, Tmantle);
+////			}
+////			else {
+////				if (f_inf > 0.0) { // Swap INF and SUP if f_inf > 0 and f_sup < 0
+////					T_TEMP = T_INF;
+////					T_INF = T_SUP;
+////					T_SUP = T_TEMP;
+////				}
+////				Tsolidus = 0.5*(T_INF+T_SUP); // Initialize the guess for the root T_BDT,
+////				dTold = fabs(T_INF-T_SUP); // Initialize the "stepsize before last"
+////				dT = dTold;                // Initialize the last stepsize
+////
+////				f_x = Psolidus(Tgeotherm[i]) - Pgeotherm[i];
+////				f_prime_x = dPsolidusdT(Tgeotherm[i]);
+////
+////				// Loop over allowed iterations to find T_BDT that is a root of f
+////				n_iter = 0;
+////				while (fabs(f_x) > NewtRaphThresh) {
+////
+////					// Bisect if Newton is out of range, or if not decreasing fast enough
+////					if ((((Tsolidus-T_SUP)*f_prime_x-f_x)*((Tsolidus-T_INF)*f_prime_x-f_x) > 0.0) || (fabs(2.0*f_x) > fabs(dTold*f_prime_x))) {
+////						dTold = dT;
+////						dT = 0.5*(T_SUP-T_INF);
+////						Tsolidus = T_INF + dT;
+////					}
+////					else { // Do Newton-Raphson
+////						dTold = dT;
+////						dT = f_x/f_prime_x;
+////						Tsolidus = Tsolidus - dT;
+////					}
+////					// Calculate updated f and f'
+////					f_x = Psolidus(Tsolidus) - Pgeotherm[i];
+////					f_prime_x = dPsolidusdT(Tsolidus);
+////
+////					if (f_x < 0.0) T_INF = Tsolidus; // Maintain the bracket on the root
+////					else T_SUP = Tsolidus;
+////
+////					n_iter++;
+////					if (n_iter>=n_iter_max) {
+////						printf("ExoCcycleGeo: could not find the brittle-ductile transition after %d iterations\n",n_iter_max);
+////						break;
+////					}
+////				}
+////			}
+////
+////			if (Tgeotherm[i] < Tsolidus) Xmelt[i] = 0.0;
+////			else {
+////				// Determine Tliquidus
+////				Tliquidus = Kelvin + 1736.2 + 4.343*Pgeotherm[i]/1.0e9 + 180.0 * atan(Pgeotherm[i]/1.0e9/2.2169);
+////				if (Tgeotherm[i] > Tliquidus) {
+////					Xmelt[i] = 1.0;
+////				}
+////				else {
+////					Tprime = (Tgeotherm[i] - (Tsolidus+Tliquidus)/2.0) / (Tliquidus-Tsolidus); // K or C doesn't matter as the numerator and the denominator are both temp differences
+////					Xmelt[i] = 0.5 + Tprime + (Tprime*Tprime - 0.25)*(0.4256+2.988*Tprime); // Again, K or C doesn't matter, Tprime is dimensionless
+////				}
+////			}
+////			printf("%g \t %g \t %g\n", Pgeotherm[i]/bar2Pa, Xmelt[i], Tgeotherm[i]);
+////		}
+////
+////		//2c-2 Mantle adiabat
+////		double T[NR]; // Temperature (K)
+////		for (ir=0;ir<NR;ir++) T[ir] = 0.0;
+////
+////		for (ir=NR-1;ir>=0;ir--) {
+////			if (P[ir] > P_BDT && P[ir] < 100000.0*bar2Pa) {
+////				// Adiabat
+////				T[ir] = T_BDT + gsurf*alpha*Tmantle/Cp*(r_p-zLith-r[ir]);
+////
+////				// Determine Tsolidus
+////
+////				// Initialize bounds for Tsolidus
+////				T_INF = Tsurf;
+////				T_SUP = 10000.0;
+////
+////				// Ensure that f(T_INF)<0 and f(T_SUP)>0 TODO Ductile strength depends on time step (deps/dt). Make time step-independent?
+////				f_inf = Psolidus(T_INF) - P[ir];
+////				f_sup = Psolidus(T_SUP) - P[ir];
+////
+////				if (f_inf*f_sup > 0.0) {
+////					printf("ExoCcycleGeo: Solidus not between Tsurf = %g K and Tmantle = %g K, cannot determine Tsolidus and melt fraction!\n", Tsurf, Tmantle);
+////				}
+////				else {
+////					if (f_inf > 0.0) { // Swap INF and SUP if f_inf > 0 and f_sup < 0
+////						T_TEMP = T_INF;
+////						T_INF = T_SUP;
+////						T_SUP = T_TEMP;
+////					}
+////					Tsolidus = 0.5*(T_INF+T_SUP); // Initialize the guess for the root T_BDT,
+////					dTold = fabs(T_INF-T_SUP); // Initialize the "stepsize before last"
+////					dT = dTold;                // Initialize the last stepsize
+////
+////					f_x = Psolidus(T[ir]) - P[ir];
+////					f_prime_x = dPsolidusdT(T[ir]);
+////
+////					// Loop over allowed iterations to find T_BDT that is a root of f
+////					n_iter = 0;
+////					while (fabs(f_x) > NewtRaphThresh) {
+////
+////						// Bisect if Newton is out of range, or if not decreasing fast enough
+////						if ((((Tsolidus-T_SUP)*f_prime_x-f_x)*((Tsolidus-T_INF)*f_prime_x-f_x) > 0.0) || (fabs(2.0*f_x) > fabs(dTold*f_prime_x))) {
+////							dTold = dT;
+////							dT = 0.5*(T_SUP-T_INF);
+////							Tsolidus = T_INF + dT;
+////						}
+////						else { // Do Newton-Raphson
+////							dTold = dT;
+////							dT = f_x/f_prime_x;
+////							Tsolidus = Tsolidus - dT;
+////						}
+////						// Calculate updated f and f'
+////						f_x = Psolidus(Tsolidus) - P[ir];
+////						f_prime_x = dPsolidusdT(Tsolidus);
+////
+////						if (f_x < 0.0) T_INF = Tsolidus; // Maintain the bracket on the root
+////						else T_SUP = Tsolidus;
+////
+////						n_iter++;
+////						if (n_iter>=n_iter_max) {
+////							printf("ExoCcycleGeo: could not find the brittle-ductile transition after %d iterations\n",n_iter_max);
+////							break;
+////						}
+////					}
+////				}
+////
+////				if (T[ir] < Tsolidus) Xmelt[i] = 0.0;
+////				else {
+////					// Determine Tliquidus
+////					Tliquidus = Kelvin + 1736.2 + 4.343*P[ir]/1.0e9 + 180.0 * atan(P[ir]/1.0e9/2.2169);
+////					if (T[ir] > Tliquidus) {
+////						Xmelt[i] = 1.0;
+////					}
+////					else {
+////						Tprime = (T[ir] - (Tsolidus+Tliquidus)/2.0) / (Tliquidus-Tsolidus); // K or C doesn't matter as the numerator and the denominator are both temp differences
+////						Xmelt[i] = 0.5 + Tprime + (Tprime*Tprime - 0.25)*(0.4256+2.988*Tprime); // Again, K or C doesn't matter, Tprime is dimensionless
+////					}
+////				}
+////				printf("%g \t %g \t %g\n", P[ir]/bar2Pa, Xmelt[i], T[ir]);
+////			}
+////		}
+//
+//		// 2e. Convert to melt fraction vs. depth and determine amount of melt generated.
+//		// Assumes all melt generated reaches the surface and all ascending mantle parcels reach pressures < Psolidus (Kite et al. 2009)
+//
+//		if (imax > imin) {
+//
+////			printf("Pressure (bar) \t Depth (km) \t Melt fraction \t Temp (K) \t Density (kg m-3)\n");
+////			for (i=imin-ir-100;i<=NR;i++) printf("%g \t %g \t %g \t %g \t %g\n", P[i]/bar2Pa, (r_p-r[i])/km2m, Meltfrac[i], T[i], rho[i]);
+//
+//			title[0] = '\0';
+//			if (cmdline == 1) strncat(title,path,strlen(path)-20);
+//			else strncat(title,path,strlen(path)-18);
+//			strcat(title,"Outputs/Geotherm.txt");
+//			fout = fopen(title,"a");
+//			if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
+//			else {
+//				fprintf(fout, "Time (Gyr) \t Pressure (bar) \t Depth (km) \t Melt fraction \t Temp (K) \t Density (kg m-3)\n");
+//				for (i=imin-ir-100;i<=NR;i++) fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g\n", realtime/Gyr2sec, P[i]/bar2Pa, (r_p-r[i])/km2m, Meltfrac[i], T[i], rho[i]);
+//			}
+//			fclose (fout);
+//
+//			for (i=imin-ir;i<=imax;i++) {
+//				meltmass = meltmass + Meltfrac[i]*4.0/3.0*PI_greek*(pow(r[i+1],3)-pow(r[i],3))*rho[i];
+//			}
+//		}
+//
+//		if (rhomelt > 0.0 && r[iBDT] > r[iCMB]) zNewcrust = meltmass/rhomelt/(4.0*PI_greek*r_p*r_p) / tConv;
+//		else zNewcrust = 0.0;
+//		zCrust = zCrust + zNewcrust*dtime;
+//
+//		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iBDT]-r[iCMB]); // mol C s-1
 //		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iBDT]-r[iCMB])*0.4; // mol C s-1, 40% melt reaches the surface
 //		if (realtime < 1.0*Gyr2sec) FCoutgas = FCoutgas * (realtime/(0.4*Gyr2sec)-1.5); // Ramp up outgassing from 0.6 to 1.0 Gyr to avoid step function
 
@@ -1305,18 +1232,17 @@ int main(int argc, char *argv[]) {
 //		printf("New crust generation rate (m Myr-1)     | 40                | %.3g \n", zNewcrust*Myr2sec);
 //		printf("New crust density (kg m-3)              | 2800              | %.4g \n", rhomelt);
 //		printf("C and H2O outgassing rate (mol s-1)     | 115000            | %.5g \n", FCoutgas);
-//		printf("Magma C mass fraction                   | 0.1-0.65%%         | %.3g%% \n", magmaCmassfrac*100.0);
+//		printf("Magma C mass fraction                   | 0.1-0.65%%        | %.3g%% \n", magmaCmassfrac*100.0);
 //		printf("Convective boundary layer thickness coef| 0.15 to 0.5       | %.2g \n", bndcoef);
 //		printf("Convective velocity (cm yr-1)           | ~1                | %.2g \n", vConv*100.0*1.0e-6*Myr2sec);
 //		printf("Mantle convection timescale (Myr)       | ~50-200           | %.4g \n", tConv/Myr2sec);
 //		printf("Rayleigh number                         | ~1e6-1e7          | %.2g \n", Ra);
 //		printf("Mantle adiabatic gradient (K km-1)      | 0.5               | %.3g \n", alpha*g[(int)((iBDT+iCMB)/2)]*Tmantle/Cp * km2m);
 //		printf("Half-mantle depth (km)                  | 1450              | %.4g \n", (r_p-r_c-zLith)/2.0/km2m);
-//		printf("Heat flux (mW m-2)                      | 86 (radiodecay 40)| %.2g \n", k*(Tmantle-Tsurf)/zLith*1000.0); // TODO should use T[r[iLith]] rather than Tmantle
+//		printf("Heat flux (mW m-2)                      | 86 (radiodecay 40)| %.2g \n", k*(Tmantle-Tsurf)/zLith*1000.0);
 //		printf("---------------------------------------------------------------------------\n");
-//		printf("Mid-mantle temperature: %g K \t Brittle-ductile transition temperature: %.3g K \t Temperature at base of lithosphere: %.4g K\n", Tmantle, T_BDT, T[iLith]);
+//		printf("Temperature at base of lithosphere: %.4g K\n", Tmantle);
 //		printf("Depth of brittle-ductile transition: %.3g km \t Thickness of lithosphere: %.3g km \n", (r_p-r[iBDT])/km2m, zLith/km2m);
-//		printf("Convective driving stress: %.4g MPa \t Lithospheric yield stress: %.4g MPa \t", driveStress/MPa2Pa, yieldStress/MPa2Pa);
 //		if (staglid) printf("Stagnant lid\n");
 //		else printf ("Plate tectonics\n");
 //		printf("\n");
@@ -1329,129 +1255,129 @@ int main(int argc, char *argv[]) {
 		  +  x235U * 56.9e-5 * exp(log(0.5)/( 0.704*Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 235-U
 		  +  x238U * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * (realtime - 4.5*Gyr2sec)); // 238-U
 		// Effective thermal conductivity scaled with Nu
-		Tmantle = Tmantle + dtime*(H/Cp - kappa*Nu*(Tmantle-Tref)/pow((r[iBDT]-r_c)/2.0,2));
+		Tmantle = Tmantle + dtime*(H/Cp - 3.0*kappa*Nu*(Tmantle-Tref)/(r_p-r_c)*r_p*r_p/(pow(r_p,3.0)-pow(r_c,3.0)));
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from continental weathering
 		//-------------------------------------------------------------------
 
 		FCcontW = 0.0;
-		if (Tsurf > Tfreeze+0.01 && realtime > tstart && realtime <= tend) {
-			// Analytical calculation from Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
-//			FCcontW = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_Earth * exp((Tsurf-TsurfEarth)/17.7);
-			L = Lnow*realtime/(4.56*Gyr2sec);
-			tResLand = tResLandNow*realtime/(4.56*Gyr2sec);
-//			tResLand = tResLandNow;
-
-		    kintime = 1.01*tResLand; // Total time of kinetic simulation
-		    iResTime = floor(tResLand / kintime * (double)kinsteps); // Index in xriver corresponding to output at riverResTime;
-
-			for (i=0;i<kinsteps;i++) {
-				for (j=0;j<nvarKin;j++) xriver[i][j] = 0.0;
-			}
-
-			runoff = runoff0*pow(1.025,Tsurf-Tsurf0); // 2.5% increase in global mean precipitation per K of temperature increase (Allen and Ingram 2002, Trenberth et al. 2005, Pendergrass 2020)
-			WRcontW = 5000.0*runoff/runoff_Earth;
-
-			printf("Continental weathering... ");
-			AqueousChem(path, "io/ContWeather.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin, 0.0, 0.0, &deltaCreac, staglid, dtime);
-
-			rainpH = xriver[1][3]; // xriver[0][3], the initial rain speciation, is returned as = 0, so this is as close as it gets (smallest reaction time)
-			massH2Oriver = xriver[iResTime][7];
-
-			if (hChazeFallout > 1.0) {
-				for (i=9;i<nvarKin;i++) xriver[iResTime][i] /= hChazeFallout; // Continental weathering decreasingly effective with increasing haze fallout thickness
-			}
-
-			// River abundances of cations (mol/kg)
-//			xriver_Mg_evap = xriver[iResTime][11]/(1.0-fracEvap);
-//			xriver_Ca_evap = xriver[iResTime][13]/(1.0-fracEvap);
-//			xriver_Si_evap = xriver[iResTime][12]/(1.0-fracEvap);
-//			xriver_Na_evap = xriver[iResTime][10]/(1.0-fracEvap);
-//			xriver_Fe_evap = xriver[iResTime][14]/(1.0-fracEvap);
-
-			// Dissolved carbonates, sulfates, sulfides (mol)
-			Mg_carb_consumed = - xriver[iResTime][nvarKin-7] - xriver[iResTime][nvarKin-6] - xriver[iResTime][nvarKin-5]; // Dolomite-dis, -ord, and magnesite
-			Ca_carb_consumed = - xriver[iResTime][nvarKin-8] - xriver[iResTime][nvarKin-7] - xriver[iResTime][nvarKin-6]; // Dolomite-dis, -ord, and calcite
-			Ca_sulf_consumed = - xriver[iResTime][nvarKin-4] - xriver[iResTime][nvarKin-3]; // Anhydrite and gypsum
-			Fe_sulf_consumed = - xriver[iResTime][nvarKin-2] - xriver[iResTime][nvarKin-1]; // Pyrite and pyrrhotite
-
-			Mriver = Asurf*L*runoff/(1.0-fracEvap)*rhoH2O*dtime;
-
-			// Individual carbon fluxes (mol/s). Rainout = (river runoff)/(1-fracEvap).
-			FC_Mg_carb =     Mg_carb_consumed/massH2Oriver*Mriver/dtime; // Factor of 1 because despite divalent cation vs. monovalent bicarbonate, 1 biarbonate is released in dissolution, so net 1
-			FC_Mg_sil  = 2.0*(xriver[iResTime][11]        *Mriver/dtime - FC_Mg_carb); // Factor of 2 because of divalent cation and monovalent bicarbonate
-			if (FC_Mg_sil < 0.0) printf("time=%g Gyr, Continental weathering: Mg silicate net formation\n", realtime/Gyr2sec);
-			FC_Mg = FC_Mg_carb + FC_Mg_sil;
-
-			FC_Ca_carb =     Ca_carb_consumed/massH2Oriver*Mriver/dtime;
-			FC_Ca_sulf = 2.0*Ca_sulf_consumed/massH2Oriver*Mriver/dtime; // Factor of 2 because of divalent cation and monovalent bicarbonate
-			FC_Ca_sil  = 2.0*(xriver[iResTime][13]        *Mriver/dtime - FC_Ca_carb - 0.5*FC_Ca_sulf);
-			if (FC_Ca_sil < 0.0) printf("time=%g Gyr, Continental weathering: Ca silicate net formation\n", realtime/Gyr2sec);
-			FC_Ca = FC_Ca_carb + FC_Ca_sulf + FC_Ca_sil;
-
-			FC_Fe_sulf = 2.0*Fe_sulf_consumed/massH2Oriver*Mriver/dtime; // Factor of 2 because of divalent cation and monovalent bicarbonate
-			FC_Fe_sil  = 2.0*(xriver[iResTime][14]        *Mriver/dtime - 0.5*FC_Fe_sulf);
-			if (FC_Fe_sil < 0.0) printf("time=%g Gyr, Continental weathering: Fe silicate net formation\n", realtime/Gyr2sec);
-			FC_Fe = FC_Fe_sulf + FC_Fe_sil;
-
-			FCcontW = - FC_Mg - FC_Ca - FC_Fe; // Negative out of atmosphere
-
-//			printf("%d %g %g %g %g %g %g\n", iResTime, xriver_Mg_evap, Mg_carb_consumed, massH2Oriver, FC_Mg_carb/1.0e12*Yr2sec, FC_Mg_sil/1.0e12*Yr2sec, FC_Mg/1.0e12*Yr2sec); // Tmol/yr
-//			printf("%g %g %g %g %g %g %g %g\n", xriver_Ca_evap, Ca_carb_consumed, Ca_sulf_consumed, massH2Oriver, FC_Ca_carb/1.0e12*Yr2sec, FC_Ca_sulf/1.0e12*Yr2sec, FC_Ca_sil/1.0e12*Yr2sec, FC_Ca/1.0e12*Yr2sec); // Tmol/yr
-//			printf("%g %g %g %g %g %g\n", xriver_Fe_evap, Fe_sulf_consumed, massH2Oriver, FC_Fe_sulf/1.0e12*Yr2sec, FC_Fe_sil/1.0e12*Yr2sec, FC_Fe/1.0e12*Yr2sec); // Tmol/yr
-		}
-
-		// Runoff removes part of the haze deposit at erosion rate scaled from modern Earth (assuming physical erosion here)
-		hChazeFallout -= 20.0e12/Yr2sec /2730.0 /0.29 /Asurf *dtime *runoff/runoff_Earth; // 20e12 kg: modern erosion rate on Earth (Borrelli et al. 2017, https://doi.org/10.1038/s41467-017-02142-7),
-		                                                                                  // scaled to global thickness using continental crust density of 2730 kg/m3 from Rudnick & Gao 2003 and modern Earth land areal fraction of 0.29
-		if (hChazeFallout < 0.0) hChazeFallout = 0.0;
-
-		//-------------------------------------------------------------------
-		// Calculate surface C flux from seafloor weathering and subduction
-		//-------------------------------------------------------------------
-
-		FCseafsubd = 0.0;
-		if (Tsurf > Tfreeze+0.01 && realtime > tstart && realtime <= tend) {
-
-			mix = Mocean/Mriver;
-
-//			LplateRdg = 1.5*2.0*PI_greek*r_p; // Current length of mid-ocean ridges = length of subduction zones = 60000-65000 km
-			LplateRdg = pow(Ra/2.3e6,beta) * 1.5*2.0*PI_greek*r_p;
-			// 2.3e6 is canonical Ra for Earth today. Scaling with Ra^beta is consistent with scaling with Nu and also consistent with 3-5 times greater ridge length in Archean from Kadko et al. (1995).
-			// Today indicative size of 7 major plates is 70e6 km2, corresponding to diameter 2*sqrt(70e6/(4*pi)) = 4720 km > mantle depth, even though (isoviscous) convection cell should have aspect ratio of 1 (Bercovici et al. 2015).
-			// For Earth inputs it is = mantle depth (2900 km) for Ra = 1e7, i.e., 2 billion years ago (oldest evidence of plate tectonics 2-3 Ga; Brown et al. 2020)
-
-			zCrack = realtime/Myr2sec; // Reflects secular cooling below crust, which prevents cracks from healing as fast
-//			zCrack = 6000.0;
-
-//			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateRdg*vConv*zCrack*dtime;
-			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateRdg*(vConv*fmin(1.0,realtime/(1.5*Gyr2sec)))*zCrack*dtime; // vConv*fmin() term represents sluggish convection until full plate tectonics
-
-			Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth TODO scale with land coverage
-			WRseafW = Mocean*dtime/tcirc / volSeafCrust; // Will be multiplied in AqueousChem() by (mass rock input to PHREEQC / seafloor crust density) = volume rock input to PHREEQC to get a mass of water for reaction with the mass of rock input to PHREEQC. 1e7 yr is hydrothermal circulation timescale (Kadko et al. 1995)
-
-			// Memorize aqueous C abundances
-			xaq0 = xaq[0];
-			xaq1 = xaq[1];
-
-			printf("Mixing river input into ocean...\n");
-			printf("Ocean will react with seafloor crust at W/R by vol. = %g\n", Mocean*dtime/tcirc / 1000.0 / volSeafCrust);
-			AqueousChem(path, "io/MixRiverOcean.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq, Pseaf, WRseafW, &deltaCreac, 0, dtime);
-			printf("deltaCreac = %g mol/kg\n", deltaCreac);
-
-			// Reset aqueous C abundances as they'll be adjusted by ocean-atmosphere equilibrium at the next time step, when netFC C is added to {atmosphere+ocean}
-			xaq[0] = xaq0;
-			xaq[1] = xaq1;
-
-			FCseafsubd = deltaCreac * Mocean / dtime; // Essentially independent of dtime because deltaCreac, for an ocean saturated in C before and after reaction, is essentially proportional to Mriver, i.e., dtime.
-		}                                             // There is a slight dependence on dtime if there was no saturation before reaction and because the solubility of C changes slightly with slight changes in ocean pressure, temperature, and composition, but it should be acceptable
-
-		//-------------------------------------------------------------------
-		// Compute net geo C fluxes
-		//-------------------------------------------------------------------
-		if (!staglid) farc = 0.25;
-		netFC = FCoutgas + (1.0-farc)*FCseafsubd; // FCcontw < 0, FCseafsubd < 0, ignore FCcontW since that's a flux to the ocean manifested in seafW
+//		if (Tsurf > Tfreeze+0.01 && realtime > tstart && realtime <= tend) {
+//			// Analytical calculation from Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
+////			FCcontW = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_Earth * exp((Tsurf-TsurfEarth)/17.7);
+//			L = Lnow*realtime/(4.56*Gyr2sec);
+//			tResLand = tResLandNow*realtime/(4.56*Gyr2sec);
+////			tResLand = tResLandNow;
+//
+//		    kintime = 1.01*tResLand; // Total time of kinetic simulation
+//		    iResTime = floor(tResLand / kintime * (double)kinsteps); // Index in xriver corresponding to output at riverResTime;
+//
+//			for (i=0;i<kinsteps;i++) {
+//				for (j=0;j<nvarKin;j++) xriver[i][j] = 0.0;
+//			}
+//
+//			runoff = runoff0*pow(1.025,Tsurf-Tsurf0); // 2.5% increase in global mean precipitation per K of temperature increase (Allen and Ingram 2002, Trenberth et al. 2005, Pendergrass 2020)
+//			WRcontW = 5000.0*runoff/runoff_Earth;
+//
+//			printf("Continental weathering... ");
+//			AqueousChem(path, "io/ContWeather.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin, 0.0, 0.0, &deltaCreac, staglid, dtime);
+//
+//			rainpH = xriver[1][3]; // xriver[0][3], the initial rain speciation, is returned as = 0, so this is as close as it gets (smallest reaction time)
+//			massH2Oriver = xriver[iResTime][7];
+//
+//			if (hChazeFallout > 1.0) {
+//				for (i=9;i<nvarKin;i++) xriver[iResTime][i] /= hChazeFallout; // Continental weathering decreasingly effective with increasing haze fallout thickness
+//			}
+//
+//			// River abundances of cations (mol/kg)
+////			xriver_Mg_evap = xriver[iResTime][11]/(1.0-fracEvap);
+////			xriver_Ca_evap = xriver[iResTime][13]/(1.0-fracEvap);
+////			xriver_Si_evap = xriver[iResTime][12]/(1.0-fracEvap);
+////			xriver_Na_evap = xriver[iResTime][10]/(1.0-fracEvap);
+////			xriver_Fe_evap = xriver[iResTime][14]/(1.0-fracEvap);
+//
+//			// Dissolved carbonates, sulfates, sulfides (mol)
+//			Mg_carb_consumed = - xriver[iResTime][nvarKin-7] - xriver[iResTime][nvarKin-6] - xriver[iResTime][nvarKin-5]; // Dolomite-dis, -ord, and magnesite
+//			Ca_carb_consumed = - xriver[iResTime][nvarKin-8] - xriver[iResTime][nvarKin-7] - xriver[iResTime][nvarKin-6]; // Dolomite-dis, -ord, and calcite
+//			Ca_sulf_consumed = - xriver[iResTime][nvarKin-4] - xriver[iResTime][nvarKin-3]; // Anhydrite and gypsum
+//			Fe_sulf_consumed = - xriver[iResTime][nvarKin-2] - xriver[iResTime][nvarKin-1]; // Pyrite and pyrrhotite
+//
+//			Mriver = Asurf*L*runoff/(1.0-fracEvap)*rhoH2O*dtime;
+//
+//			// Individual carbon fluxes (mol/s). Rainout = (river runoff)/(1-fracEvap).
+//			FC_Mg_carb =     Mg_carb_consumed/massH2Oriver*Mriver/dtime; // Factor of 1 because despite divalent cation vs. monovalent bicarbonate, 1 biarbonate is released in dissolution, so net 1
+//			FC_Mg_sil  = 2.0*(xriver[iResTime][11]        *Mriver/dtime - FC_Mg_carb); // Factor of 2 because of divalent cation and monovalent bicarbonate
+//			if (FC_Mg_sil < 0.0) printf("time=%g Gyr, Continental weathering: Mg silicate net formation\n", realtime/Gyr2sec);
+//			FC_Mg = FC_Mg_carb + FC_Mg_sil;
+//
+//			FC_Ca_carb =     Ca_carb_consumed/massH2Oriver*Mriver/dtime;
+//			FC_Ca_sulf = 2.0*Ca_sulf_consumed/massH2Oriver*Mriver/dtime; // Factor of 2 because of divalent cation and monovalent bicarbonate
+//			FC_Ca_sil  = 2.0*(xriver[iResTime][13]        *Mriver/dtime - FC_Ca_carb - 0.5*FC_Ca_sulf);
+//			if (FC_Ca_sil < 0.0) printf("time=%g Gyr, Continental weathering: Ca silicate net formation\n", realtime/Gyr2sec);
+//			FC_Ca = FC_Ca_carb + FC_Ca_sulf + FC_Ca_sil;
+//
+//			FC_Fe_sulf = 2.0*Fe_sulf_consumed/massH2Oriver*Mriver/dtime; // Factor of 2 because of divalent cation and monovalent bicarbonate
+//			FC_Fe_sil  = 2.0*(xriver[iResTime][14]        *Mriver/dtime - 0.5*FC_Fe_sulf);
+//			if (FC_Fe_sil < 0.0) printf("time=%g Gyr, Continental weathering: Fe silicate net formation\n", realtime/Gyr2sec);
+//			FC_Fe = FC_Fe_sulf + FC_Fe_sil;
+//
+//			FCcontW = - FC_Mg - FC_Ca - FC_Fe; // Negative out of atmosphere
+//
+////			printf("%d %g %g %g %g %g %g\n", iResTime, xriver_Mg_evap, Mg_carb_consumed, massH2Oriver, FC_Mg_carb/1.0e12*Yr2sec, FC_Mg_sil/1.0e12*Yr2sec, FC_Mg/1.0e12*Yr2sec); // Tmol/yr
+////			printf("%g %g %g %g %g %g %g %g\n", xriver_Ca_evap, Ca_carb_consumed, Ca_sulf_consumed, massH2Oriver, FC_Ca_carb/1.0e12*Yr2sec, FC_Ca_sulf/1.0e12*Yr2sec, FC_Ca_sil/1.0e12*Yr2sec, FC_Ca/1.0e12*Yr2sec); // Tmol/yr
+////			printf("%g %g %g %g %g %g\n", xriver_Fe_evap, Fe_sulf_consumed, massH2Oriver, FC_Fe_sulf/1.0e12*Yr2sec, FC_Fe_sil/1.0e12*Yr2sec, FC_Fe/1.0e12*Yr2sec); // Tmol/yr
+//		}
+//
+//		// Runoff removes part of the haze deposit at erosion rate scaled from modern Earth (assuming physical erosion here)
+//		hChazeFallout -= 20.0e12/Yr2sec /2730.0 /0.29 /Asurf *dtime *runoff/runoff_Earth; // 20e12 kg: modern erosion rate on Earth (Borrelli et al. 2017, https://doi.org/10.1038/s41467-017-02142-7),
+//		                                                                                  // scaled to global thickness using continental crust density of 2730 kg/m3 from Rudnick & Gao 2003 and modern Earth land areal fraction of 0.29
+//		if (hChazeFallout < 0.0) hChazeFallout = 0.0;
+//
+//		//-------------------------------------------------------------------
+//		// Calculate surface C flux from seafloor weathering and subduction
+//		//-------------------------------------------------------------------
+//
+//		FCseafsubd = 0.0;
+//		if (Tsurf > Tfreeze+0.01 && realtime > tstart && realtime <= tend) {
+//
+//			mix = Mocean/Mriver;
+//
+////			LplateRdg = 1.5*2.0*PI_greek*r_p; // Current length of mid-ocean ridges = length of subduction zones = 60000-65000 km
+//			LplateRdg = pow(Ra/2.3e6,beta) * 1.5*2.0*PI_greek*r_p;
+//			// 2.3e6 is canonical Ra for Earth today. Scaling with Ra^beta is consistent with scaling with Nu and also consistent with 3-5 times greater ridge length in Archean from Kadko et al. (1995).
+//			// Today indicative size of 7 major plates is 70e6 km2, corresponding to diameter 2*sqrt(70e6/(4*pi)) = 4720 km > mantle depth, even though (isoviscous) convection cell should have aspect ratio of 1 (Bercovici et al. 2015).
+//			// For Earth inputs it is = mantle depth (2900 km) for Ra = 1e7, i.e., 2 billion years ago (oldest evidence of plate tectonics 2-3 Ga; Brown et al. 2020)
+//
+//			zCrack = realtime/Myr2sec; // Reflects secular cooling below crust, which prevents cracks from healing as fast
+////			zCrack = 6000.0;
+//
+////			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateRdg*vConv*zCrack*dtime;
+//			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateRdg*(vConv*fmin(1.0,realtime/(1.5*Gyr2sec)))*zCrack*dtime; // vConv*fmin() term represents sluggish convection until full plate tectonics
+//
+//			Pseaf = rhoH2O * g[NR] * (r_p - pow(pow(r_p,3) - Mocean/rhoH2O/(4.0/3.0*PI_greek),1.0/3.0)) / bar2Pa; // Seafloor hydrostatic pressure: density*surface gravity*ocean depth TODO scale with land coverage
+//			WRseafW = Mocean*dtime/tcirc / volSeafCrust; // Will be multiplied in AqueousChem() by (mass rock input to PHREEQC / seafloor crust density) = volume rock input to PHREEQC to get a mass of water for reaction with the mass of rock input to PHREEQC. 1e7 yr is hydrothermal circulation timescale (Kadko et al. 1995)
+//
+//			// Memorize aqueous C abundances
+//			xaq0 = xaq[0];
+//			xaq1 = xaq[1];
+//
+//			printf("Mixing river input into ocean...\n");
+//			printf("Ocean will react with seafloor crust at W/R by vol. = %g\n", Mocean*dtime/tcirc / 1000.0 / volSeafCrust);
+//			AqueousChem(path, "io/MixRiverOcean.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq, Pseaf, WRseafW, &deltaCreac, 0, dtime);
+//			printf("deltaCreac = %g mol/kg\n", deltaCreac);
+//
+//			// Reset aqueous C abundances as they'll be adjusted by ocean-atmosphere equilibrium at the next time step, when netFC C is added to {atmosphere+ocean}
+//			xaq[0] = xaq0;
+//			xaq[1] = xaq1;
+//
+//			FCseafsubd = deltaCreac * Mocean / dtime; // Essentially independent of dtime because deltaCreac, for an ocean saturated in C before and after reaction, is essentially proportional to Mriver, i.e., dtime.
+//		}                                             // There is a slight dependence on dtime if there was no saturation before reaction and because the solubility of C changes slightly with slight changes in ocean pressure, temperature, and composition, but it should be acceptable
+//
+//		//-------------------------------------------------------------------
+//		// Compute net geo C fluxes
+//		//-------------------------------------------------------------------
+//		if (!staglid) farc = 0.25;
+//		netFC = FCoutgas + (1.0-farc)*FCseafsubd; // FCcontw < 0, FCseafsubd < 0, ignore FCcontW since that's a flux to the ocean manifested in seafW
 
 		dtime_old = dtime; // Memorize in case reservoirs need to be readjusted at the next time step so a negative netFC*dtime doesn't exceed xgas*nAir
 		RCmantle_old = RCmantle;
@@ -1504,9 +1430,9 @@ int main(int argc, char *argv[]) {
 		strcat(title,"Outputs/Outgassing.txt");
 		fout = fopen(title,"a");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-		else { // TODO for heat flux, expression should use T[r[iLith]] rather than Tmantle
+		else {
 			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %d\n", realtime/Gyr2sec, Tmantle, Ra,
-					nu*rho[(int)((iBDT+iCMB)/2)], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, bndcoef, FCoutgas, vConv*1.0e-6*Myr2sec, tConv, zCrust, zCrust/zNewcrust, staglid);
+					nu*rho[(int)((NR+iCMB)/2.0)], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, p, FCoutgas, vConv*1.0e-6*Myr2sec, tConv, zCrust, zCrust/zNewcrust, staglid);
 		}
 		fclose (fout);
 
