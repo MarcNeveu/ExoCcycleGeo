@@ -25,7 +25,7 @@
 #define G 6.67e-11                      // Gravitational constant (SI)
 #define R_G 8.314                       // Universal gas constant, same number of decimal places as in PHREEQC (J mol-1 K-1)
 #define sigStefBoltz 5.6704e-8          // Stefan-Boltzmann constant (W m-2 K-4)
-#define rEarth 6378000.0                // Earth radius (m)
+#define rEarth 6371000.0                // Earth radius (m)
 #define mEarth 6.0e24                   // Earth mass (kg)
 #define km2m 1000.0                     // Convert from km to m
 #define m2cm 100.0                      // Convert m to cm

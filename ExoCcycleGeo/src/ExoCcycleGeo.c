@@ -180,42 +180,46 @@ int main(int argc, char *argv[]) {
 	double p = 0.0;                    // Frank-Kamenetskii parameter (Solomatov 1995; denoted theta in Foley et al. 2020 chapter) (no dim)
 
 	// Viscosity law constants (can't be #define'd because they are used as exponents)
-	double KK08DryOlDiff[5];           // Dry diffusion creep flow law (Korenaga & Karato 2008)
+	double KK08DryOlDiff[6];           // Dry diffusion creep flow law (Korenaga & Karato 2008)
 	KK08DryOlDiff[0] = 261.0e3;        // Activation energy (J mol-1), default 261.0±28e3
 	KK08DryOlDiff[1] = 6.0e-6;         // Activation volume (m3 mol-1), default 6±5e-6
 	KK08DryOlDiff[2] = 5.25;           // Exponent of pre-exponential factor, default 5.25±0.03
 	KK08DryOlDiff[3] = 1.0;            // Stress exponent
 	KK08DryOlDiff[4] = 2.98;           // Grain size exponent, default 2.98±0.02
+	KK08DryOlDiff[5] = 0.0;            // Water content exponent, default 0.0 (this is a dry law)
 
-	double KK08WetOlDiff[5];		   // Wet diffusion creep flow law
+	double KK08WetOlDiff[6];		   // Wet diffusion creep flow law
 	KK08WetOlDiff[0] = 387.0e3;        // Activation energy (J mol-1), default 387±53e3
 	KK08WetOlDiff[1] = 25.0e-6;        // Activation volume (m3 mol-1), default 25±4e-6
 	KK08WetOlDiff[2] = 4.32;           // Exponent of pre-exponential factor, default 4.32±0.38
 	KK08WetOlDiff[3] = 1.0;            // Stress exponent
 	KK08WetOlDiff[4] = 2.56;           // Grain size exponent, default 2.56±0.24
+	KK08WetOlDiff[5] = 1.93;           // Water content exponent, default 1.93±0.07
 
-	double KK08DryOlDisl[5];           // Dry dislocation creep flow law (Korenaga & Karato 2008)
+	double KK08DryOlDisl[6];           // Dry dislocation creep flow law (Korenaga & Karato 2008)
 	KK08DryOlDisl[0] = 610.0e3;        // Activation energy (J mol-1), default 610±30e3
 	KK08DryOlDisl[1] = 13.0e-6;        // Activation volume (m3 mol-1), default 13±8e-6
 	KK08DryOlDisl[2] = 6.09;           // Exponent of pre-exponential factor, default 6.09±0.11
 	KK08DryOlDisl[3] = 4.94;           // Stress exponent, default 4.94±0.05
 	KK08DryOlDisl[4] = 0.0;            // Grain size exponent
+	KK08DryOlDisl[5] = 0.0;            // Water content exponent, default 0.0 (this is a dry law)
 
-	double KK08WetOlDisl[5];           // Wet dislocation creep flow law
+	double KK08WetOlDisl[6];           // Wet dislocation creep flow law
 	KK08WetOlDisl[0] = 523.0e3;        // Activation energy (J mol-1), default 523±100e3
 	KK08WetOlDisl[1] = 4.0e-6;         // Activation volume (m3 mol-1), default 4±3e-6
 	KK08WetOlDisl[2] = 0.6;            // Exponent of pre-exponential factor, default 0.6±0.5
 	KK08WetOlDisl[3] = 3.60;           // Stress exponent, default 3.60±0.24
 	KK08WetOlDisl[4] = 0.0;            // Grain size exponent
+	KK08WetOlDisl[5] = 1.95;           // Water content exponent, default 1.95±0.05
 
-	double flowLawDiff[5];
-	for (i=0;i<5;i++) flowLawDiff[i] = 0.0;
+	double flowLawDiff[6];
+	for (i=0;i<6;i++) flowLawDiff[i] = 0.0;
 
-	double flowLawDisl[5];
-	for (i=0;i<5;i++) flowLawDisl[i] = 0.0;
+	double flowLawDisl[6];
+	for (i=0;i<6;i++) flowLawDisl[i] = 0.0;
 
-	const double grainSize = 1.0e3;	   // Grain size for computation of viscosity and creep laws (µm)
-
+	const double grainSize = 1.0e4;	   // Grain size for computation of viscosity and creep laws (µm)
+	const double C_OH = 300.0;         // ppm H/Si in the mantle (Korenaga & Karato 2008, citing Hirth & Kohlstedt 1996)
 
 	// Quantities to be computed by continental weathering model
     int iResTime = 0;
@@ -353,7 +357,7 @@ int main(int argc, char *argv[]) {
     xgas[4] = input[i]; i++;             // H2O mixing ratio
 
 	printf("\n");
-	printf("ExoCcycleGeo v23.8\n");
+	printf("ExoCcycleGeo v23.9\n");
 	if (cmdline == 1) printf("Command line mode\n");
 
 	printf("|--------------------------------------------------------------|\n");
@@ -417,7 +421,7 @@ int main(int argc, char *argv[]) {
 		if (r[i] <= r_p - zLith && r[i+1] > r_p-zLith) iLith = i;
 	}
 	tConv = 10.0*Myr2sec;              // Initial value
-	vConv = (r_p-zLith-r[iCMB])/tConv;
+	vConv = (r_p-r_c)/tConv;
 
 	// Calculate Tmantle from accretion (Canup et al. 2021 Pluto chapter; volume averaging leads to 3/5 term)
 	Tmantle = Tsurf0 + 0.6*4.0*h_frac*chi*G*PI_greek*rho_p*r_p*r_p/(3.0*Cp);
@@ -467,13 +471,13 @@ int main(int argc, char *argv[]) {
 	// Rheology
 	switch (rheology) {
 	case 0: // Dry olivine rheology of Korenaga & Karato (2008)
-		for (i=0;i<5;i++) {
+		for (i=0;i<6;i++) {
 			flowLawDiff[i] = KK08DryOlDiff[i];
 			flowLawDisl[i] = KK08DryOlDisl[i];
 		}
 		break;
 	case 1: // Wet olivine rheology of Korenaga & Karato (2008)
-		for (i=0;i<5;i++) {
+		for (i=0;i<6;i++) {
 			flowLawDiff[i] = KK08WetOlDiff[i];
 			flowLawDisl[i] = KK08WetOlDisl[i];
 		}
@@ -884,7 +888,7 @@ int main(int argc, char *argv[]) {
 		p = flowLawDiff[0]/(R_G*Tmantle*Tmantle)*(Tmantle-Tsurf); // TODO change flowlaw[0] based on rheology (combo, composition-dependent)
 
 		//  Upper mantle viscosity
-		nu = combVisc(Tmantle, P[iLith], flowLawDiff, flowLawDisl, grainSize, tConv)/rho[iLith];
+		nu = combVisc(Tmantle, P[iLith], flowLawDiff, flowLawDisl, grainSize, C_OH, tConv)/rho[iLith];
 //		nu = 1.0e19/3500.0;
 //		nu = 1.0e16*exp((2.0e5 + P[(int)((iLith+iCMB)/2.0)]*1.1e-6)/(R_G*Tmantle))/rho[(int)((iLith+iCMB)/2)]; // Cízková et al. (2012)
 //		nu = 1.0e16*exp((2.0e5 + P[iCMB]*1.1e-6)/(R_G*(Tmantle - alpha*g[iCMB]*Tmantle/Cp * (r[iCMB] - 0.5*(r_p+r_c)))))/rho[iCMB]; // Cízková et al. (2012) for CMB depth
@@ -1208,7 +1212,7 @@ int main(int argc, char *argv[]) {
 
 		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iLith]-r[iCMB]); // mol C s-1
 		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iLith]-r[iCMB])*0.4; // mol C s-1, 40% melt reaches the surface
-		if (realtime < 1.0*Gyr2sec) FCoutgas = FCoutgas * (realtime/(0.4*Gyr2sec)-1.5); // Ramp up outgassing from 0.6 to 1.0 Gyr to avoid step function
+//		if (realtime < 1.0*Gyr2sec) FCoutgas = FCoutgas * (realtime/(0.4*Gyr2sec)-1.5); // Ramp up outgassing from 0.6 to 1.0 Gyr to avoid step function
 
 //      // Alternative: Kite et al. (2009) eq. 25 They didn't scale with mass: [sum melt fraction (depth)] * [mass (depth)] / [total mass between surf and Psolidus]. Also their typo: P0>Pf.
 //		double Rmelt = 0.0;             // Rate of melt generation (m-2 s-1)
@@ -1226,7 +1230,7 @@ int main(int argc, char *argv[]) {
 		printf("---------------------------------------------------------------------------\n");
 		printf("New crust generation rate (m Myr-1)     | 40                | %.3g \n", zNewcrust*Myr2sec);
 		printf("New crust density (kg m-3)              | 2800              | %.4g \n", rhomelt);
-		printf("C and H2O outgassing rate (mol s-1)     | 115000            | %.5g \n", FCoutgas);
+		printf("C and H2O outgassing rate (mol s-1)     | 115000            | %.6g \n", FCoutgas);
 		printf("Magma C mass fraction                   | 0.1-0.65%%         | %.3g%% \n", magmaCmassfrac*100.0);
 		printf("Convective velocity (cm yr-1)           | ~1                | %.2g \n", vConv*100.0*1.0e-6*Myr2sec);
 		printf("Mantle convection timescale (Myr)       | ~50-200           | %.4g \n", tConv/Myr2sec);
@@ -1234,7 +1238,7 @@ int main(int argc, char *argv[]) {
 		printf("Half-mantle depth (km)                  | 1450              | %.4g \n", (r_p-r_c-zLith)/2.0/km2m);
 		printf("Heat flux (mW m-2)                      | 86 (radiodecay 40)| %.2g \n", k*(Tmantle-Tsurf)/zLith*1000.0);
 		printf("Thickness of lithosphere (km)           | 100               | %.3g \n", zLith/km2m);
-		printf("Temperature at base of lithosphere (K)  | 1400              | %.4g \n", Tmantle);
+		printf("Temperature at base of lithosphere (ºC) | 1400              | %.4g \n", Tmantle-Kelvin);
 		printf("Adiabatic temperature gradient (K km-1) | 0.5               | %.2g \n", (T[iCMB+1]-Tmantle)/(r_p-zLith-r_c)*km2m);
 		printf("---------------------------------------------------------------------------\n");
 		printf("\n");

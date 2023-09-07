@@ -1,2002 +1,286 @@
-Title: Allan et al. 1989 (see Ghiorso 1997)
-
-Pressure 99995.30 Temperature 2704.23 
-Partition 100.308973 
-Bulk 100.308973 
-Liquid 72.777456 
-Solid 27.531517 
-spinel_0 0.050826 
-kyanite 27.480690 
-Pressure 99697.60 Temperature 2703.57 
-Partition 100.308986 
-Bulk 100.308986 
-Liquid 72.800230 
-Solid 27.508756 
-spinel_0 0.050873 
-kyanite 27.457883 
-Pressure 99399.90 Temperature 2702.90 
-Partition 100.309000 
-Bulk 100.309000 
-Liquid 72.823968 
-Solid 27.485033 
-spinel_0 0.050921 
-kyanite 27.434112 
-Pressure 99102.20 Temperature 2702.24 
-Partition 100.309015 
-Bulk 100.309015 
-Liquid 72.848742 
-Solid 27.460273 
-spinel_0 0.050968 
-kyanite 27.409305 
-Pressure 98804.60 Temperature 2701.58 
-Partition 100.309030 
-Bulk 100.309030 
-Liquid 72.874562 
-Solid 27.434467 
-spinel_0 0.051016 
-kyanite 27.383452 
-Pressure 98506.90 Temperature 2700.92 
-Partition 100.309045 
-Bulk 100.309045 
-Liquid 72.901486 
-Solid 27.407559 
-spinel_0 0.051064 
-kyanite 27.356495 
-Pressure 98209.30 Temperature 2700.25 
-Partition 100.309060 
-Bulk 100.309060 
-Liquid 72.929509 
-Solid 27.379551 
-spinel_0 0.051112 
-kyanite 27.328439 
-Pressure 97911.70 Temperature 2699.59 
-Partition 100.309076 
-Bulk 100.309076 
-Liquid 72.958727 
-Solid 27.350348 
-spinel_0 0.051160 
-kyanite 27.299188 
-Pressure 97614.10 Temperature 2698.93 
-Partition 100.309091 
-Bulk 100.309091 
-Liquid 72.989158 
-Solid 27.319933 
-spinel_0 0.051209 
-kyanite 27.268724 
-Pressure 97316.50 Temperature 2698.26 
-Partition 100.309107 
-Bulk 100.309107 
-Liquid 73.020817 
-Solid 27.288290 
-spinel_0 0.051258 
-kyanite 27.237032 
-Pressure 97018.90 Temperature 2697.60 
-Partition 100.309123 
-Bulk 100.309123 
-Liquid 73.053798 
-Solid 27.255325 
-spinel_0 0.051308 
-kyanite 27.204017 
-Pressure 96721.40 Temperature 2696.94 
-Partition 100.309139 
-Bulk 100.309139 
-Liquid 73.088106 
-Solid 27.221033 
-spinel_0 0.051357 
-kyanite 27.169676 
-Pressure 96423.80 Temperature 2696.27 
-Partition 100.309155 
-Bulk 100.309155 
-Liquid 73.123781 
-Solid 27.185375 
-spinel_0 0.051407 
-kyanite 27.133968 
-Pressure 96126.30 Temperature 2695.61 
-Partition 100.309171 
-Bulk 100.309171 
-Liquid 73.160897 
-Solid 27.148274 
-spinel_0 0.051457 
-kyanite 27.096817 
-Pressure 95828.80 Temperature 2694.95 
-Partition 100.309188 
-Bulk 100.309188 
-Liquid 73.199485 
-Solid 27.109702 
-spinel_0 0.051508 
-kyanite 27.058194 
-Pressure 95531.30 Temperature 2694.28 
-Partition 100.309204 
-Bulk 100.309204 
-Liquid 73.239557 
-Solid 27.069646 
-spinel_0 0.051558 
-kyanite 27.018088 
-Pressure 95233.80 Temperature 2693.62 
-Partition 100.309220 
-Bulk 100.309220 
-Liquid 73.281224 
-Solid 27.027996 
-spinel_0 0.051610 
-kyanite 26.976386 
-Pressure 94936.30 Temperature 2692.96 
-Partition 100.309236 
-Bulk 100.309236 
-Liquid 73.324500 
-Solid 26.984736 
-spinel_0 0.051661 
-kyanite 26.933075 
-Pressure 94638.90 Temperature 2692.29 
-Partition 100.309252 
-Bulk 100.309252 
-Liquid 73.369378 
-Solid 26.939874 
-spinel_0 0.051713 
-kyanite 26.888161 
-Pressure 94341.50 Temperature 2691.63 
-Partition 100.309268 
-Bulk 100.309268 
-Liquid 73.415993 
-Solid 26.893274 
-spinel_0 0.051765 
-kyanite 26.841510 
-Pressure 94044.10 Temperature 2690.97 
-Partition 100.309283 
-Bulk 100.309283 
-Liquid 73.464358 
-Solid 26.844926 
-spinel_0 0.051817 
-kyanite 26.793109 
-Pressure 93746.70 Temperature 2690.30 
-Partition 100.309298 
-Bulk 100.309298 
-Liquid 73.514477 
-Solid 26.794822 
-spinel_0 0.051870 
-kyanite 26.742952 
-Pressure 93449.30 Temperature 2689.64 
-Partition 100.309314 
-Bulk 100.309314 
-Liquid 73.566480 
-Solid 26.742834 
-spinel_0 0.051923 
-kyanite 26.690911 
-Pressure 93151.90 Temperature 2688.97 
-Partition 100.309328 
-Bulk 100.309328 
-Liquid 73.620330 
-Solid 26.688999 
-spinel_0 0.051976 
-kyanite 26.637023 
-Pressure 92854.60 Temperature 2688.31 
-Partition 100.309343 
-Bulk 100.309343 
-Liquid 73.676142 
-Solid 26.633201 
-spinel_0 0.052030 
-kyanite 26.581171 
-Pressure 92557.20 Temperature 2687.65 
-Partition 100.309357 
-Bulk 100.309357 
-Liquid 73.733961 
-Solid 26.575396 
-spinel_0 0.052084 
-kyanite 26.523312 
-Pressure 92259.90 Temperature 2686.98 
-Partition 100.309371 
-Bulk 100.309371 
-Liquid 73.793743 
-Solid 26.515629 
-spinel_0 0.052138 
-kyanite 26.463490 
-Pressure 91962.60 Temperature 2686.32 
-Partition 100.309385 
-Bulk 100.309385 
-Liquid 73.855653 
-Solid 26.453732 
-spinel_0 0.052193 
-kyanite 26.401539 
-Pressure 91665.30 Temperature 2685.65 
-Partition 100.309398 
-Bulk 100.309398 
-Liquid 73.919636 
-Solid 26.389761 
-spinel_0 0.052248 
-kyanite 26.337513 
-Pressure 91368.00 Temperature 2684.99 
-Partition 100.309410 
-Bulk 100.309410 
-Liquid 73.985846 
-Solid 26.323564 
-spinel_0 0.052304 
-kyanite 26.271260 
-Pressure 91070.80 Temperature 2684.32 
-Partition 100.309422 
-Bulk 100.309422 
-Liquid 74.054193 
-Solid 26.255229 
-spinel_0 0.052360 
-kyanite 26.202869 
-Pressure 90773.50 Temperature 2683.66 
-Partition 100.309434 
-Bulk 100.309434 
-Liquid 74.124887 
-Solid 26.184547 
-spinel_0 0.052417 
-kyanite 26.132131 
-Pressure 90476.30 Temperature 2683.00 
-Partition 100.309445 
-Bulk 100.309445 
-Liquid 74.197865 
-Solid 26.111580 
-spinel_0 0.052473 
-kyanite 26.059107 
-Pressure 90179.10 Temperature 2682.33 
-Partition 100.309456 
-Bulk 100.309456 
-Liquid 74.273134 
-Solid 26.036321 
-spinel_0 0.052531 
-kyanite 25.983791 
-Pressure 89881.90 Temperature 2681.67 
-Partition 100.309466 
-Bulk 100.309466 
-Liquid 74.350864 
-Solid 25.958602 
-spinel_0 0.052589 
-kyanite 25.906013 
-Pressure 89584.70 Temperature 2681.00 
-Partition 100.309475 
-Bulk 100.309475 
-Liquid 74.430968 
-Solid 25.878507 
-spinel_0 0.052647 
-kyanite 25.825860 
-Pressure 89287.60 Temperature 2680.34 
-Partition 100.309484 
-Bulk 100.309484 
-Liquid 74.513593 
-Solid 25.795891 
-spinel_0 0.052705 
-kyanite 25.743186 
-Pressure 88990.40 Temperature 2679.67 
-Partition 100.309492 
-Bulk 100.309492 
-Liquid 74.598701 
-Solid 25.710791 
-spinel_0 0.052765 
-kyanite 25.658026 
-Pressure 88693.30 Temperature 2679.01 
-Partition 100.309499 
-Bulk 100.309499 
-Liquid 74.686416 
-Solid 25.623083 
-spinel_0 0.052824 
-kyanite 25.570259 
-Pressure 88396.20 Temperature 2678.34 
-Partition 100.309506 
-Bulk 100.309506 
-Liquid 74.776661 
-Solid 25.532845 
-spinel_0 0.052885 
-kyanite 25.479960 
-Pressure 88099.10 Temperature 2677.68 
-Partition 100.309512 
-Bulk 100.309512 
-Liquid 74.869627 
-Solid 25.439885 
-spinel_0 0.052946 
-kyanite 25.386939 
-Pressure 87802.00 Temperature 2677.01 
-Partition 100.309517 
-Bulk 100.309517 
-Liquid 74.965197 
-Solid 25.344320 
-spinel_0 0.053007 
-kyanite 25.291314 
-Pressure 87505.00 Temperature 2676.35 
-Partition 100.309522 
-Bulk 100.309522 
-Liquid 75.063533 
-Solid 25.245989 
-spinel_0 0.053069 
-kyanite 25.192920 
-Pressure 87207.90 Temperature 2675.68 
-Partition 100.309526 
-Bulk 100.309526 
-Liquid 75.164577 
-Solid 25.144948 
-spinel_0 0.053131 
-kyanite 25.091817 
-Pressure 86910.90 Temperature 2675.02 
-Partition 100.309529 
-Bulk 100.309529 
-Liquid 75.268464 
-Solid 25.041065 
-spinel_0 0.053195 
-kyanite 24.987870 
-Pressure 86613.90 Temperature 2674.35 
-Partition 100.309531 
-Bulk 100.309531 
-Liquid 75.375088 
-Solid 24.934443 
-spinel_0 0.053258 
-kyanite 24.881185 
-Pressure 86316.80 Temperature 2673.69 
-Partition 100.309532 
-Bulk 100.309532 
-Liquid 75.484703 
-Solid 24.824829 
-spinel_0 0.053323 
-kyanite 24.771506 
-Pressure 86019.90 Temperature 2673.02 
-Partition 100.309533 
-Bulk 100.309533 
-Liquid 75.597040 
-Solid 24.712493 
-spinel_0 0.053388 
-kyanite 24.659105 
-Pressure 85722.90 Temperature 2672.36 
-Partition 100.309533 
-Bulk 100.309533 
-Liquid 75.712438 
-Solid 24.597094 
-spinel_0 0.053454 
-kyanite 24.543640 
-Pressure 85425.90 Temperature 2671.69 
-Partition 100.309532 
-Bulk 100.309532 
-Liquid 75.830696 
-Solid 24.478836 
-spinel_0 0.053521 
-kyanite 24.425315 
-Pressure 85129.00 Temperature 2671.02 
-Partition 100.309530 
-Bulk 100.309530 
-Liquid 75.951895 
-Solid 24.357635 
-spinel_0 0.053589 
-kyanite 24.304046 
-Pressure 84832.10 Temperature 2670.36 
-Partition 100.309527 
-Bulk 100.309527 
-Liquid 76.076216 
-Solid 24.233312 
-spinel_0 0.053657 
-kyanite 24.179655 
-Pressure 84535.20 Temperature 2669.69 
-Partition 100.309524 
-Bulk 100.309524 
-Liquid 76.203474 
-Solid 24.106050 
-spinel_0 0.053727 
-kyanite 24.052324 
-Pressure 84238.30 Temperature 2669.03 
-Partition 100.309520 
-Bulk 100.309520 
-Liquid 76.333916 
-Solid 23.975604 
-spinel_0 0.053797 
-kyanite 23.921807 
-Pressure 83941.40 Temperature 2668.36 
-Partition 100.309514 
-Bulk 100.309514 
-Liquid 76.467346 
-Solid 23.842169 
-spinel_0 0.053868 
-kyanite 23.788300 
-Pressure 83644.50 Temperature 2667.70 
-Partition 100.309508 
-Bulk 100.309508 
-Liquid 76.604020 
-Solid 23.705488 
-spinel_0 0.053941 
-kyanite 23.651548 
-Pressure 83347.70 Temperature 2667.03 
-Partition 100.309501 
-Bulk 100.309501 
-Liquid 76.743679 
-Solid 23.565822 
-spinel_0 0.054014 
-kyanite 23.511808 
-Pressure 83050.90 Temperature 2666.36 
-Partition 100.309493 
-Bulk 100.309493 
-Liquid 76.886514 
-Solid 23.422980 
-spinel_0 0.054089 
-kyanite 23.368891 
-Pressure 82754.10 Temperature 2665.70 
-Partition 100.309485 
-Bulk 100.309485 
-Liquid 77.032676 
-Solid 23.276809 
-spinel_0 0.054164 
-kyanite 23.222645 
-Pressure 82457.30 Temperature 2665.03 
-Partition 100.309475 
-Bulk 100.309475 
-Liquid 77.181937 
-Solid 23.127538 
-spinel_0 0.054241 
-kyanite 23.073297 
-Pressure 82160.50 Temperature 2664.37 
-Partition 100.309465 
-Bulk 100.309465 
-Liquid 77.334582 
-Solid 22.974883 
-spinel_0 0.054320 
-kyanite 22.920563 
-Pressure 81863.70 Temperature 2663.70 
-Partition 100.309454 
-Bulk 100.309454 
-Liquid 77.490368 
-Solid 22.819086 
-spinel_0 0.054400 
-kyanite 22.764686 
-Pressure 81567.00 Temperature 2663.03 
-Partition 100.309442 
-Bulk 100.309442 
-Liquid 77.649393 
-Solid 22.660049 
-spinel_0 0.054481 
-kyanite 22.605568 
-Pressure 81270.20 Temperature 2662.37 
-Partition 100.309429 
-Bulk 100.309429 
-Liquid 77.811936 
-Solid 22.497493 
-spinel_0 0.054564 
-kyanite 22.442929 
-Pressure 80973.50 Temperature 2661.70 
-Partition 100.309415 
-Bulk 100.309415 
-Liquid 77.977622 
-Solid 22.331794 
-spinel_0 0.054649 
-kyanite 22.277145 
-Pressure 80676.80 Temperature 2661.03 
-Partition 100.309401 
-Bulk 100.309401 
-Liquid 78.146669 
-Solid 22.162732 
-spinel_0 0.054735 
-kyanite 22.107997 
-Pressure 80380.10 Temperature 2660.37 
-Partition 100.309386 
-Bulk 100.309386 
-Liquid 78.319255 
-Solid 21.990130 
-spinel_0 0.054823 
-kyanite 21.935307 
-Pressure 80083.50 Temperature 2659.70 
-Partition 100.309369 
-Bulk 100.309369 
-Liquid 78.495035 
-Solid 21.814334 
-spinel_0 0.054914 
-kyanite 21.759421 
-Pressure 79786.80 Temperature 2659.03 
-Partition 100.309352 
-Bulk 100.309352 
-Liquid 78.674307 
-Solid 21.635045 
-spinel_0 0.055006 
-kyanite 21.580039 
-Pressure 79490.20 Temperature 2658.37 
-Partition 100.309335 
-Bulk 100.309335 
-Liquid 78.857130 
-Solid 21.452205 
-spinel_0 0.055101 
-kyanite 21.397104 
-Pressure 79193.60 Temperature 2657.70 
-Partition 100.309316 
-Bulk 100.309316 
-Liquid 79.043265 
-Solid 21.266051 
-spinel_0 0.055198 
-kyanite 21.210853 
-Pressure 78897.00 Temperature 2657.03 
-Partition 100.309295 
-Bulk 100.309295 
-Liquid 79.238632 
-Solid 21.070663 
-corundum 0.010056 
-spinel_0 0.055291 
-kyanite 21.005317 
-Pressure 78600.40 Temperature 2656.37 
-Partition 100.309180 
-Bulk 100.309180 
-Liquid 79.804436 
-Solid 20.504744 
-corundum 0.661443 
-spinel_0 0.054934 
-kyanite 19.788367 
-Pressure 78303.80 Temperature 2655.70 
-Partition 100.309063 
-Bulk 100.309063 
-Liquid 80.386856 
-Solid 19.922207 
-corundum 1.332862 
-spinel_0 0.054567 
-kyanite 18.534778 
-Pressure 78007.20 Temperature 2655.03 
-Partition 100.308943 
-Bulk 100.308943 
-Liquid 80.986743 
-Solid 19.322200 
-corundum 2.025181 
-spinel_0 0.054190 
-kyanite 17.242829 
-Pressure 77710.70 Temperature 2654.37 
-Partition 100.308821 
-Bulk 100.308821 
-Liquid 81.604804 
-Solid 18.704017 
-corundum 2.739099 
-spinel_0 0.053802 
-kyanite 15.911116 
-Pressure 77414.20 Temperature 2653.70 
-Partition 100.308697 
-Bulk 100.308697 
-Liquid 82.241303 
-Solid 18.067394 
-corundum 3.475237 
-spinel_0 0.053404 
-kyanite 14.538754 
-Pressure 77117.70 Temperature 2653.03 
-Partition 100.308571 
-Bulk 100.308571 
-Liquid 82.897217 
-Solid 17.411354 
-corundum 4.234605 
-spinel_0 0.052994 
-kyanite 13.123755 
-Pressure 76821.20 Temperature 2652.36 
-Partition 100.308443 
-Bulk 100.308443 
-Liquid 83.573266 
-Solid 16.735177 
-corundum 5.018066 
-spinel_0 0.052572 
-kyanite 11.664538 
-Pressure 76524.70 Temperature 2651.70 
-Partition 100.308313 
-Bulk 100.308313 
-Liquid 84.270561 
-Solid 16.037751 
-corundum 5.826786 
-spinel_0 0.052139 
-kyanite 10.158827 
-Pressure 76228.30 Temperature 2651.03 
-Partition 100.308180 
-Bulk 100.308180 
-Liquid 84.988953 
-Solid 15.319227 
-corundum 6.660921 
-spinel_0 0.051693 
-kyanite 8.606613 
-Pressure 75931.80 Temperature 2650.36 
-Partition 100.308045 
-Bulk 100.308045 
-Liquid 85.730123 
-Solid 14.577922 
-corundum 7.522296 
-spinel_0 0.051234 
-kyanite 7.004392 
-Pressure 75635.40 Temperature 2649.69 
-Partition 100.307908 
-Bulk 100.307908 
-Liquid 86.494441 
-Solid 13.813467 
-corundum 8.411375 
-spinel_0 0.050762 
-kyanite 5.351330 
-Pressure 75339.00 Temperature 2649.03 
-Partition 100.307769 
-Bulk 100.307769 
-Liquid 87.283512 
-Solid 13.024257 
-corundum 9.329897 
-spinel_0 0.050276 
-kyanite 3.644084 
-Pressure 75042.60 Temperature 2648.36 
-Partition 100.307627 
-Bulk 100.307627 
-Liquid 88.097512 
-Solid 12.210116 
-corundum 10.278403 
-spinel_0 0.049776 
-kyanite 1.881936 
-Pressure 74746.20 Temperature 2647.69 
-Partition 100.307483 
-Bulk 100.307483 
-Liquid 88.937885 
-Solid 11.369599 
-corundum 11.258452 
-spinel_0 0.049261 
-kyanite 0.061886 
-Pressure 74449.80 Temperature 2647.02 
-Partition 100.307522 
-Bulk 100.307522 
-Liquid 89.062338 
-Solid 11.245184 
-corundum 11.196313 
-spinel_0 0.048871 
-Pressure 74153.50 Temperature 2646.36 
-Partition 100.307568 
-Bulk 100.307568 
-Liquid 89.162511 
-Solid 11.145057 
-corundum 11.096585 
-spinel_0 0.048472 
-Pressure 73857.10 Temperature 2645.69 
-Partition 100.307615 
-Bulk 100.307615 
-Liquid 89.263508 
-Solid 11.044107 
-corundum 10.996049 
-spinel_0 0.048058 
-Pressure 73560.80 Temperature 2645.02 
-Partition 100.307662 
-Bulk 100.307662 
-Liquid 89.365372 
-Solid 10.942289 
-corundum 10.894660 
-spinel_0 0.047630 
-Pressure 73264.50 Temperature 2644.35 
-Partition 100.307709 
-Bulk 100.307709 
-Liquid 89.468142 
-Solid 10.839567 
-corundum 10.792382 
-spinel_0 0.047186 
-Pressure 72968.30 Temperature 2643.68 
-Partition 100.307757 
-Bulk 100.307757 
-Liquid 89.571779 
-Solid 10.735978 
-corundum 10.689252 
-spinel_0 0.046726 
-Pressure 72672.00 Temperature 2643.01 
-Partition 100.307806 
-Bulk 100.307806 
-Liquid 89.676360 
-Solid 10.631446 
-corundum 10.585196 
-spinel_0 0.046250 
-Pressure 72375.70 Temperature 2642.35 
-Partition 100.307855 
-Bulk 100.307855 
-Liquid 89.781973 
-Solid 10.525883 
-corundum 10.480126 
-spinel_0 0.045756 
-Pressure 72079.50 Temperature 2641.68 
-Partition 100.307905 
-Bulk 100.307905 
-Liquid 89.888331 
-Solid 10.419574 
-corundum 10.374328 
-spinel_0 0.045246 
-Pressure 71783.30 Temperature 2641.01 
-Partition 100.307956 
-Bulk 100.307956 
-Liquid 89.995597 
-Solid 10.312359 
-corundum 10.267641 
-spinel_0 0.044718 
-Pressure 71487.10 Temperature 2640.34 
-Partition 100.308007 
-Bulk 100.308007 
-Liquid 90.103771 
-Solid 10.204236 
-corundum 10.160065 
-spinel_0 0.044171 
-Pressure 71190.90 Temperature 2639.67 
-Partition 100.308059 
-Bulk 100.308059 
-Liquid 90.212855 
-Solid 10.095203 
-corundum 10.051598 
-spinel_0 0.043605 
-Pressure 70894.70 Temperature 2639.00 
-Partition 100.308111 
-Bulk 100.308111 
-Liquid 90.322850 
-Solid 9.985261 
-corundum 9.942241 
-spinel_0 0.043020 
-Pressure 70598.60 Temperature 2638.34 
-Partition 100.308164 
-Bulk 100.308164 
-Liquid 90.433846 
-Solid 9.874318 
-corundum 9.831904 
-spinel_0 0.042414 
-Pressure 70302.40 Temperature 2637.67 
-Partition 100.308218 
-Bulk 100.308218 
-Liquid 90.545666 
-Solid 9.762551 
-corundum 9.720764 
-spinel_0 0.041787 
-Pressure 70006.30 Temperature 2637.00 
-Partition 100.308272 
-Bulk 100.308272 
-Liquid 90.658358 
-Solid 9.649913 
-corundum 9.608774 
-spinel_0 0.041139 
-Pressure 69710.20 Temperature 2636.33 
-Partition 100.308327 
-Bulk 100.308327 
-Liquid 90.771965 
-Solid 9.536362 
-corundum 9.495893 
-spinel_0 0.040469 
-Pressure 69414.10 Temperature 2635.66 
-Partition 100.308382 
-Bulk 100.308382 
-Liquid 90.886487 
-Solid 9.421895 
-corundum 9.382119 
-spinel_0 0.039776 
-Pressure 69118.00 Temperature 2634.99 
-Partition 100.308438 
-Bulk 100.308438 
-Liquid 91.001926 
-Solid 9.306512 
-corundum 9.267453 
-spinel_0 0.039059 
-Pressure 68822.00 Temperature 2634.32 
-Partition 100.308495 
-Bulk 100.308495 
-Liquid 91.118242 
-Solid 9.190253 
-corundum 9.151935 
-spinel_0 0.038318 
-Pressure 68525.90 Temperature 2633.65 
-Partition 100.308552 
-Bulk 100.308552 
-Liquid 91.235519 
-Solid 9.073034 
-corundum 9.035482 
-spinel_0 0.037552 
-Pressure 68229.90 Temperature 2632.98 
-Partition 100.308611 
-Bulk 100.308611 
-Liquid 91.353675 
-Solid 8.954936 
-corundum 8.918176 
-spinel_0 0.036760 
-Pressure 67933.90 Temperature 2632.32 
-Partition 100.308669 
-Bulk 100.308669 
-Liquid 91.472893 
-Solid 8.835777 
-corundum 8.799836 
-spinel_0 0.035941 
-Pressure 67637.90 Temperature 2631.65 
-Partition 100.308729 
-Bulk 100.308729 
-Liquid 91.592896 
-Solid 8.715833 
-corundum 8.680738 
-spinel_0 0.035095 
-Pressure 67341.90 Temperature 2630.98 
-Partition 100.308789 
-Bulk 100.308789 
-Liquid 91.713825 
-Solid 8.594964 
-corundum 8.560744 
-spinel_0 0.034220 
-Pressure 67046.00 Temperature 2630.31 
-Partition 100.308850 
-Bulk 100.308850 
-Liquid 91.835638 
-Solid 8.473212 
-corundum 8.439895 
-spinel_0 0.033316 
-Pressure 66750.00 Temperature 2629.64 
-Partition 100.308911 
-Bulk 100.308911 
-Liquid 91.958425 
-Solid 8.350486 
-corundum 8.318104 
-spinel_0 0.032382 
-Pressure 66454.10 Temperature 2628.97 
-Partition 100.308974 
-Bulk 100.308974 
-Liquid 92.082099 
-Solid 8.226875 
-corundum 8.195458 
-spinel_0 0.031417 
-Pressure 66158.20 Temperature 2628.30 
-Partition 100.309036 
-Bulk 100.309036 
-Liquid 92.206706 
-Solid 8.102331 
-corundum 8.071911 
-spinel_0 0.030420 
-Pressure 65862.30 Temperature 2627.63 
-Partition 100.309100 
-Bulk 100.309100 
-Liquid 92.332248 
-Solid 7.976851 
-corundum 7.947462 
-spinel_0 0.029390 
-Pressure 65566.40 Temperature 2626.96 
-Partition 100.309164 
-Bulk 100.309164 
-Liquid 92.458729 
-Solid 7.850435 
-corundum 7.822110 
-spinel_0 0.028325 
-Pressure 65270.50 Temperature 2626.29 
-Partition 100.309229 
-Bulk 100.309229 
-Liquid 92.586151 
-Solid 7.723079 
-corundum 7.695853 
-spinel_0 0.027226 
-Pressure 64974.70 Temperature 2625.62 
-Partition 100.309295 
-Bulk 100.309295 
-Liquid 92.714468 
-Solid 7.594827 
-corundum 7.568737 
-spinel_0 0.026090 
-Pressure 64678.90 Temperature 2624.95 
-Partition 100.309361 
-Bulk 100.309361 
-Liquid 92.843731 
-Solid 7.465631 
-corundum 7.440714 
-spinel_0 0.024916 
-Pressure 64383.10 Temperature 2624.28 
-Partition 100.309429 
-Bulk 100.309429 
-Liquid 92.973941 
-Solid 7.335488 
-corundum 7.311784 
-spinel_0 0.023704 
-Pressure 64087.30 Temperature 2623.61 
-Partition 100.309496 
-Bulk 100.309496 
-Liquid 93.105101 
-Solid 7.204395 
-corundum 7.181943 
-spinel_0 0.022452 
-Pressure 63791.50 Temperature 2622.94 
-Partition 100.309565 
-Bulk 100.309565 
-Liquid 93.237215 
-Solid 7.072350 
-corundum 7.051191 
-spinel_0 0.021159 
-Pressure 63495.70 Temperature 2622.27 
-Partition 100.309634 
-Bulk 100.309634 
-Liquid 93.370286 
-Solid 6.939349 
-corundum 6.919526 
-spinel_0 0.019823 
-Pressure 63200.00 Temperature 2621.60 
-Partition 100.309705 
-Bulk 100.309705 
-Liquid 93.504267 
-Solid 6.805438 
-corundum 6.786994 
-spinel_0 0.018443 
-Pressure 62904.20 Temperature 2620.93 
-Partition 100.309776 
-Bulk 100.309776 
-Liquid 93.639259 
-Solid 6.670516 
-corundum 6.653498 
-spinel_0 0.017018 
-Pressure 62608.50 Temperature 2620.26 
-Partition 100.309847 
-Bulk 100.309847 
-Liquid 93.775168 
-Solid 6.534679 
-corundum 6.519132 
-spinel_0 0.015547 
-Pressure 62312.80 Temperature 2619.59 
-Partition 100.309920 
-Bulk 100.309920 
-Liquid 93.912046 
-Solid 6.397873 
-corundum 6.383846 
-spinel_0 0.014027 
-Pressure 62017.10 Temperature 2618.92 
-Partition 100.309993 
-Bulk 100.309993 
-Liquid 94.049897 
-Solid 6.260096 
-corundum 6.247638 
-spinel_0 0.012458 
-Pressure 61721.50 Temperature 2618.25 
-Partition 100.310067 
-Bulk 100.310067 
-Liquid 94.188673 
-Solid 6.121394 
-corundum 6.110556 
-spinel_0 0.010838 
-Pressure 61425.80 Temperature 2617.58 
-Partition 100.310141 
-Bulk 100.310141 
-Liquid 94.328479 
-Solid 5.981662 
-corundum 5.972498 
-spinel_0 0.009164 
-Pressure 61130.20 Temperature 2616.91 
-Partition 100.310217 
-Bulk 100.310217 
-Liquid 94.469218 
-Solid 5.840998 
-corundum 5.833563 
-spinel_0 0.007436 
-Pressure 60834.50 Temperature 2616.24 
-Partition 100.310293 
-Bulk 100.310293 
-Liquid 94.610997 
-Solid 5.699297 
-corundum 5.693646 
-spinel_0 0.005650 
-Pressure 60538.90 Temperature 2615.56 
-Partition 100.310370 
-Bulk 100.310370 
-Liquid 94.753548 
-Solid 5.556823 
-corundum 5.553013 
-spinel_0 0.003809 
-Pressure 60243.40 Temperature 2614.89 
-Partition 100.310448 
-Bulk 100.310448 
-Liquid 94.897208 
-Solid 5.413240 
-corundum 5.411333 
-spinel_0 0.001907 
-Pressure 59947.80 Temperature 2614.22 
-Partition 100.310527 
-Bulk 100.310527 
-Liquid 95.041875 
-Solid 5.268652 
-corundum 5.268652 
-Pressure 59652.20 Temperature 2613.55 
-Partition 100.310605 
-Bulk 100.310605 
-Liquid 95.186011 
-Solid 5.124594 
-corundum 5.124594 
-Pressure 59356.70 Temperature 2612.88 
-Partition 100.310685 
-Bulk 100.310685 
-Liquid 95.331054 
-Solid 4.979631 
-corundum 4.979631 
-Pressure 59061.20 Temperature 2612.21 
-Partition 100.310765 
-Bulk 100.310765 
-Liquid 95.477059 
-Solid 4.833706 
-corundum 4.833706 
-Pressure 58765.70 Temperature 2611.54 
-Partition 100.310846 
-Bulk 100.310846 
-Liquid 95.624029 
-Solid 4.686817 
-corundum 4.686817 
-Pressure 58470.20 Temperature 2610.87 
-Partition 100.310927 
-Bulk 100.310927 
-Liquid 95.771968 
-Solid 4.538960 
-corundum 4.538960 
-Pressure 58174.70 Temperature 2610.20 
-Partition 100.311010 
-Bulk 100.311010 
-Liquid 95.920879 
-Solid 4.390131 
-corundum 4.390131 
-Pressure 57879.20 Temperature 2609.52 
-Partition 100.311093 
-Bulk 100.311093 
-Liquid 96.070590 
-Solid 4.240503 
-corundum 4.240503 
-Pressure 57583.80 Temperature 2608.85 
-Partition 100.311178 
-Bulk 100.311178 
-Liquid 96.221400 
-Solid 4.089777 
-corundum 4.089777 
-Pressure 57288.40 Temperature 2608.18 
-Partition 100.311263 
-Bulk 100.311263 
-Liquid 96.373193 
-Solid 3.938070 
-corundum 3.938070 
-Pressure 56993.00 Temperature 2607.51 
-Partition 100.311349 
-Bulk 100.311349 
-Liquid 96.525972 
-Solid 3.785376 
-corundum 3.785376 
-Pressure 56697.60 Temperature 2606.84 
-Partition 100.311435 
-Bulk 100.311435 
-Liquid 96.679741 
-Solid 3.631694 
-corundum 3.631694 
-Pressure 56402.20 Temperature 2606.17 
-Partition 100.311523 
-Bulk 100.311523 
-Liquid 96.834505 
-Solid 3.477018 
-corundum 3.477018 
-Pressure 56106.80 Temperature 2605.49 
-Partition 100.311611 
-Bulk 100.311611 
-Liquid 96.990083 
-Solid 3.321528 
-corundum 3.321528 
-Pressure 55811.50 Temperature 2604.82 
-Partition 100.311701 
-Bulk 100.311701 
-Liquid 97.146789 
-Solid 3.164912 
-corundum 3.164912 
-Pressure 55516.20 Temperature 2604.15 
-Partition 100.311791 
-Bulk 100.311791 
-Liquid 97.304500 
-Solid 3.007290 
-corundum 3.007290 
-Pressure 55220.90 Temperature 2603.48 
-Partition 100.311882 
-Bulk 100.311882 
-Liquid 97.463222 
-Solid 2.848660 
-corundum 2.848660 
-Pressure 54925.60 Temperature 2602.81 
-Partition 100.311974 
-Bulk 100.311974 
-Liquid 97.622959 
-Solid 2.689015 
-corundum 2.689015 
-Pressure 54630.30 Temperature 2602.13 
-Partition 100.312066 
-Bulk 100.312066 
-Liquid 97.783525 
-Solid 2.528541 
-corundum 2.528541 
-Pressure 54335.00 Temperature 2601.46 
-Partition 100.312160 
-Bulk 100.312160 
-Liquid 97.945303 
-Solid 2.366857 
-corundum 2.366857 
-Pressure 54039.80 Temperature 2600.79 
-Partition 100.312255 
-Bulk 100.312255 
-Liquid 98.108051 
-Solid 2.204204 
-corundum 2.204204 
-Pressure 53744.60 Temperature 2600.12 
-Partition 100.312350 
-Bulk 100.312350 
-Liquid 98.271831 
-Solid 2.040519 
-corundum 2.040519 
-Pressure 53449.30 Temperature 2599.45 
-Partition 100.312446 
-Bulk 100.312446 
-Liquid 98.436709 
-Solid 1.875738 
-corundum 1.875738 
-Pressure 53154.20 Temperature 2598.77 
-Partition 100.312544 
-Bulk 100.312544 
-Liquid 98.602313 
-Solid 1.710231 
-corundum 1.710231 
-Pressure 52859.00 Temperature 2598.10 
-Partition 100.312642 
-Bulk 100.312642 
-Liquid 98.769219 
-Solid 1.543423 
-corundum 1.543423 
-Pressure 52563.80 Temperature 2597.43 
-Partition 100.312741 
-Bulk 100.312741 
-Liquid 98.937178 
-Solid 1.375563 
-corundum 1.375563 
-Pressure 52268.70 Temperature 2596.76 
-Partition 100.312841 
-Bulk 100.312841 
-Liquid 99.106133 
-Solid 1.206708 
-corundum 1.206708 
-Pressure 51973.50 Temperature 2596.08 
-Partition 100.312942 
-Bulk 100.312942 
-Liquid 99.276013 
-Solid 1.036929 
-corundum 1.036929 
-Pressure 51678.40 Temperature 2595.41 
-Partition 100.313044 
-Bulk 100.313044 
-Liquid 99.447098 
-Solid 0.865946 
-corundum 0.865946 
-Pressure 51383.30 Temperature 2594.74 
-Partition 100.313146 
-Bulk 100.313146 
-Liquid 99.619257 
-Solid 0.693889 
-corundum 0.693889 
-Pressure 51088.20 Temperature 2594.06 
-Partition 100.313250 
-Bulk 100.313250 
-Liquid 99.792291 
-Solid 0.520959 
-corundum 0.520959 
-Pressure 50793.20 Temperature 2593.39 
-Partition 100.313355 
-Bulk 100.313355 
-Liquid 99.966549 
-Solid 0.346806 
-corundum 0.346806 
-Pressure 50498.10 Temperature 2592.72 
-Partition 100.313461 
-Bulk 100.313461 
-Liquid 100.141962 
-Solid 0.171498 
-corundum 0.171498 
-Pressure 50203.10 Temperature 2592.04 
-Partition 100.313570 ---
-Bulk 100.313570 
-Liquid 100.313570 
-Solid 0.000000 ---
-Pressure 49908.10 Temperature 2591.37 
-Partition 100.313811 ---
-Bulk 100.313811 
-Liquid 100.313811 
-Solid 0.000000 ---
-Pressure 49613.10 Temperature 2590.70 
-Partition 100.314053 ---
-Bulk 100.314053 
-Liquid 100.314053 
-Solid 0.000000 ---
-Pressure 49318.10 Temperature 2590.03 
-Partition 100.314298 ---
-Bulk 100.314298 
-Liquid 100.314298 
-Solid 0.000000 ---
-Pressure 49023.10 Temperature 2589.35 
-Partition 100.314545 ---
-Bulk 100.314545 
-Liquid 100.314545 
-Solid 0.000000 ---
-Pressure 48728.20 Temperature 2588.68 
-Partition 100.314794 ---
-Bulk 100.314794 
-Liquid 100.314794 
-Solid 0.000000 ---
-Pressure 48433.30 Temperature 2588.00 
-Partition 100.315046 ---
-Bulk 100.315046 
-Liquid 100.315046 
-Solid 0.000000 ---
-Pressure 48138.40 Temperature 2587.33 
-Partition 100.315300 ---
-Bulk 100.315300 
-Liquid 100.315300 
-Solid 0.000000 ---
-Pressure 47843.50 Temperature 2586.66 
-Partition 100.315557 ---
-Bulk 100.315557 
-Liquid 100.315557 
-Solid 0.000000 ---
-Pressure 47548.60 Temperature 2585.98 
-Partition 100.315816 ---
-Bulk 100.315816 
-Liquid 100.315816 
-Solid 0.000000 ---
-Pressure 47253.70 Temperature 2585.31 
-Partition 100.316078 ---
-Bulk 100.316078 
-Liquid 100.316078 
-Solid 0.000000 ---
-Pressure 46958.90 Temperature 2584.64 
-Partition 100.316343 ---
-Bulk 100.316343 
-Liquid 100.316343 
-Solid 0.000000 ---
-Pressure 46664.00 Temperature 2583.96 
-Partition 100.316609 ---
-Bulk 100.316609 
-Liquid 100.316609 
-Solid 0.000000 ---
-Pressure 46369.20 Temperature 2583.29 
-Partition 100.316879 ---
-Bulk 100.316879 
-Liquid 100.316879 
-Solid 0.000000 ---
-Pressure 46074.40 Temperature 2582.61 
-Partition 100.317151 ---
-Bulk 100.317151 
-Liquid 100.317151 
-Solid 0.000000 ---
-Pressure 45779.60 Temperature 2581.94 
-Partition 100.317425 ---
-Bulk 100.317425 
-Liquid 100.317425 
-Solid 0.000000 ---
-Pressure 45484.90 Temperature 2581.27 
-Partition 100.317703 ---
-Bulk 100.317703 
-Liquid 100.317703 
-Solid 0.000000 ---
-Pressure 45190.10 Temperature 2580.59 
-Partition 100.317982 ---
-Bulk 100.317982 
-Liquid 100.317982 
-Solid 0.000000 ---
-Pressure 44895.40 Temperature 2579.92 
-Partition 100.318265 ---
-Bulk 100.318265 
-Liquid 100.318265 
-Solid 0.000000 ---
-Pressure 44600.70 Temperature 2579.24 
-Partition 100.318550 ---
-Bulk 100.318550 
-Liquid 100.318550 
-Solid 0.000000 ---
-Pressure 44306.00 Temperature 2578.57 
-Partition 100.318839 ---
-Bulk 100.318839 
-Liquid 100.318839 
-Solid 0.000000 ---
-Pressure 44011.30 Temperature 2577.89 
-Partition 100.319129 ---
-Bulk 100.319129 
-Liquid 100.319129 
-Solid 0.000000 ---
-Pressure 43716.60 Temperature 2577.22 
-Partition 100.319423 ---
-Bulk 100.319423 
-Liquid 100.319423 
-Solid 0.000000 ---
-Pressure 43422.00 Temperature 2576.54 
-Partition 100.319720 ---
-Bulk 100.319720 
-Liquid 100.319720 
-Solid 0.000000 ---
-Pressure 43127.30 Temperature 2575.87 
-Partition 100.320019 ---
-Bulk 100.320019 
-Liquid 100.320019 
-Solid 0.000000 ---
-Pressure 42832.70 Temperature 2575.19 
-Partition 100.320321 ---
-Bulk 100.320321 
-Liquid 100.320321 
-Solid 0.000000 ---
-Pressure 42538.10 Temperature 2574.52 
-Partition 100.320627 ---
-Bulk 100.320627 
-Liquid 100.320627 
-Solid 0.000000 ---
-Pressure 42243.50 Temperature 2573.84 
-Partition 100.320935 ---
-Bulk 100.320935 
-Liquid 100.320935 
-Solid 0.000000 ---
-Pressure 41949.00 Temperature 2573.17 
-Partition 100.321246 ---
-Bulk 100.321246 
-Liquid 100.321246 
-Solid 0.000000 ---
-Pressure 41654.40 Temperature 2572.49 
-Partition 100.321560 ---
-Bulk 100.321560 
-Liquid 100.321560 
-Solid 0.000000 ---
-Pressure 41359.90 Temperature 2571.82 
-Partition 100.321877 ---
-Bulk 100.321877 
-Liquid 100.321877 
-Solid 0.000000 ---
-Pressure 41065.40 Temperature 2571.14 
-Partition 100.322197 ---
-Bulk 100.322197 
-Liquid 100.322197 
-Solid 0.000000 ---
-Pressure 40770.90 Temperature 2570.47 
-Partition 100.322520 ---
-Bulk 100.322520 
-Liquid 100.322520 
-Solid 0.000000 ---
-Pressure 40476.40 Temperature 2569.79 
-Partition 100.322846 ---
-Bulk 100.322846 
-Liquid 100.322846 
-Solid 0.000000 ---
-Pressure 40181.90 Temperature 2569.12 
-Partition 100.323176 ---
-Bulk 100.323176 
-Liquid 100.323176 
-Solid 0.000000 ---
-Pressure 39887.50 Temperature 2568.44 
-Partition 100.323509 ---
-Bulk 100.323509 
-Liquid 100.323509 
-Solid 0.000000 ---
-Pressure 39593.00 Temperature 2567.77 
-Partition 100.323845 ---
-Bulk 100.323845 
-Liquid 100.323845 
-Solid 0.000000 ---
-Pressure 39298.60 Temperature 2567.09 
-Partition 100.324184 ---
-Bulk 100.324184 
-Liquid 100.324184 
-Solid 0.000000 ---
-Pressure 39004.20 Temperature 2566.42 
-Partition 100.324526 ---
-Bulk 100.324526 
-Liquid 100.324526 
-Solid 0.000000 ---
-Pressure 38709.80 Temperature 2565.74 
-Partition 100.324872 ---
-Bulk 100.324872 
-Liquid 100.324872 
-Solid 0.000000 ---
-Pressure 38415.40 Temperature 2565.06 
-Partition 100.325221 ---
-Bulk 100.325221 
-Liquid 100.325221 
-Solid 0.000000 ---
-Pressure 38121.10 Temperature 2564.39 
-Partition 100.325573 ---
-Bulk 100.325573 
-Liquid 100.325573 
-Solid 0.000000 ---
-Pressure 37826.80 Temperature 2563.71 
-Partition 100.325929 ---
-Bulk 100.325929 
-Liquid 100.325929 
-Solid 0.000000 ---
-Pressure 37532.40 Temperature 2563.04 
-Partition 100.326288 ---
-Bulk 100.326288 
-Liquid 100.326288 
-Solid 0.000000 ---
-Pressure 37238.10 Temperature 2562.36 
-Partition 100.326650 ---
-Bulk 100.326650 
-Liquid 100.326650 
-Solid 0.000000 ---
-Pressure 36943.90 Temperature 2561.68 
-Partition 100.327016 ---
-Bulk 100.327016 
-Liquid 100.327016 
-Solid 0.000000 ---
-Pressure 36649.60 Temperature 2561.01 
-Partition 100.327386 ---
-Bulk 100.327386 
-Liquid 100.327386 
-Solid 0.000000 ---
-Pressure 36355.30 Temperature 2560.33 
-Partition 100.327759 ---
-Bulk 100.327759 
-Liquid 100.327759 
-Solid 0.000000 ---
-Pressure 36061.10 Temperature 2559.65 
-Partition 100.328136 ---
-Bulk 100.328136 
-Liquid 100.328136 
-Solid 0.000000 ---
-Pressure 35766.90 Temperature 2558.98 
-Partition 100.328517 ---
-Bulk 100.328517 
-Liquid 100.328517 
-Solid 0.000000 ---
-Pressure 35472.70 Temperature 2558.30 
-Partition 100.328901 ---
-Bulk 100.328901 
-Liquid 100.328901 
-Solid 0.000000 ---
-Pressure 35178.50 Temperature 2557.62 
-Partition 100.329288 ---
-Bulk 100.329288 
-Liquid 100.329288 
-Solid 0.000000 ---
-Pressure 34884.30 Temperature 2556.95 
-Partition 100.329680 ---
-Bulk 100.329680 
-Liquid 100.329680 
-Solid 0.000000 ---
-Pressure 34590.20 Temperature 2556.27 
-Partition 100.330075 ---
-Bulk 100.330075 
-Liquid 100.330075 
-Solid 0.000000 ---
-Pressure 34296.10 Temperature 2555.59 
-Partition 100.330474 ---
-Bulk 100.330474 
-Liquid 100.330474 
-Solid 0.000000 ---
-Pressure 34001.90 Temperature 2554.92 
-Partition 100.330877 ---
-Bulk 100.330877 
-Liquid 100.330877 
-Solid 0.000000 ---
-Pressure 33707.80 Temperature 2554.24 
-Partition 100.331284 ---
-Bulk 100.331284 
-Liquid 100.331284 
-Solid 0.000000 ---
-Pressure 33413.80 Temperature 2553.56 
-Partition 100.331695 ---
-Bulk 100.331695 
-Liquid 100.331695 
-Solid 0.000000 ---
-Pressure 33119.70 Temperature 2552.89 
-Partition 100.332110 ---
-Bulk 100.332110 
-Liquid 100.332110 
-Solid 0.000000 ---
-Pressure 32825.60 Temperature 2552.21 
-Partition 100.332528 ---
-Bulk 100.332528 
-Liquid 100.332528 
-Solid 0.000000 ---
-Pressure 32531.60 Temperature 2551.53 
-Partition 100.332951 ---
-Bulk 100.332951 
-Liquid 100.332951 
-Solid 0.000000 ---
-Pressure 32237.60 Temperature 2550.85 
-Partition 100.333378 ---
-Bulk 100.333378 
-Liquid 100.333378 
-Solid 0.000000 ---
-Pressure 31943.60 Temperature 2550.18 
-Partition 100.333809 ---
-Bulk 100.333809 
-Liquid 100.333809 
-Solid 0.000000 ---
-Pressure 31649.60 Temperature 2549.50 
-Partition 100.334244 ---
-Bulk 100.334244 
-Liquid 100.334244 
-Solid 0.000000 ---
-Pressure 31355.60 Temperature 2548.82 
-Partition 100.334683 ---
-Bulk 100.334683 
-Liquid 100.334683 
-Solid 0.000000 ---
-Pressure 31061.70 Temperature 2548.14 
-Partition 100.335127 ---
-Bulk 100.335127 
-Liquid 100.335127 
-Solid 0.000000 ---
-Pressure 30767.80 Temperature 2547.47 
-Partition 100.335575 ---
-Bulk 100.335575 
-Liquid 100.335575 
-Solid 0.000000 ---
-Pressure 30473.90 Temperature 2546.79 
-Partition 100.336027 ---
-Bulk 100.336027 
-Liquid 100.336027 
-Solid 0.000000 ---
-Pressure 30180.00 Temperature 2546.11 
-Partition 100.336483 ---
-Bulk 100.336483 
-Liquid 100.336483 
-Solid 0.000000 ---
-Pressure 29886.10 Temperature 2545.43 
-Partition 100.336944 ---
-Bulk 100.336944 
-Liquid 100.336944 
-Solid 0.000000 ---
-Pressure 29592.20 Temperature 2544.75 
-Partition 100.337410 ---
-Bulk 100.337410 
-Liquid 100.337410 
-Solid 0.000000 ---
-Pressure 29298.40 Temperature 2544.08 
-Partition 100.337880 ---
-Bulk 100.337880 
-Liquid 100.337880 
-Solid 0.000000 ---
-Pressure 29004.50 Temperature 2543.40 
-Partition 100.338355 ---
-Bulk 100.338355 
-Liquid 100.338355 
-Solid 0.000000 ---
-Pressure 28710.70 Temperature 2542.72 
-Partition 100.338834 ---
-Bulk 100.338834 
-Liquid 100.338834 
-Solid 0.000000 ---
-Pressure 28416.90 Temperature 2542.04 
-Partition 100.339317 ---
-Bulk 100.339317 
-Liquid 100.339317 
-Solid 0.000000 ---
-Pressure 28123.10 Temperature 2541.36 
-Partition 100.339806 ---
-Bulk 100.339806 
-Liquid 100.339806 
-Solid 0.000000 ---
-Pressure 27829.40 Temperature 2540.68 
-Partition 100.340299 ---
-Bulk 100.340299 
-Liquid 100.340299 
-Solid 0.000000 ---
-Pressure 27535.60 Temperature 2540.01 
-Partition 100.340797 ---
-Bulk 100.340797 
-Liquid 100.340797 
-Solid 0.000000 ---
-Pressure 27241.90 Temperature 2539.33 
-Partition 100.341300 ---
-Bulk 100.341300 
-Liquid 100.341300 
-Solid 0.000000 ---
-Pressure 26948.20 Temperature 2538.65 
-Partition 100.341807 ---
-Bulk 100.341807 
-Liquid 100.341807 
-Solid 0.000000 ---
-Pressure 26654.50 Temperature 2537.97 
-Partition 100.342320 ---
-Bulk 100.342320 
-Liquid 100.342320 
-Solid 0.000000 ---
-Pressure 26360.80 Temperature 2537.29 
-Partition 100.342837 ---
-Bulk 100.342837 
-Liquid 100.342837 
-Solid 0.000000 ---
-Pressure 26067.20 Temperature 2536.61 
-Partition 100.343360 ---
-Bulk 100.343360 
-Liquid 100.343360 
-Solid 0.000000 ---
-Pressure 25773.50 Temperature 2535.93 
-Partition 100.343887 ---
-Bulk 100.343887 
-Liquid 100.343887 
-Solid 0.000000 ---
-Pressure 25479.90 Temperature 2535.25 
-Partition 100.344420 ---
-Bulk 100.344420 
-Liquid 100.344420 
-Solid 0.000000 ---
-Pressure 25186.30 Temperature 2534.58 
-Partition 100.344958 ---
-Bulk 100.344958 
-Liquid 100.344958 
-Solid 0.000000 ---
-Pressure 24892.70 Temperature 2533.90 
-Partition 100.345501 ---
-Bulk 100.345501 
-Liquid 100.345501 
-Solid 0.000000 ---
-Pressure 24599.10 Temperature 2533.22 
-Partition 100.346050 ---
-Bulk 100.346050 
-Liquid 100.346050 
-Solid 0.000000 ---
-Pressure 24305.60 Temperature 2532.54 
-Partition 100.346603 ---
-Bulk 100.346603 
-Liquid 100.346603 
-Solid 0.000000 ---
-Pressure 24012.00 Temperature 2531.86 
-Partition 100.347163 ---
-Bulk 100.347163 
-Liquid 100.347163 
-Solid 0.000000 ---
-Pressure 23718.50 Temperature 2531.18 
-Partition 100.347727 ---
-Bulk 100.347727 
-Liquid 100.347727 
-Solid 0.000000 ---
-Pressure 23425.00 Temperature 2530.50 
-Partition 100.348297 ---
-Bulk 100.348297 
-Liquid 100.348297 
-Solid 0.000000 ---
-Pressure 23131.50 Temperature 2529.82 
-Partition 100.348872 ---
-Bulk 100.348872 
-Liquid 100.348872 
-Solid 0.000000 ---
-Pressure 22838.00 Temperature 2529.14 
-Partition 100.349454 ---
-Bulk 100.349454 
-Liquid 100.349454 
-Solid 0.000000 ---
-Pressure 22544.60 Temperature 2528.46 
-Partition 100.350040 ---
-Bulk 100.350040 
-Liquid 100.350040 
-Solid 0.000000 ---
-Pressure 22251.10 Temperature 2527.78 
-Partition 100.350633 ---
-Bulk 100.350633 
-Liquid 100.350633 
-Solid 0.000000 ---
-Pressure 21957.70 Temperature 2527.10 
-Partition 100.351231 ---
-Bulk 100.351231 
-Liquid 100.351231 
-Solid 0.000000 ---
-Pressure 21664.30 Temperature 2526.42 
-Partition 100.351835 ---
-Bulk 100.351835 
-Liquid 100.351835 
-Solid 0.000000 ---
-Pressure 21370.90 Temperature 2525.74 
-Partition 100.352445 ---
-Bulk 100.352445 
-Liquid 100.352445 
-Solid 0.000000 ---
-Pressure 21077.50 Temperature 2525.06 
-Partition 100.353061 ---
-Bulk 100.353061 
-Liquid 100.353061 
-Solid 0.000000 ---
-Pressure 20784.20 Temperature 2524.38 
-Partition 100.353683 ---
-Bulk 100.353683 
-Liquid 100.353683 
-Solid 0.000000 ---
-Pressure 20490.80 Temperature 2523.70 
-Partition 100.354311 ---
-Bulk 100.354311 
-Liquid 100.354311 
-Solid 0.000000 ---
-Pressure 20197.50 Temperature 2523.02 
-Partition 100.354945 ---
-Bulk 100.354945 
-Liquid 100.354945 
-Solid 0.000000 ---
-Pressure 19904.20 Temperature 2522.34 
-Partition 100.355585 ---
-Bulk 100.355585 
-Liquid 100.355585 
-Solid 0.000000 ---
-Pressure 19610.90 Temperature 2521.66 
-Partition 100.356232 ---
-Bulk 100.356232 
-Liquid 100.356232 
-Solid 0.000000 ---
-Pressure 19317.60 Temperature 2520.98 
-Partition 100.356884 ---
-Bulk 100.356884 
-Liquid 100.356884 
-Solid 0.000000 ---
-Pressure 19024.40 Temperature 2520.30 
-Partition 100.357543 ---
-Bulk 100.357543 
-Liquid 100.357543 
-Solid 0.000000 ---
-Pressure 18731.20 Temperature 2519.62 
-Partition 100.358209 ---
-Bulk 100.358209 
-Liquid 100.358209 
-Solid 0.000000 ---
-Pressure 18437.90 Temperature 2518.94 
-Partition 100.358881 ---
-Bulk 100.358881 
-Liquid 100.358881 
-Solid 0.000000 ---
-Pressure 18144.70 Temperature 2518.26 
-Partition 100.359559 ---
-Bulk 100.359559 
-Liquid 100.359559 
-Solid 0.000000 ---
-Pressure 17851.60 Temperature 2517.57 
-Partition 100.360244 ---
-Bulk 100.360244 
-Liquid 100.360244 
-Solid 0.000000 ---
-Pressure 17558.40 Temperature 2516.89 
-Partition 100.360936 ---
-Bulk 100.360936 
-Liquid 100.360936 
-Solid 0.000000 ---
-Pressure 17265.20 Temperature 2516.21 
-Partition 100.361634 ---
-Bulk 100.361634 
-Liquid 100.361634 
-Solid 0.000000 ---
-Pressure 16972.10 Temperature 2515.53 
-Partition 100.362340 ---
-Bulk 100.362340 
-Liquid 100.362340 
-Solid 0.000000 ---
-Pressure 16679.00 Temperature 2514.85 
-Partition 100.363052 ---
-Bulk 100.363052 
-Liquid 100.363052 
-Solid 0.000000 ---
-Pressure 16385.90 Temperature 2514.17 
-Partition 100.363771 ---
-Bulk 100.363771 
-Liquid 100.363771 
-Solid 0.000000 ---
-Pressure 16092.80 Temperature 2513.49 
-Partition 100.364497 ---
-Bulk 100.364497 
-Liquid 100.364497 
-Solid 0.000000 ---
-Pressure 15799.70 Temperature 2512.81 
-Partition 100.365231 ---
-Bulk 100.365231 
-Liquid 100.365231 
-Solid 0.000000 ---
-Pressure 15506.70 Temperature 2512.12 
-Partition 100.365970 ---
-Bulk 100.365970 
-Liquid 100.365970 
-Solid 0.000000 ---
-Pressure 15213.70 Temperature 2511.44 
-Partition 100.366718 ---
-Bulk 100.366718 
-Liquid 100.366718 
-Solid 0.000000 ---
-Pressure 14920.70 Temperature 2510.76 
-Partition 100.367473 ---
-Bulk 100.367473 
-Liquid 100.367473 
-Solid 0.000000 ---
-Pressure 14627.70 Temperature 2510.08 
-Partition 100.368235 ---
-Bulk 100.368235 
-Liquid 100.368235 
-Solid 0.000000 ---
-Pressure 14334.70 Temperature 2509.40 
-Partition 100.369004 ---
-Bulk 100.369004 
-Liquid 100.369004 
-Solid 0.000000 ---
-Pressure 14041.70 Temperature 2508.72 
-Partition 100.369782 ---
-Bulk 100.369782 
-Liquid 100.369782 
-Solid 0.000000 ---
-Pressure 13748.80 Temperature 2508.03 
-Partition 100.370566 ---
-Bulk 100.370566 
-Liquid 100.370566 
-Solid 0.000000 ---
-Pressure 13455.90 Temperature 2507.35 
-Partition 100.371358 ---
-Bulk 100.371358 
-Liquid 100.371358 
-Solid 0.000000 ---
-Pressure 13162.90 Temperature 2506.67 
-Partition 100.372158 ---
-Bulk 100.372158 
-Liquid 100.372158 
-Solid 0.000000 ---
-Pressure 12870.10 Temperature 2505.99 
-Partition 100.372965 ---
-Bulk 100.372965 
-Liquid 100.372965 
-Solid 0.000000 ---
-Pressure 12577.20 Temperature 2505.30 
-Partition 100.373781 ---
-Bulk 100.373781 
-Liquid 100.373781 
-Solid 0.000000 ---
-Pressure 12284.30 Temperature 2504.62 
-Partition 100.374604 ---
-Bulk 100.374604 
-Liquid 100.374604 
-Solid 0.000000 ---
-Pressure 11991.50 Temperature 2503.94 
-Partition 100.375436 ---
-Bulk 100.375436 
-Liquid 100.375436 
-Solid 0.000000 ---
-Pressure 11698.70 Temperature 2503.26 
-Partition 100.376275 ---
-Bulk 100.376275 
-Liquid 100.376275 
-Solid 0.000000 ---
-Pressure 11405.90 Temperature 2502.57 
-Partition 100.377122 ---
-Bulk 100.377122 
-Liquid 100.377122 
-Solid 0.000000 ---
-Pressure 11113.10 Temperature 2501.89 
-Partition 100.377978 ---
-Bulk 100.377978 
-Liquid 100.377978 
-Solid 0.000000 ---
-Pressure 10820.30 Temperature 2501.21 
-Partition 100.378843 ---
-Bulk 100.378843 
-Liquid 100.378843 
-Solid 0.000000 ---
-Pressure 10527.50 Temperature 2500.53 
-Partition 100.379715 ---
-Bulk 100.379715 
-Liquid 100.379715 
-Solid 0.000000 ---
-Pressure 10234.80 Temperature 2499.84 
-Partition 100.380596 ---
-Bulk 100.380596 
-Liquid 100.380596 
-Solid 0.000000 ---
-Pressure 9942.09 Temperature 2499.16 
-Partition 100.381485 ---
-Bulk 100.381485 
-Liquid 100.381485 
-Solid 0.000000 ---
-Pressure 9649.39 Temperature 2474.03 
-Partition 100.381273 ---
-Bulk 100.381273 
-Liquid 100.381273 
-Solid 0.000000 ---
-Pressure 9356.70 Temperature 2423.82 
-Partition 100.379990 ---
-Bulk 100.379990 
-Liquid 100.379990 
-Solid 0.000000 ---
-Pressure 9064.04 Temperature 2372.29 
-Partition 100.378745 ---
-Bulk 100.378745 
-Liquid 100.378745 
-Solid 0.000000 ---
-Pressure 8771.39 Temperature 2319.44 
-Partition 100.377552 ---
-Bulk 100.377552 
-Liquid 100.377552 
-Solid 0.000000 ---
-Pressure 8478.75 Temperature 2265.30 
-Partition 100.376430 ---
-Bulk 100.376430 
-Liquid 100.376430 
-Solid 0.000000 ---
-Pressure 8186.14 Temperature 2209.86 
-Partition 100.375397 ---
-Bulk 100.375397 
-Liquid 100.375397 
-Solid 0.000000 ---
-Pressure 7893.54 Temperature 2153.15 
-Partition 100.374475 ---
-Bulk 100.374475 
-Liquid 100.374475 
-Solid 0.000000 ---
-Pressure 7600.96 Temperature 2095.19 
-Partition 100.373691 ---
-Bulk 100.373691 
-Liquid 100.373691 
-Solid 0.000000 ---
-Pressure 7308.40 Temperature 2035.98 
-Partition 100.373074 ---
-Bulk 100.373074 
-Liquid 100.373074 
-Solid 0.000000 ---
-Pressure 7015.85 Temperature 1975.56 
-Partition 100.372663 ---
-Bulk 100.372663 
-Liquid 100.372663 
-Solid 0.000000 ---
-Pressure 6723.33 Temperature 1913.95 
-Partition 100.372502 ---
-Bulk 100.372502 
-Liquid 100.372502 
-Solid 0.000000 ---
-Pressure 6430.81 Temperature 1851.18 
-Partition 100.372644 ---
-Bulk 100.372644 
-Liquid 100.372644 
-Solid 0.000000 ---
-Pressure 6138.32 Temperature 1787.27 
-Partition 100.373158 ---
-Bulk 100.373158 
-Liquid 100.373158 
-Solid 0.000000 ---
-Pressure 5845.85 Temperature 1722.26 
-Partition 100.374128 ---
-Bulk 100.374128 
-Liquid 100.374128 
-Solid 0.000000 ---
-Pressure 5553.39 Temperature 1656.18 
-Partition 100.375663 ---
-Bulk 100.375663 
-Liquid 100.375663 
-Solid 0.000000 ---
-Pressure 5260.95 Temperature 1589.07 
-Partition 100.377902 ---
-Bulk 100.377902 
-Liquid 100.377902 
-Solid 0.000000 ---
-Pressure 4968.52 Temperature 1520.97 
-Partition 100.381034 ---
-Bulk 100.381034 
-Liquid 100.381034 
-Solid 0.000000 ---
-Pressure 4676.12 Temperature 1451.92 
-Partition 100.397117 
-Bulk 100.397117 
-Liquid 68.783374 
-Solid 31.613743 
-olivine_0 1.279847 
-clinopyroxene_0 21.611981 
-feldspar_0 7.765308 
-spinel_0 0.956607 
-Pressure 4383.73 Temperature 1381.96 
-Partition 100.398911 
-Bulk 100.398911 
-Liquid 21.091910 
-Solid 79.307001 
-olivine_0 8.657760 
-clinopyroxene_0 33.977262 
-feldspar_0 35.418077 
-spinel_0 1.253903 
-Pressure 4091.36 Temperature 1311.14 
-Partition 100.399749 
-Bulk 100.399749 
-Liquid 8.832874 
-Solid 91.566875 
-olivine_0 12.215896 
-clinopyroxene_0 33.954967 
-feldspar_0 43.718535 
-spinel_0 1.376798 
-spinel_1 0.300680 
-Pressure 3799.00 Temperature 1239.50 
-Partition 100.374533 
-Bulk 100.374533 
-Liquid 5.112967 
-Solid 95.261566 
-olivine_0 14.391925 
-clinopyroxene_0 30.779302 
-clinopyroxene_1 2.068980 
-feldspar_0 46.675903 
-spinel_0 1.127086 
-spinel_1 0.130615 
-apatite 0.087754 
-Pressure 3506.67 Temperature 1167.09 
-Partition 100.335138 
-Bulk 100.335138 
-Liquid 3.505070 
-Solid 96.830068 
-olivine_0 15.137285 
-clinopyroxene_0 28.506073 
-clinopyroxene_1 4.260831 
-clinopyroxene_2 1.001560 
-feldspar_0 46.881772 
-spinel_0 0.901204 
-apatite 0.141343 
-Pressure 3214.35 Temperature 1093.97 
-Partition 100.312532 
-Bulk 100.312532 
+Pressure 30767.80 Temperature 1208.60 
+Partition 99.934965 
+Bulk 99.934965 
 Liquid 0.000000 ---
-Solid 100.312532 
-olivine_0 3.301393 
-garnet_0 10.327647 
-clinopyroxene_0 24.793913 
-clinopyroxene_1 5.049808 
-clinopyroxene_2 9.053498 
-hornblende_0 9.323690 
-biotite_0 0.058312 
-feldspar_0 37.699035 
-spinel_0 0.516498 
-apatite 0.188739 
+Solid 99.934965 
+olivine_0 55.660933 
+garnet_0 15.060986 
+orthopyroxene_0 13.873652 
+clinopyroxene_0 14.311820 
+biotite_0 0.262254 
+spinel_0 0.647757 
+apatite 0.049544 
+water 0.068020 
+Pressure 30473.90 Temperature 1200.07 
+Partition 99.934866 
+Bulk 99.934866 
+Liquid 0.000000 ---
+Solid 99.934866 
+olivine_0 55.657416 
+garnet_0 15.071796 
+orthopyroxene_0 13.869233 
+clinopyroxene_0 14.309619 
+biotite_0 0.262232 
+spinel_0 0.647006 
+apatite 0.049544 
+water 0.068020 
+Pressure 30180.00 Temperature 1191.53 
+Partition 99.934768 
+Bulk 99.934768 
+Liquid 0.000000 ---
+Solid 99.934768 
+olivine_0 55.653793 
+garnet_0 15.082783 
+orthopyroxene_0 13.864417 
+clinopyroxene_0 14.307742 
+biotite_0 0.262210 
+spinel_0 0.646260 
+apatite 0.049544 
+water 0.068020 
+Pressure 29886.10 Temperature 1182.99 
+Partition 99.934670 
+Bulk 99.934670 
+Liquid 0.000000 ---
+Solid 99.934670 
+olivine_0 55.650060 
+garnet_0 15.093964 
+orthopyroxene_0 13.859205 
+clinopyroxene_0 14.306172 
+biotite_0 0.262188 
+spinel_0 0.645517 
+apatite 0.049544 
+water 0.068020 
+Pressure 29592.20 Temperature 1174.45 
+Partition 99.934573 
+Bulk 99.934573 
+Liquid 0.000000 ---
+Solid 99.934573 
+olivine_0 55.646216 
+garnet_0 15.105335 
+orthopyroxene_0 13.853617 
+clinopyroxene_0 14.304897 
+biotite_0 0.262166 
+spinel_0 0.644779 
+apatite 0.049544 
+water 0.068020 
+Pressure 29298.40 Temperature 1165.91 
+Partition 99.934476 
+Bulk 99.934476 
+Liquid 0.000000 ---
+Solid 99.934476 
+olivine_0 55.642256 
+garnet_0 15.116922 
+orthopyroxene_0 13.847644 
+clinopyroxene_0 14.303904 
+biotite_0 0.262143 
+spinel_0 0.644043 
+apatite 0.049544 
+water 0.068020 
+Pressure 29004.50 Temperature 1157.36 
+Partition 99.934379 
+Bulk 99.934379 
+Liquid 0.000000 ---
+Solid 99.934379 
+olivine_0 55.638178 
+garnet_0 15.128699 
+orthopyroxene_0 13.841326 
+clinopyroxene_0 14.303179 
+biotite_0 0.262121 
+spinel_0 0.643312 
+apatite 0.049544 
+water 0.068020 
+Pressure 28710.70 Temperature 1148.82 
+Partition 99.934283 
+Bulk 99.934283 
+Liquid 0.000000 ---
+Solid 99.934283 
+olivine_0 55.633980 
+garnet_0 15.140700 
+orthopyroxene_0 13.834647 
+clinopyroxene_0 14.302708 
+biotite_0 0.262099 
+spinel_0 0.642585 
+apatite 0.049544 
+water 0.068020 
+Pressure 28416.90 Temperature 1140.28 
+Partition 99.934187 
+Bulk 99.934187 
+Liquid 0.000000 ---
+Solid 99.934187 
+olivine_0 55.629657 
+garnet_0 15.152920 
+orthopyroxene_0 13.827628 
+clinopyroxene_0 14.302480 
+biotite_0 0.262076 
+spinel_0 0.641861 
+apatite 0.049544 
+water 0.068020 
+Pressure 28123.10 Temperature 1131.73 
+Partition 99.934092 
+Bulk 99.934092 
+Liquid 0.000000 ---
+Solid 99.934092 
+olivine_0 55.625207 
+garnet_0 15.165365 
+orthopyroxene_0 13.820278 
+clinopyroxene_0 14.302482 
+biotite_0 0.262054 
+spinel_0 0.641142 
+apatite 0.049544 
+water 0.068020 
+Pressure 27829.40 Temperature 1123.19 
+Partition 99.933997 
+Bulk 99.933997 
+Liquid 0.000000 ---
+Solid 99.933997 
+olivine_0 55.620626 
+garnet_0 15.178048 
+orthopyroxene_0 13.812601 
+clinopyroxene_0 14.302701 
+biotite_0 0.262031 
+spinel_0 0.640426 
+apatite 0.049544 
+water 0.068020 
+Pressure 27535.60 Temperature 1114.64 
+Partition 99.933903 
+Bulk 99.933903 
+Liquid 0.000000 ---
+Solid 99.933903 
+olivine_0 55.615910 
+garnet_0 15.190963 
+orthopyroxene_0 13.804617 
+clinopyroxene_0 14.303125 
+biotite_0 0.262009 
+spinel_0 0.639715 
+apatite 0.049544 
+water 0.068020 
+Pressure 27241.90 Temperature 1106.09 
+Partition 99.933809 
+Bulk 99.933809 
+Liquid 0.000000 ---
+Solid 99.933809 
+olivine_0 55.611056 
+garnet_0 15.204135 
+orthopyroxene_0 13.796318 
+clinopyroxene_0 14.303742 
+biotite_0 0.261986 
+spinel_0 0.639008 
+apatite 0.049544 
+water 0.068020 
+Pressure 26948.20 Temperature 1097.54 
+Partition 99.933776 
+Bulk 99.933776 
+Liquid 0.000000 ---
+Solid 99.933776 
+olivine_0 55.342343 
+garnet_0 14.818883 
+orthopyroxene_0 13.928644 
+clinopyroxene_0 14.359442 
+biotite_0 0.261990 
+spinel_0 0.638560 
+apatite 0.049544 
+chlorite_0 0.534370 
+Pressure 26654.50 Temperature 1088.99 
+Partition 99.933683 
+Bulk 99.933683 
+Liquid 0.000000 ---
+Solid 99.933683 
+olivine_0 55.337374 
+garnet_0 14.831599 
+orthopyroxene_0 13.920951 
+clinopyroxene_0 14.360035 
+biotite_0 0.261967 
+spinel_0 0.637864 
+apatite 0.049544 
+chlorite_0 0.534349 
+Pressure 26360.80 Temperature 1080.44 
+Partition 99.933591 
+Bulk 99.933591 
+Liquid 0.000000 ---
+Solid 99.933591 
+olivine_0 55.332259 
+garnet_0 14.844559 
+orthopyroxene_0 13.912999 
+clinopyroxene_0 14.360786 
+biotite_0 0.261944 
+spinel_0 0.637172 
+apatite 0.049544 
+chlorite_0 0.534327 
+Pressure 26067.20 Temperature 1071.89 
+Partition 99.933499 
+Bulk 99.933499 
+Liquid 0.000000 ---
+Solid 99.933499 
+olivine_0 55.326993 
+garnet_0 14.857787 
+orthopyroxene_0 13.904779 
+clinopyroxene_0 14.361685 
+biotite_0 0.261922 
+spinel_0 0.636484 
+apatite 0.049544 
+chlorite_0 0.534305 
+Pressure 25773.50 Temperature 1063.34 
+Partition 99.933407 
+Bulk 99.933407 
+Liquid 0.000000 ---
+Solid 99.933407 
+olivine_0 55.321571 
+garnet_0 14.871272 
+orthopyroxene_0 13.896319 
+clinopyroxene_0 14.362718 
+biotite_0 0.261899 
+spinel_0 0.635801 
+apatite 0.049544 
+chlorite_0 0.534283 
+Pressure 25479.90 Temperature 1054.79 
+Partition 99.933316 
+Bulk 99.933316 
+Liquid 0.000000 ---
+Solid 99.933316 
+olivine_0 55.315992 
+garnet_0 14.885034 
+orthopyroxene_0 13.887613 
+clinopyroxene_0 14.363875 
+biotite_0 0.261876 
+spinel_0 0.635122 
+apatite 0.049544 
+chlorite_0 0.534261 
+Pressure 25186.30 Temperature 1046.23 
+Partition 99.933226 
+Bulk 99.933226 
+Liquid 0.000000 ---
+Solid 99.933226 
+olivine_0 55.310249 
+garnet_0 14.899074 
+orthopyroxene_0 13.878678 
+clinopyroxene_0 14.365143 
+biotite_0 0.261853 
+spinel_0 0.634447 
+apatite 0.049544 
+chlorite_0 0.534238 
+Pressure 24892.70 Temperature 1037.68 
+Partition 99.933136 
+Bulk 99.933136 
+Liquid 0.000000 ---
+Solid 99.933136 
+olivine_0 55.304338 
+garnet_0 14.913400 
+orthopyroxene_0 13.869521 
+clinopyroxene_0 14.366511 
+biotite_0 0.261829 
+spinel_0 0.633776 
+apatite 0.049544 
+chlorite_0 0.534215 
+Pressure 24599.10 Temperature 1029.12 
+Partition 99.933047 
+Bulk 99.933047 
+Liquid 0.000000 ---
+Solid 99.933047 
+olivine_0 55.298255 
+garnet_0 14.928021 
+orthopyroxene_0 13.860152 
+clinopyroxene_0 14.367967 
+biotite_0 0.261806 
+spinel_0 0.633111 
+apatite 0.049544 
+chlorite_0 0.534192 

@@ -14,8 +14,8 @@
 // SUBROUTINE DECLARATIONS
 //-------------------------------------------------------------------
 
-double viscosity (double T, double P, double flowLaw[5], double grainSize, double dtime);
-double combVisc (double T, double P, double flowLawDiff[5], double flowLawDisl[5], double grainSize, double dtime);
+double viscosity (double T, double P, double flowLaw[6], double grainSize, double C_OH, double dtime);
+double combVisc (double T, double P, double flowLawDiff[6], double flowLawDisl[6], double grainSize, double C_OH, double dtime);
 double Psolidus (double T);
 double dPsolidusdT (double T);
 
@@ -27,11 +27,11 @@ double dPsolidusdT (double T);
  *
  *--------------------------------------------------------------------*/
 
-double viscosity (double T, double P, double flowLaw[5], double grainSize, double dtime) {
+double viscosity (double T, double P, double flowLaw[6], double grainSize, double C_OH, double dtime) {
 
 	double visc = 0.0;
 
-	visc = MPa2Pa*pow(pow(10.0,-flowLaw[2]) * pow(grainSize,flowLaw[4]) * exp((flowLaw[0] + P*flowLaw[1])/(R_G*T)), 1.0/flowLaw[3]) * pow(1.0/dtime, 1.0/flowLaw[3]-1.0);
+	visc = MPa2Pa*pow(pow(10.0,-flowLaw[2]) * pow(grainSize,flowLaw[4]) * pow(C_OH,-flowLaw[5]) * exp((flowLaw[0] + P*flowLaw[1])/(R_G*T)), 1.0/flowLaw[3]) * pow(1.0/dtime, 1.0/flowLaw[3]-1.0);
 
 	return visc;
 }
@@ -45,14 +45,14 @@ double viscosity (double T, double P, double flowLaw[5], double grainSize, doubl
  *
  *--------------------------------------------------------------------*/
 
-double combVisc (double T, double P, double flowLawDiff[5], double flowLawDisl[5], double grainSize, double dtime) {
+double combVisc (double T, double P, double flowLawDiff[6], double flowLawDisl[6], double grainSize, double C_OH, double dtime) {
 
 	double visc = 0.0;
 	double viscDryDiff = 0.0;
 	double viscDryDisl = 0.0;
 
-	viscDryDiff = viscosity(T, P, flowLawDiff, grainSize, dtime); // Korenaga & Karato (2008), dry diffusion
-	viscDryDisl = viscosity(T, P, flowLawDisl, grainSize, dtime); // Korenaga & Karato (2008), dry dislocation
+	viscDryDiff = viscosity(T, P, flowLawDiff, grainSize, C_OH, dtime); // Korenaga & Karato (2008), dry diffusion
+	viscDryDisl = viscosity(T, P, flowLawDisl, grainSize, C_OH, dtime); // Korenaga & Karato (2008), dry dislocation
 	visc = 1.0/(1.0/viscDryDiff + 1.0/viscDryDisl); // Parallel combination
 
 	return visc;

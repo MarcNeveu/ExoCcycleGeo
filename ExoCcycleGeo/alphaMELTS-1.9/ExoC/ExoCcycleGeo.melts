@@ -1,4 +1,6 @@
-Title: Allan et al. 1989 (see Ghiorso 1997)
+Title: Primitive mantle composition from McDonough & Sun (1995),
+Title: close to Palme and O'Neill (2014),
+Title: with H2O from Peslier et al. (2017)
 Title: Temperature input in Celsius, output in Kelvin
 Title: Pressure in bar
 Title: P-T are overwritten by those in the environment variable file
@@ -12,18 +14,17 @@ Title: Use table file to generate MELTS inputs along the P,T profile from ExoCcy
 Title: One row per P,T[,fO2] condition, column headers: Temperature, Pressure, logfO2
 Title: fO2 could deal with redox changes upon ascent a la Gaillard and Scaillet 2007 
 Title: May need to remove corresponding values in the env file.
-Initial Composition: SiO2 48.68
-Initial Composition: TiO2 1.01
-Initial Composition: Al2O3 17.64
-Initial Composition: Fe2O3 0.89
-Initial Composition: Cr2O3 0.03
-Initial Composition: FeO 7.59
-Initial Composition: MgO 9.10
-Initial Composition: CaO 12.45
-Initial Composition: Na2O 2.65
-Initial Composition: K2O 0.03
-Initial Composition: P2O5 0.08
-Initial Composition: H2O 0.20
+Initial Composition: SiO2 45.0
+Initial Composition: TiO2 0.201
+Initial Composition: Al2O3 4.45
+Initial Composition: Cr2O3 0.384
+Initial Composition: FeO 8.05
+Initial Composition: MgO 37.8
+Initial Composition: CaO 3.55
+Initial Composition: Na2O 0.36
+Initial Composition: K2O 0.029
+Initial Composition: P2O5 0.021
+Initial Composition: H2O 0.08
 Initial Temperature: 1747.74 !T[iLith] from ExoCcycleGeo
 Final Temperature: 1576.85
 Increment Temperature: 3.00

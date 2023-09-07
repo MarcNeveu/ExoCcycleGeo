@@ -1016,7 +1016,7 @@ int alphaMELTS (char *path, int nPTstart, int nPTend, char *aMELTS_setfile, doub
 	// --- Run alphaMELTS ---
 	printf("Running alphaMELTS\n");
 	system(doalarm);
-	printf("%s\n", aMELTSsys);
+//	printf("%s\n", aMELTSsys);
 	system(aMELTSsys);
 	printf("alphaMELTS ran successfully\n");
 	// Alternative if ever needed: echo [interactive inputs] |.
