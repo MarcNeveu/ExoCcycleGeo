@@ -12,6 +12,7 @@
 #include "Compression.h"
 #include "Geochem.h"
 #include "Geodynamics.h"
+#include <signal.h>
 
 //-------------------------------------------------------------------
 // MAIN PROGRAM
@@ -19,12 +20,16 @@
 
 int main(int argc, char *argv[]) {
 
+	int pid = getpid();
+
 	//-------------------------------------------------------------------
 	// Variable declarations and initializations
 	//-------------------------------------------------------------------
 
 	int i = 0;
 	int recover = 0;
+	int t = 0;
+	int t_reset = 0;
 
 	int n_inputs = 25;
 	double *input = (double*) malloc(n_inputs*sizeof(double));
@@ -78,7 +83,7 @@ int main(int argc, char *argv[]) {
 	int imax = 0;                      // Index of outermost grid zone of melting in MELTS output
 	int iCMB = 0;                      // Index of grid zone that corresponds to core-mantle boundary
 
-	int nslopeAvg = 5;                 // Target number of data points used for averaging melt fraction slope in the mantle
+	int nslopeAvg = 3;                 // Target number of data points used for averaging melt fraction slope in the mantle
 	int islope = 0;                    // Actual numbers of data points used for averaging melt fraction slope in the mantle
 
 	double slope = 0.0;                // Average melt fraction slope in the mantle (bar-1)
@@ -400,6 +405,12 @@ int main(int argc, char *argv[]) {
 	printf("|--------------------------------------------------------------|\n");
 
 	printf("\n");
+
+	int timesteps = (int) ((tend-tstart)/dtime0);
+	if (timesteps <= 0) timesteps = 1;
+	double FCoutgas_mem[timesteps][2];        // Memorized outgassing flux in case MELTS calculations fluctuate too much (mol s-1) TODO this only works if timestep doesn't change, but it will
+	for (i=0;i<timesteps;i++) FCoutgas_mem[i][0] = 0.0; FCoutgas_mem[i][1] = 0.0;
+
 	printf("Computing geo C fluxes through time...\n");
 
 	// Get pressure and density profiles with depth, accounting for compression and self-gravity
@@ -947,12 +958,21 @@ int main(int argc, char *argv[]) {
 
 		ir = 0;
 		for (i=iCMB;i<NR;i++) {
-			if (P[i] < 1.0e10) { // 10 GPa is above MELTS upper limit.
-				if (T[i]-Kelvin > TminMELTS) {
-					fprintf(fout, "%g %g\n", P[i]/bar2Pa, T[i]-Kelvin); // Don't input below 750 C to avoid MELTS crashing.
-					ir++;
+			if (P[i] > PminMELTS && P[i] < PmaxMELTS) { // Nominally, 1 to 4 GPa
+				if (staglid) {
+					if (T[i]-Kelvin > TminMELTS) {
+						fprintf(fout, "%g %g\n", P[i]/bar2Pa, T[i]-Kelvin); // Don't input below 750 C to avoid MELTS crashing.
+						ir++;
+					}
+					else break;
 				}
-				else break;
+				else { // Adiabatic profile through to the surface at mid-ocean ridges in plate tectonics mode
+					if (Tadiab[i]-Kelvin > TminMELTS) {
+						fprintf(fout, "%g %g\n", P[i]/bar2Pa, Tadiab[i]-Kelvin); // Don't input below 750 C to avoid MELTS crashing.
+						ir++;
+					}
+					else break;
+				}
 			}
 		}
 		fclose(fout);
@@ -974,16 +994,28 @@ int main(int argc, char *argv[]) {
 		j = 0;
 		for (i=iCMB+1;i<NR;i++) {
 			Meltfrac[i] = 0.0;
-			if (P[i] < 1.0e10) { // 10 GPa is above MELTS upper limit.
+			if (P[i] > PminMELTS && P[i] < PmaxMELTS) { // Nominally, 1 to 4 GPa
 				if (sys_tbl[j][4] > 0.0 && (sys_tbl[j][13] < 1.5*sys_tbl[j][14] || sys_tbl[j][4] == 1.0)) { // Don't store if volume melt fraction negative or if density of melt > n*density of solid
-					if (T[i]-Kelvin > TminMELTS) { // There was no input below 750 C to avoid MELTS crashing.
-						if (fabs(1.0-P[i]/(sys_tbl[j][0]*bar2Pa)) > 1.0e-3) printf("ExoCcycleGeo: pressures from grid (%g bar) and MELTS (%g bar) misaligned at grid index %d\n", P[i]/bar2Pa, sys_tbl[j][0], i);
-						if (fabs(1.0-T[i]/ sys_tbl[j][1]        ) > 1.0e-3) printf("ExoCcycleGeo: temperatures from grid (%g K) and MELTS (%g K) misaligned at grid index %d\n", T[i], sys_tbl[j][1], i);
-						Meltfrac[i] = sys_tbl[j][3];
-						rhomelt = sys_tbl[j][13]*1000.0; // g cm-3 to kg m-3, taken at depth of highest melt fraction, for calculation of thickness of new crust generated
-						if (imin == 0) imin = i;
+					if (staglid) {
+						if (T[i]-Kelvin > TminMELTS) { // There was no input below 750 C to avoid MELTS crashing.
+							if (fabs(1.0-P[i]/(sys_tbl[j][0]*bar2Pa)) > 1.0e-3) printf("ExoCcycleGeo: pressures from grid (%g bar) and MELTS (%g bar) misaligned at grid index %d\n", P[i]/bar2Pa, sys_tbl[j][0], i);
+							if (fabs(1.0-T[i]/ sys_tbl[j][1]        ) > 1.0e-3) printf("ExoCcycleGeo: temperatures from grid (%g K) and MELTS (%g K) misaligned at grid index %d\n", T[i], sys_tbl[j][1], i);
+							Meltfrac[i] = sys_tbl[j][3];
+							rhomelt = sys_tbl[j][13]*1000.0; // g cm-3 to kg m-3, taken at depth of highest melt fraction, for calculation of thickness of new crust generated
+							if (imin == 0) imin = i;
+						}
+						imax = i;
 					}
-					imax = i;
+					else { // Compare with Tadiab for plate tectonics
+						if (Tadiab[i]-Kelvin > TminMELTS) { // There was no input below 750 C to avoid MELTS crashing.
+							if (fabs(1.0-P[i]/(sys_tbl[j][0]*bar2Pa)) > 1.0e-3) printf("ExoCcycleGeo: pressures from grid (%g bar) and MELTS (%g bar) misaligned at grid index %d\n", P[i]/bar2Pa, sys_tbl[j][0], i);
+							if (fabs(1.0-Tadiab[i]/ sys_tbl[j][1]   ) > 1.0e-3) printf("ExoCcycleGeo: temperatures from grid (%g K) and MELTS (%g K) misaligned at grid index %d\n", T[i], sys_tbl[j][1], i);
+							Meltfrac[i] = sys_tbl[j][3];
+							rhomelt = sys_tbl[j][13]*1000.0; // g cm-3 to kg m-3, taken at depth of highest melt fraction, for calculation of thickness of new crust generated
+							if (imin == 0) imin = i;
+						}
+						imax = i;
+					}
 				}
 				j++;
 			}
@@ -993,33 +1025,33 @@ int main(int argc, char *argv[]) {
 		slope = 0.0;
 		islope = 0;
 		ir = 0;
-		if (imax > imin) {
-			if (Meltfrac[imin] > 0.0) {
-//				printf("ExoCcycleGeo: alphaMELTS could only calculate melting down to depth %g km (melt fraction %.2g > 0.1), extrapolating melting curve to 0 linearly with depth\n", (r_p-r[imin])/km2m, Meltfrac[imin]);
-				// Extrapolate starting from last 5 indices, provided melt fraction of all is < 1 (otherwise, use less indices)
-				if (imax-imin > 5) { // Only do this if there are > 5 grid zones of melt, otherwise chances are the slope will be skewed.
-					for (i=imin;i<imin+nslopeAvg;i++) {
-						if (P[i+1]-P[i] == 0) printf("ExoCcycleGeo: Can't extrapolate rock melting curve with pressure because denominator is zero\n");
-						else {
-							if (Meltfrac[i] < Meltfrac[i+1]) { // Ensure we're below depth of max melt
-								slope = slope + (Meltfrac[i+1]-Meltfrac[i])/(P[i+1]-P[i]);
-								islope++;
-							}
-						}
-					}
-					slope = slope/(double) islope;
-
-					if (islope) {
-						for (i=imin-1;i>iCMB;i--) {
-							meltfrac = Meltfrac[i+1] + slope*(P[i]-P[i+1]);
-							if (meltfrac > 0.0) Meltfrac[i] = meltfrac;
-							else break;
-							ir++;
-						}
-					}
-				}
-			}
-		}
+//		if (imax > imin) {
+//			if (Meltfrac[imin] > 0.0) {
+////				printf("ExoCcycleGeo: alphaMELTS could only calculate melting down to depth %g km (melt fraction %.2g > 0.1), extrapolating melting curve to 0 linearly with depth\n", (r_p-r[imin])/km2m, Meltfrac[imin]);
+//				// Extrapolate starting from last 5 indices, provided melt fraction of all is < 1 (otherwise, use less indices)
+//				if (imax-imin > 5) { // Only do this if there are > 5 grid zones of melt, otherwise chances are the slope will be skewed.
+//					for (i=imin;i<imin+nslopeAvg;i++) {
+//						if (P[i+1]-P[i] == 0) printf("ExoCcycleGeo: Can't extrapolate rock melting curve with pressure because denominator is zero\n");
+//						else {
+//							if (Meltfrac[i] < Meltfrac[i+1]) { // Ensure we're below depth of max melt
+//								slope = slope + (Meltfrac[i+1]-Meltfrac[i])/(P[i+1]-P[i]);
+//								islope++;
+//							}
+//						}
+//					}
+//					slope = slope/(double) islope;
+//
+//					if (islope) {
+//						for (i=imin-1;i>iCMB;i--) {
+//							meltfrac = Meltfrac[i+1] + slope*(P[i]-P[i+1]);
+//							if (meltfrac > 0.0) Meltfrac[i] = meltfrac;
+//							else break;
+//							ir++;
+//						}
+//					}
+//				}
+//			}
+//		}
 
 //		// 2d. Alternatively, use analytical formulation of McKenzie & Bickle (1988) at the expense of compositional versatility?
 //		// McKenzie & Bickle (1988): determine Tsolidus at P, then Tliquidus at P, then T'(T, Tsol, Tliq), then X(T')
@@ -1187,7 +1219,7 @@ int main(int argc, char *argv[]) {
 		// Assumes all melt generated reaches the surface and all ascending mantle parcels reach pressures < Psolidus (Kite et al. 2009)
 
 //		if (imax > imin) {
-			if(realtime > 0.5*Gyr2sec) {
+			if(realtime > tstart) {
 				title[0] = '\0';
 				if (cmdline == 1) strncat(title,path,strlen(path)-20);
 				else strncat(title,path,strlen(path)-18);
@@ -1196,7 +1228,10 @@ int main(int argc, char *argv[]) {
 				if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 				else {
 					fprintf(fout, "Time (Gyr) \t Pressure (bar) \t Depth (km) \t Melt fraction \t Temp (K) \t Density (kg m-3)\n");
-					for (i=imin-ir-100;i<=NR;i++) fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g\n", realtime/Gyr2sec, P[i]/bar2Pa, (r_p-r[i])/km2m, Meltfrac[i], T[i], rho[i]);
+					for (i=iCMB;i<=NR;i++) {
+						if (P[i] > PminMELTS && P[i] < PmaxMELTS)
+							fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g\n", realtime/Gyr2sec, P[i]/bar2Pa, (r_p-r[i])/km2m, Meltfrac[i], T[i], rho[i]);
+					}
 				}
 				fclose (fout);
 
@@ -1211,7 +1246,7 @@ int main(int argc, char *argv[]) {
 		zCrust = zCrust + zNewcrust*dtime;
 
 		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iLith]-r[iCMB]); // mol C s-1
-		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iLith]-r[iCMB])*0.4; // mol C s-1, 40% melt reaches the surface
+//		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iLith]-r[iCMB])*0.4; // mol C s-1, 40% melt reaches the surface
 //		if (realtime < 1.0*Gyr2sec) FCoutgas = FCoutgas * (realtime/(0.4*Gyr2sec)-1.5); // Ramp up outgassing from 0.6 to 1.0 Gyr to avoid step function
 
 //      // Alternative: Kite et al. (2009) eq. 25 They didn't scale with mass: [sum melt fraction (depth)] * [mass (depth)] / [total mass between surf and Psolidus]. Also their typo: P0>Pf.
@@ -1222,6 +1257,35 @@ int main(int argc, char *argv[]) {
 //
 //		// Includes extrusive and intrusive melting because both degas (K09).
 //		FCoutgas = deltaCvolcEarth * Rmelt/(RmeltEarth*mEarth); // mol C s-1. Accurate for Earth magma C concentrations, but for other mantle concentrations, should be calculated explicitly (MELTS?)
+
+		// If MELTS calculation results are too erratic, stick to an approximate time envelope of the MELTS calculation.
+		// Could improve this extrapolation by memorizing FCoutgas through time.
+//		if (realtime > tstart) {
+//			FCoutgas_mem[t][0] = log(FCoutgas);
+//			FCoutgas_mem[t][1] = realtime/Gyr2sec;
+//
+//			if (t >= nslopeAvg) {
+//				if (t >= t_reset+nslopeAvg) { // Enough reliable data to update the slope
+//					slope = 0.0;
+//					islope = 0;
+//					for (i=t-nslopeAvg;i<t;i++) {
+//						if (FCoutgas_mem[i][1]-FCoutgas_mem[i-1][1] == 0) printf("ExoCcycleGeo: Can't extrapolate outgassing flux curve with time because denominator is zero\n");
+//						else {
+//							slope = slope + (FCoutgas_mem[i][0]-FCoutgas_mem[i-1][0])/(FCoutgas_mem[i][1]-FCoutgas_mem[i-1][1]);
+//							islope++;
+//						}
+//					}
+//					slope = slope/(double) islope;
+//					printf("slope = %g (log mol C s-1)/Gyr\n", slope);
+//				}
+//
+//				if (FCoutgas <=0 || fabs(1.0 - FCoutgas / (FCoutgas_mem[t-1][0] + slope*(realtime/Gyr2sec-FCoutgas_mem[t-1][1]))) > 0.1) { // Threshold: 10% variation from trend
+//					FCoutgas = exp(FCoutgas_mem[t-1][0] + slope * (realtime/Gyr2sec - FCoutgas_mem[t-1][1]));
+//					t_reset = t;
+//				}
+//			}
+//			t++;
+//		}
 
 		printf("\n");
 		printf("Time: %g Gyr\n", realtime/Gyr2sec);
@@ -1236,7 +1300,7 @@ int main(int argc, char *argv[]) {
 		printf("Mantle convection timescale (Myr)       | ~50-200           | %.4g \n", tConv/Myr2sec);
 		printf("Rayleigh number                         | ~1e6-1e7          | %.2g \n", Ra);
 		printf("Half-mantle depth (km)                  | 1450              | %.4g \n", (r_p-r_c-zLith)/2.0/km2m);
-		printf("Heat flux (mW m-2)                      | 86 (radiodecay 40)| %.2g \n", k*(Tmantle-Tsurf)/zLith*1000.0);
+		printf("Heat flux (mW m-2)                      | 86 (radiodecay 40)| %.3g \n", k*(Tmantle-Tsurf)/zLith*1000.0);
 		printf("Thickness of lithosphere (km)           | 100               | %.3g \n", zLith/km2m);
 		printf("Temperature at base of lithosphere (ºC) | 1400              | %.4g \n", Tmantle-Kelvin);
 		printf("Adiabatic temperature gradient (K km-1) | 0.5               | %.2g \n", (T[iCMB+1]-Tmantle)/(r_p-zLith-r_c)*km2m);
@@ -1479,5 +1543,6 @@ int main(int argc, char *argv[]) {
 
 	Rf_endEmbeddedR(0);                                     // Close R and CHNOSZ
 
+	kill(-1*pid, SIGKILL);
 	return EXIT_SUCCESS;
 }

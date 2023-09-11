@@ -55,6 +55,8 @@
 #define beta 1.0/3.0                    // Exponent for scaling Nusselt number to Rayleigh number, 1/4 to 1/3 (Schubert et al. 2001)
 #define Ra_c 1707.762                   // Critical Rayleigh number for convection, http://home.iitk.ac.in/~sghorai/NOTES/benard/node15.html, see also Koschmieder EL (1993) Benard cells and Taylor vortices, Cambridge U Press, p. 20.
 #define TminMELTS 750.0                 // Don't run MELTS below 750ºC to avoid it crashing (ºC)
+#define PmaxMELTS 4.0e9                 // Don't run pMELTS at pressures above 4 GPa
+#define PminMELTS 0.1e9                 // Don't run pMELTS at pressures below 1 GPa
 
 // Atmosphere parameters
 //#define xCO2g0 355.0e-6               // Reference atmospheric CO2 mixing ratio (ppmv)
