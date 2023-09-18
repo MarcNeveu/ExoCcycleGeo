@@ -16,7 +16,7 @@ ExoCcycleGeo v20.x Input File
 | Outer layer material code (see planmat dbase) | 201          |
 | Radionuclides (1 hi, 2 int, 3 lo, def. int)   | 3            |
 | Rheology (0 dry oliv, 1 wet oliv KK08)        | 0            |
-| Tectonic mode (0 plate tecton, 1 stagnant lid)| 0            |
+| Tectonic mode (0 plate tecton, 1 stagnant lid)| 1            |
 | Upper mantle redox (1 surf, 2 HM, 3 FMQ, 4 IW)| 3            |
 | Mass fraction of C in the mantle (def. 0.002) | 0.002        |
 | Mole fraction of C outgassed as CH4/(CH4+CO2) | 0.5          |

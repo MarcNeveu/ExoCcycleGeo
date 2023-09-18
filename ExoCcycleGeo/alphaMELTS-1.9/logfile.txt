@@ -13,6 +13,6 @@ ALPHAMELTS_MINF 0.005
 ALPHAMELTS_MASSIN  0.001
 
 ! alphamelts run by mneveu 
-! Time: Sep 11 2023 at 10:53 
+! Time: Sep 18 2023 at 11:48 
 ! Command line: -f /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoC_env.txt -b /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoCbatch.txt -p /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ 
 ! Settings file: /Users/mneveu/eclipse-workspace/ExoCcycleGeo/ExoCcycleGeo/alphaMELTS-1.9/ExoC/ExoC_env.txt

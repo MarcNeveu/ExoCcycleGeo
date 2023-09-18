@@ -72,6 +72,7 @@
 #define nelts 31                        // 30 elements + 1 extra column in WaterRock/Molar_masses.txt
 #define rhoH2O 1000.0                   // Density of water (kg m-3)
 #define tcirc (1.0e7*Yr2sec)			// Timescale of ocean cycling through seafloor hydrothermal systems (Mottl 1983; Kadko et al. 1995) (s)
+#define molmassC 0.012                // Molar mass of carbon (kg mol-1)
 
 #ifndef EXOCCYCLEGEO_H_
 #define EXOCCYCLEGEO_H_
