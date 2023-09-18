@@ -346,7 +346,7 @@ int main(int argc, char *argv[]) {
 	rheology = (int) input[i]; i++;      // 0 = dry olivine (KK08), 1 = wet olivine (KK08)
 	staglid = (int) input[i]; i++;       // 0 = plate tectonics, 1 = stagnant lid
 	redox = (int) input[i]; i++;         // 1 = current Earth surface, 2 = hematite-magnetite, 3 = fayalite-magnetite-quartz, 4 = iron-wustite, code won't run with other values
-    magmaCmassfrac = input[i]; i++;      // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; Hartley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
+    magmaCmassfrac = input[i]/1.0e6; i++; // Mass fraction of C in magmas. default 350 ppm; range 115-670 ppm (Aiuppa et al. 2021)
     fCH4 = input[i]; i++;				 // Mole fraction of C outgassed as CH4, relative to CH4+CO2
     // Surface inputs
 	Mocean = input[i]; i++;              // Mass of ocean (kg, default: Earth=1.4e21)
@@ -1306,8 +1306,8 @@ int main(int argc, char *argv[]) {
 		printf("---------------------------------------------------------------------------\n");
 		printf("New crust generation rate (m Myr-1)     | 40                | %.3g \n", zNewcrust*Myr2sec);
 		printf("New crust density (kg m-3)              | 2800              | %.4g \n", rhomelt);
-		printf("C and H2O outgassing rate (mol s-1)     | 115000            | %.6g \n", FCoutgas);
-		printf("Magma C mass fraction                   | 0.1-0.65%%         | %.3g%% \n", magmaCmassfrac*100.0);
+		printf("C and H2O outgassing rate (mol s-1)     | 129000-407000     | %.6g \n", FCoutgas);
+		printf("Magma C mass fraction (ppm)             | 350 (115-670)     | %.3g%% \n", magmaCmassfrac*1.0e6);
 		printf("Convective velocity (cm yr-1)           | ~1                | %.2g \n", vConv*100.0*1.0e-6*Myr2sec);
 		printf("Mantle convection timescale (Myr)       | ~50-200           | %.4g \n", tConv/Myr2sec);
 		printf("Rayleigh number                         | ~1e6-1e7          | %.2g \n", Ra);
