@@ -57,6 +57,8 @@
 #define TminMELTS 750.0                 // Don't run MELTS below 750ºC to avoid it crashing (ºC)
 #define PmaxMELTS 4.0e9                 // Don't run pMELTS at pressures above 4 GPa
 #define PminMELTS 0.1e9                 // Don't run pMELTS at pressures below 1 GPa
+#define nParamFlowLaw 8                 // Number of flow law parameters
+#define Fe_FeMg_ref 0.1                 // Reference Fe/(Fe+Mg) ratio in flow law
 
 // Atmosphere parameters
 //#define xCO2g0 355.0e-6               // Reference atmospheric CO2 mixing ratio (ppmv)

@@ -179,53 +179,75 @@ int main(int argc, char *argv[]) {
 	double meltmass = 0.0;             // Total mass of outgassing mantle melt (kg)
 	double rhomelt = 0.0;              // Density of the melt (kg m-3)
 	double zNewcrust = 0.0;            // Thickness of crust generated from mantle melt (m)
-	double Tupbnd = 0.0;               // Temperature in conductive upper boundary layer (K)
 	double zLith = 0.0;                // Depth of lithosphere (both thermal: geotherm inflexion to adiabat and mechanical: brittle-ductile transition) (m)
 	double tConv = 0.0;                // Convection timescale (s), 200 Myr for deep Earth mantle today
 	double vConv = 0.0;                // Convective velocity (m s-1)
 	double p = 0.0;                    // Frank-Kamenetskii parameter (Solomatov 1995; denoted theta in Foley et al. 2020 chapter) (no dim)
 
 	// Viscosity law constants (can't be #define'd because they are used as exponents)
-	double KK08DryOlDiff[6];           // Dry diffusion creep flow law (Korenaga & Karato 2008)
-	KK08DryOlDiff[0] = 261.0e3;        // Activation energy (J mol-1), default 261.0±28e3
-	KK08DryOlDiff[1] = 6.0e-6;         // Activation volume (m3 mol-1), default 6±5e-6
-	KK08DryOlDiff[2] = 5.25;           // Exponent of pre-exponential factor, default 5.25±0.03
-	KK08DryOlDiff[3] = 1.0;            // Stress exponent
-	KK08DryOlDiff[4] = 2.98;           // Grain size exponent, default 2.98±0.02
-	KK08DryOlDiff[5] = 0.0;            // Water content exponent, default 0.0 (this is a dry law)
+	double DryOlDiff[nParamFlowLaw];   // Dry diffusion creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2009))
+	DryOlDiff[0] = 261.0e3;            // Activation energy (J mol-1), default 261.0±28e3 (KK08)
+	DryOlDiff[1] = 6.0e-6;             // Activation volume (m3 mol-1), default 6±5e-6 (KK08)
+	DryOlDiff[2] = 5.25;               // Exponent of pre-exponential factor, default 5.25±0.03 (KK08)
+	DryOlDiff[3] = 1.0;                // Stress exponent (KK08)
+	DryOlDiff[4] = 2.98;               // Grain size exponent, default 2.98±0.02 (KK08)
+	DryOlDiff[5] = 0.0;                // Water content exponent, default 0.0 (this is a dry law) (KK08)
+	DryOlDiff[6] = -45.0e3;            // Activation energy dependence on Fe/(Fe+Mg) (Zhao et al. 2009 by analogy with gbs-accommodated dislocation creep, as did Ruedas et al. 2013 eq. 13)
+	DryOlDiff[7] = 1.5;                // Fe/(Fe+Mg) exponent (Zhao et al. 2009 by analogy with gbs-accommodated dislocation creep, as did Ruedas et al. 2013)
 
-	double KK08WetOlDiff[6];		   // Wet diffusion creep flow law
-	KK08WetOlDiff[0] = 387.0e3;        // Activation energy (J mol-1), default 387±53e3
-	KK08WetOlDiff[1] = 25.0e-6;        // Activation volume (m3 mol-1), default 25±4e-6
-	KK08WetOlDiff[2] = 4.32;           // Exponent of pre-exponential factor, default 4.32±0.38
-	KK08WetOlDiff[3] = 1.0;            // Stress exponent
-	KK08WetOlDiff[4] = 2.56;           // Grain size exponent, default 2.56±0.24
-	KK08WetOlDiff[5] = 1.93;           // Water content exponent, default 1.93±0.07
+	double WetOlDiff[nParamFlowLaw];   // Wet diffusion creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2018))
+	WetOlDiff[0] = 387.0e3;            // Activation energy (J mol-1), default 387±53e3
+	WetOlDiff[1] = 25.0e-6;            // Activation volume (m3 mol-1), default 25±4e-6
+	WetOlDiff[2] = 4.32;               // Exponent of pre-exponential factor, default 4.32±0.38
+	WetOlDiff[3] = 1.0;                // Stress exponent
+	WetOlDiff[4] = 2.56;               // Grain size exponent, default 2.56±0.24
+	WetOlDiff[5] = 1.93;               // Water content exponent, default 1.93±0.07
+	WetOlDiff[6] = -120.0e3;           // Activation energy dependence on Fe/(Fe+Mg) (Zhao et al. 2009 by analogy with dislocation creep)
+	WetOlDiff[7] = 0.5;                // Fe/(Fe+Mg) exponent (Zhao et al. 2009  by analogy with dislocation creep)
 
-	double KK08DryOlDisl[6];           // Dry dislocation creep flow law (Korenaga & Karato 2008)
-	KK08DryOlDisl[0] = 610.0e3;        // Activation energy (J mol-1), default 610±30e3
-	KK08DryOlDisl[1] = 13.0e-6;        // Activation volume (m3 mol-1), default 13±8e-6
-	KK08DryOlDisl[2] = 6.09;           // Exponent of pre-exponential factor, default 6.09±0.11
-	KK08DryOlDisl[3] = 4.94;           // Stress exponent, default 4.94±0.05
-	KK08DryOlDisl[4] = 0.0;            // Grain size exponent
-	KK08DryOlDisl[5] = 0.0;            // Water content exponent, default 0.0 (this is a dry law)
+	double DryOlDisl[nParamFlowLaw];   // Dry dislocation creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2009))
+	DryOlDisl[0] = 610.0e3;            // Activation energy (J mol-1), default 610±30e3
+	DryOlDisl[1] = 13.0e-6;            // Activation volume (m3 mol-1), default 13±8e-6
+	DryOlDisl[2] = 6.09;               // Exponent of pre-exponential factor, default 6.09±0.11
+	DryOlDisl[3] = 4.94;               // Stress exponent, default 4.94±0.05
+	DryOlDisl[4] = 0.0;                // Grain size exponent
+	DryOlDisl[5] = 0.0;                // Water content exponent, default 0.0 (this is a dry law)
+	DryOlDisl[6] = -45.0e3;            // Activation energy dependence on Fe/(Fe+Mg) (Zhao et al. 2009, really for grain boundary sliding-accommodated dislocation)
+	DryOlDisl[7] = 1.5;                // Fe/(Fe+Mg) exponent (Zhao et al. 2009)
 
-	double KK08WetOlDisl[6];           // Wet dislocation creep flow law
-	KK08WetOlDisl[0] = 523.0e3;        // Activation energy (J mol-1), default 523±100e3
-	KK08WetOlDisl[1] = 4.0e-6;         // Activation volume (m3 mol-1), default 4±3e-6
-	KK08WetOlDisl[2] = 0.6;            // Exponent of pre-exponential factor, default 0.6±0.5
-	KK08WetOlDisl[3] = 3.60;           // Stress exponent, default 3.60±0.24
-	KK08WetOlDisl[4] = 0.0;            // Grain size exponent
-	KK08WetOlDisl[5] = 1.95;           // Water content exponent, default 1.95±0.05
+	double WetOlDisl[nParamFlowLaw];   // Wet dislocation creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2018))
+	WetOlDisl[0] = 523.0e3;            // Activation energy (J mol-1), default 523±100e3
+	WetOlDisl[1] = 4.0e-6;             // Activation volume (m3 mol-1), default 4±3e-6
+	WetOlDisl[2] = 0.6;                // Exponent of pre-exponential factor, default 0.6±0.5
+	WetOlDisl[3] = 3.60;               // Stress exponent, default 3.60±0.24
+	WetOlDisl[4] = 0.0;                // Grain size exponent
+	WetOlDisl[5] = 1.95;               // Water content exponent, default 1.95±0.05
+	WetOlDisl[6] = -120.0e3;           // Activation energy dependence on Fe/(Fe+Mg) (Zhao et al. 2009)
+	WetOlDisl[7] = 0.5;                // Fe/(Fe+Mg) exponent (Zhao et al. 2009)
 
-	double flowLawDiff[6];
-	for (i=0;i<6;i++) flowLawDiff[i] = 0.0;
+	double flowLawDiff[nParamFlowLaw];
+	for (i=0;i<nParamFlowLaw;i++) flowLawDiff[i] = 0.0;
 
-	double flowLawDisl[6];
-	for (i=0;i<6;i++) flowLawDisl[i] = 0.0;
+	double flowLawDisl[nParamFlowLaw];
+	for (i=0;i<nParamFlowLaw;i++) flowLawDisl[i] = 0.0;
 
 	const double grainSize = 1.0e4;	   // Grain size for computation of viscosity and creep laws (µm)
-	const double C_OH = 300.0;         // ppm H/Si in the mantle (Korenaga & Karato 2008, citing Hirth & Kohlstedt 1996)
+	const double C_OH = 1000.0;        // ppm H/Si in the mantle (Korenaga & Karato 2008, citing Hirth & Kohlstedt 1996) TODO make this an input
+	const double Fe_FeMg = 1.0;        // Fe/(Fe+Mg) ratio TODO make this an input
+	const double fPx = 0.0;            // fraction of upper mantle that is pyroxene (the rest is assumed to be olivine) TODO make this an input
+
+//	printf("fPx \t Viscosity (Pa s)\n");
+//	for (i=0;i<100;i++) {
+//		printf("%g \t %g\n", (double)i/100.0, viscosity(1360.0+273.15, 0.3e9, WetOlDisl, grainSize, C_OH, Fe_FeMg, (double)i/100.0, 1.0/(2.0e-6)));
+//	}
+//	exit(0);
+//
+//	int tK = 1000;
+//	printf("T(K) \t Viscosity(Pa s)\n");
+//	for (tK=500;tK<2500;tK=tK+10) {
+//		printf("%g \t %g\n", (double)tK, viscosity(tK, 3.0e9, WetOlDiff, grainSize, C_OH, Fe_FeMg, fPx, 0.1*Gyr2sec));
+//	}
+//	exit(0);
 
 	// Quantities to be computed by continental weathering model
     int iResTime = 0;
@@ -484,14 +506,14 @@ int main(int argc, char *argv[]) {
 	switch (rheology) {
 	case 0: // Dry olivine rheology of Korenaga & Karato (2008)
 		for (i=0;i<6;i++) {
-			flowLawDiff[i] = KK08DryOlDiff[i];
-			flowLawDisl[i] = KK08DryOlDisl[i];
+			flowLawDiff[i] = DryOlDiff[i];
+			flowLawDisl[i] = DryOlDisl[i];
 		}
 		break;
 	case 1: // Wet olivine rheology of Korenaga & Karato (2008)
 		for (i=0;i<6;i++) {
-			flowLawDiff[i] = KK08WetOlDiff[i];
-			flowLawDisl[i] = KK08WetOlDisl[i];
+			flowLawDiff[i] = WetOlDiff[i];
+			flowLawDisl[i] = WetOlDisl[i];
 		}
 		break;
 	default:
@@ -897,10 +919,10 @@ int main(int argc, char *argv[]) {
 //		printf("Tmantle=%g T_CMB=%g Tp=%g\n", Tmantle, Tadiab[iCMB], Tp);
 
 		// Solomatov (1995) equation (24) stagnant lid scaling, see also Foley et al. (2020) chapter just before equation (4.5)
-		p = flowLawDiff[0]/(R_G*Tmantle*Tmantle)*(Tmantle-Tsurf); // TODO change flowlaw[0] based on rheology (combo, composition-dependent)
+		p = (flowLawDiff[0] + flowLawDiff[6]*(Fe_FeMg - Fe_FeMg_ref))/(R_G*Tmantle*Tmantle)*(Tmantle-Tsurf); // Taking diffusion creep as the dominant mechanism at low stress
 
 		//  Upper mantle viscosity
-		nu = combVisc(Tmantle, P[iLith], flowLawDiff, flowLawDisl, grainSize, C_OH, tConv)/rho[iLith];
+		nu = combVisc(Tmantle, P[iLith], flowLawDiff, flowLawDisl, grainSize, C_OH, Fe_FeMg, fPx, tConv)/rho[iLith];
 //		nu = 1.0e19/3500.0;
 //		nu = 1.0e16*exp((2.0e5 + P[(int)((iLith+iCMB)/2.0)]*1.1e-6)/(R_G*Tmantle))/rho[(int)((iLith+iCMB)/2)]; // Cízková et al. (2012)
 //		nu = 1.0e16*exp((2.0e5 + P[iCMB]*1.1e-6)/(R_G*(Tmantle - alpha*g[iCMB]*Tmantle/Cp * (r[iCMB] - 0.5*(r_p+r_c)))))/rho[iCMB]; // Cízková et al. (2012) for CMB depth
@@ -1307,7 +1329,7 @@ int main(int argc, char *argv[]) {
 		printf("New crust generation rate (m Myr-1)     | 40                | %.3g \n", zNewcrust*Myr2sec);
 		printf("New crust density (kg m-3)              | 2800              | %.4g \n", rhomelt);
 		printf("C and H2O outgassing rate (mol s-1)     | 129000-407000     | %.6g \n", FCoutgas);
-		printf("Magma C mass fraction (ppm)             | 350 (115-670)     | %.3g%% \n", magmaCmassfrac*1.0e6);
+		printf("Magma C mass fraction (ppm)             | 350 (115-670)     | %.3g \n", magmaCmassfrac*1.0e6);
 		printf("Convective velocity (cm yr-1)           | ~1                | %.2g \n", vConv*100.0*1.0e-6*Myr2sec);
 		printf("Mantle convection timescale (Myr)       | ~50-200           | %.4g \n", tConv/Myr2sec);
 		printf("Rayleigh number                         | ~1e6-1e7          | %.2g \n", Ra);
