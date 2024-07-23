@@ -1,5 +1,6 @@
 # Marc Neveu - created March 2, 2017. marc.f.neveu@nasa.gov
 #
+# 2024-Jul-23: for Saponite-Fe-Fe, fixed second parameter in -analytic to be "-1.630e-1", instead of "-1.630-1" 
 # 2020-Sep-18: added inert gases and corresponding aqueous species from phreeqc.dat, treated all gases as ideal
 # 2020-Aug-17: added Riebeckite and kinetic rates
 #
@@ -5703,7 +5704,7 @@ Saponite-Fe-Ca
 Saponite-Fe-Fe
 	Fe3.175Al.35Si3.65O10(OH)2 + 7.4 H+ = 0.35 Al+3 + 3.175 Fe+2 + 3.65 SiO2 + 4.7 H2O
 	log_k		18.9359
-	-analytic	5.762e1 -1.630-1 0 0 0 1.099e-4
+	-analytic	5.762e1 -1.630e-1 0 0 0 1.099e-4
 #	Range		0-300
 	-Vm		142.672
 #	Extrapol	supcrt92

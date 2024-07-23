@@ -385,7 +385,7 @@ int main(int argc, char *argv[]) {
     xgas[4] = input[i]; i++;             // H2O mixing ratio
 
 	printf("\n");
-	printf("ExoCcycleGeo v23.9\n");
+	printf("ExoCcycleGeo v24.7\n");
 	if (cmdline == 1) printf("Command line mode\n");
 
 	printf("|--------------------------------------------------------------|\n");

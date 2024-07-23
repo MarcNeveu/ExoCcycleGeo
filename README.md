@@ -105,8 +105,8 @@ Once installed, you might need to break the symbolic link between the command *g
 ## Compiling and linking instructions
 If you wish to modify the code, set up your compiler and linker so that all the relevant flags are added. My compiling and linking commands (executed in a Terminal window from within the *ExoCcycleGeo/Debug* folder) look like this:
  
-    gcc /usr/local/lib/gcc/x86_64-apple-darwin18.5.0/8.3.0/include -I/usr/local/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/Library/Frameworks/R.framework/Versions/4.0/Resources/include -I/Library/Frameworks/R.framework/Versions/4.0/Resources/library/RInside/include -O0 -g3 -Wall -c -fmessage-length=0 -o src/ExoCcycleGeo.o ../src/ExoCcycleGeo.c
-    gcc -L/usr/lib -L/usr/local/lib -L/Library/Frameworks/R.framework/Versions/4.0/Resources/lib -o ExoCcycleGeo src/ExoCcycleGeo.o /usr/local/lib/libiphreeqc-3.6.2.dylib /usr/local/lib/libiphreeqc.dylib /usr/local/lib/libiphreeqc.a -lR 
+    gcc -I/Library/Frameworks/R.framework/Versions/4.1/Resources/include -I/usr/local/include -I/Library/Frameworks/R.framework/Versions/4.1/Resources/library/RInside/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -O0 -g3 -Wall -c -fmessage-length=0 -o src/ExoCcycleGeo.o ../src/ExoCcycleGeo.c
+    gcc -L/Library/Frameworks/R.framework/Versions/4.1/Resources/lib -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib -o ExoCcycleGeo src/ExoCcycleGeo.o /usr/local/lib/libiphreeqc-3.7.3.dylib /usr/local/lib/libiphreeqc.dylib -lR
 
 You might need to specify the full path to gcc (e.g. */usr/local/bin/gcc*) rather than simply the *gcc* alias.
 
