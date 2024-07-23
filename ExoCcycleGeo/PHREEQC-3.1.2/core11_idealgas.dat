@@ -1,4 +1,5 @@
 # Marc Neveu - created March 2, 2017. marc.f.neveu@nasa.gov
+# Reference for database description: Neveu M., Desch S. J., Castillo-Rogez J. C. (2017) Aqueous geochemistry in icy world interiors: Equilibrium fluid, rock, and gas compositions, and fate of antifreezes and radionuclides. Geochimica et Cosmochimica Acta 212, 324-371. http://dx.doi.org/10.1016/j.gca.2017.06.023
 #
 # 2024-Jul-23: for Saponite-Fe-Fe, fixed second parameter in -analytic to be "-1.630e-1", instead of "-1.630-1" 
 # 2020-Sep-18: added inert gases and corresponding aqueous species from phreeqc.dat, treated all gases as ideal
@@ -37,6 +38,7 @@
 # MLS+03: http://dx.doi.org/10.2138/am-2003-5-613 (Goethite)
 # MS97: http://dx.doi.org/10.1016/S0016-7037(97)00241-X (HCl, MgSO4)
 # N17: https://doi.org/10.1016/j.gca.2017.06.023 ([(6)(CB)(CB)S], NH4-feldspar, NH4-muscovite)
+# PK04: https://doi.org/10.3133/ofr20041068 (kinetic rates for 56 solids)
 # R01: http://dx.doi.org/10.1016/S0016-7037(01)00761-X ([(6)(CB)(CB)S])
 # RHF79: http://pubs.er.usgs.gov/publication/b1452 (40 solids)
 # RH98: http://dx.doi.org/10.1016/S0016-7037(97)00345-1 ([(aro)-O-(aro)], Kerogen C128, C292, C515)
@@ -6666,9 +6668,9 @@ C2H4(g)
 	-delta_H	-3.930		kcal/mol
 	-analytic	-14.5616 0.0176 2192.2 0 0 -3.8657e-6
 #	Range		0-350
-#	-T_c		283 # K
-#	-P_c		50.53
-#	-Omega		0.085 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
+	-T_c		283 # K
+	-P_c		50.53
+	-Omega		0.085 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
 #	Extrapol	supcrt92
 #	Ref		Sho93
 
@@ -6678,9 +6680,9 @@ C2H6(g)
 	-delta_H	-4.509		kcal/mol
 	-analytic	-23.1154 0.0354 3289.1 0 0 -1.5637e-5
 #	Range		0-350
-#	-T_c		305 # K
-#	-P_c		48.16
-#	-Omega		0.100 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
+	-T_c		305 # K
+	-P_c		48.16
+	-Omega		0.100 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
 #	Extrapol	supcrt92
 #	Ref		HOK+98	
 
@@ -6689,9 +6691,9 @@ C3H8(g)
 	log_k		-2.876
 	-analytic	1.885	-2.55e-2 0 0 0 3.20e-5 # Not the best
 #	Range		0-350
-#	-T_c		369.522 # K
-#	-P_c		42.4924
-#	-Omega		0.152 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
+	-T_c		369.522 # K
+	-P_c		42.4924
+	-Omega		0.152 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
 #	Extrapol	supcrt92
 #	Ref		HOK+98
 
@@ -6702,9 +6704,9 @@ CH4(g)
 #	deltafH		-17.88		kcal/mol
 	-analytic	-24.027 4.7146e-3 372.27 6.4264 2.3362e5
 #	Range		0-350
-#	-T_c		190.6 # K
-#	-P_c		45.40
-#	-Omega		0.008 # phreeqc.dat
+	-T_c		190.6 # K
+	-P_c		45.40
+	-Omega		0.008 # phreeqc.dat
 #	Extrapol	supcrt92
 #	Ref		WEP+82, Kel60
 
@@ -6715,9 +6717,9 @@ CO(g)
 #	deltafH		-26.416		kcal/mol
 	-analytic	-8.0849 9.2114e-3 0 0 2.0813e5
 #	Range		0-350
-#	-T_c		133 # K
-#	-P_c		34.54
-#	-Omega		0.049 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
+	-T_c		133 # K
+	-P_c		34.54
+	-Omega		0.049 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
 #	Extrapol	supcrt92
 #	Ref		Sho93
 
@@ -6728,9 +6730,9 @@ CO2(g)
 #	deltafH		-94.051		kcal/mol
 	-analytic	-8.5938e1 -3.0431e-2 2.0702e3 3.2427e1 3.2328e1
 #	Range		0-350
-#	-T_c		304.25 # K
-#	-P_c		72.83 # atm, 7.38 MPa, http://webbook.nist.gov/cgi/cbook.cgi?ID=C124389&Units=SI&Mask=4#Thermo-Phase
-#	-Omega		0.225 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
+	-T_c		304.25 # K
+	-P_c		72.83 # atm, 7.38 MPa, http://webbook.nist.gov/cgi/cbook.cgi?ID=C124389&Units=SI&Mask=4#Thermo-Phase
+	-Omega		0.225 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
 #	Extrapol	supcrt92
 #	Ref		WEP+82, Kel60
 
@@ -6741,9 +6743,9 @@ H2(g)
 #	deltafH		0		kcal/mol
 	-analytic	-9.3114 4.6473e-3 -49.335 1.4341 1.2815e5
 #	Range		0-350
-#	-T_c		33.2 # K
-#	-P_c		12.80
-#	-Omega		0.225 # phreeqc.dat
+	-T_c		33.2 # K
+	-P_c		12.80
+	-Omega		0.225 # phreeqc.dat
 #	Extrapol	supcrt92
 #	Ref		WEP+82, Kel60
 
@@ -6754,9 +6756,9 @@ H2O(g)
 #	deltafH		-57.935		kcal/mol
 	-analytic	-1.4782e1 1.0752e-3 2.7519e3 2.7548 4.2945e1
 #	Range		0-350
-#	-T_c		647.3 # K
-#	-P_c		218.31
-#	-Omega		0.344 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
+	-T_c		647.3 # K
+	-P_c		218.31
+	-Omega		0.344 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
 #	Extrapol	supcrt92
 #	Ref		Joh90
 
@@ -6767,9 +6769,9 @@ H2S(g)
 #	deltafH		-4.931		kcal/mol
 	-analytic	-97.354 -3.1576e-2 1.8285e3 37.44 28.56
 #	Range		0-350
-#	-T_c		373.2 # K
-#	-P_c		88.20
-#	-Omega		0.1
+	-T_c		373.2 # K
+	-P_c		88.20
+	-Omega		0.1
 #	Extrapol	supcrt92
 #	Ref		WEP+82, Kel60
 
@@ -6780,9 +6782,9 @@ N2(g)
 #	deltafH		0		kcal/mol
 	-analytic	-58.453 1.818e-3 3199 17.909 -27460 # phreeqc.dat
 #	Range		0-350
-#	-T_c		126.2 # K
-#	-P_c		33.50
-#	-Omega		0.039
+	-T_c		126.2 # K
+	-P_c		33.50
+	-Omega		0.039
 #	Extrapol	supcrt92
 #	Ref		WEP+82, Kel60
 
@@ -6793,9 +6795,9 @@ NH3(g)
 #	deltafH		-11.021		kcal/mol
 	-analytic	-18.758 3.3670e-4 2.5113e3 4.8619 39.192
 #	Range		0-350
-#	-T_c		405.6 # K
-#	-P_c		111.3
-#	-Omega		0.25
+	-T_c		405.6 # K
+	-P_c		111.3
+	-Omega		0.25
 #	Extrapol	supcrt92
 #	Ref		WEP+82, Kel60
 
@@ -6806,9 +6808,9 @@ NO(g)
 #	deltafH		90.241		kJ/mol
 	-analytic	8.2147 -1.2708e-1 -6.0593e3 2.0504e1 -9.4551e1
 #	Range		0-300
-#	-T_c		180 # K
-#	-P_c		64.64
-#	-Omega		0.607 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
+	-T_c		180 # K
+	-P_c		64.64
+	-Omega		0.607 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
 #	Extrapol	supcrt92, Cp integration
 #	Ref		AS01, WEP+82 differ by 0.2 log K at 0C, 17 log K at 350C !! flag
 
@@ -6819,9 +6821,9 @@ NO2(g)
 #	deltafH		33.154		kJ/mol
 	-analytic	9.4389e1 -2.7511e-1 -1.6783e4 2.1127e1 -2.6191e2
 #	Range		0-300
-#	-T_c		431 # K
-#	-P_c		99.67
-#	-Omega		0 # Not found
+	-T_c		431 # K
+	-P_c		99.67
+	-Omega		0 # Not found
 #	Extrapol	Cp integration
 #	Ref		WEP+82
 
@@ -6832,9 +6834,9 @@ O2(g)
 #	deltafH		0		kcal/mol
 	-analytic	-7.5001 7.8981e-3 0.0 0.0 2.0027e5
 #	Range		0-300
-#	-T_c		154.6 # K phreeqc.dat
-#	-P_c		49.80 # phreeqc.dat
-#	-Omega		0.021 # phreeqc.dat
+	-T_c		154.6 # K phreeqc.dat
+	-P_c		49.80 # phreeqc.dat
+	-Omega		0.021 # phreeqc.dat
 #	Extrapol	supcrt92
 #	Ref		WEP+82, Kel60
 
@@ -6845,9 +6847,9 @@ SO2(g)
 #	deltafH		0		kcal/mol
 	-analytic	-2.0205e1 2.8861e-3 1.4862e3 5.2958 1.2721e5
 #	Range		0-300
-#	-T_c		430 # K
-#	-P_c		77.67
-#	-Omega		0.251 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
+	-T_c		430 # K
+	-P_c		77.67
+	-Omega		0.251 # http://webserver.dmt.upm.es/~isidoro/dat1/eGAS.pdf
 #	Extrapol	supcrt92
 #	Ref		WEP+82, Kel60
 
@@ -6880,7 +6882,7 @@ Mtg(g)
 RATES
 
 #----------
-# 56 Solids
+# 56 Solids from PK04
 #----------
 
 # --- SiO2 polymorphs ---
