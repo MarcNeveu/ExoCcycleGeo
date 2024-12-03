@@ -1,0 +1,270 @@
+Title: Temperature in Celsius
+
+Pressure 500.00 Temperature 1421.32 
+Partition 100.350000 
+Bulk 100.350000 
+Liquid 85.251314 
+Solid 15.098686 
+olivine_0 8.123276 
+feldspar_0 6.975410 
+Pressure 1500.00 Temperature 1427.48 
+Partition 85.253314 
+Bulk 85.253314 
+Liquid 83.506216 
+Solid 1.747099 
+olivine_0 0.287564 
+feldspar_0 1.459535 
+Pressure 2500.00 Temperature 1433.25 
+Partition 83.508216 
+Bulk 83.508216 
+Liquid 82.013842 
+Solid 1.494373 
+olivine_0 0.259753 
+feldspar_0 1.234621 
+Pressure 3500.00 Temperature 1446.70 
+Partition 82.015842 
+Bulk 82.015842 
+Liquid 78.444603 
+Solid 3.571239 
+clinopyroxene_0 3.147223 
+feldspar_0 0.424016 
+Pressure 4500.00 Temperature 1457.79 
+Partition 78.446603 
+Bulk 78.446603 
+Liquid 75.831468 
+Solid 2.615135 
+clinopyroxene_0 2.362890 
+feldspar_0 0.252245 
+Pressure 5500.00 Temperature 1468.44 
+Partition 75.833468 
+Bulk 75.833468 
+Liquid 73.555967 
+Solid 2.277501 
+clinopyroxene_0 2.277501 
+Pressure 6500.00 Temperature 1479.21 
+Partition 73.556967 
+Bulk 73.556967 
+Liquid 71.327103 
+Solid 2.229864 
+clinopyroxene_0 2.174633 
+spinel_0 0.055231 
+Pressure 7500.00 Temperature 1489.99 
+Partition 71.329103 
+Bulk 71.329103 
+Liquid 69.192418 
+Solid 2.136685 
+clinopyroxene_0 2.071784 
+spinel_0 0.064901 
+Pressure 8500.00 Temperature 1500.74 
+Partition 69.194418 
+Bulk 69.194418 
+Liquid 67.161608 
+Solid 2.032810 
+clinopyroxene_0 1.974009 
+spinel_0 0.058801 
+Pressure 9500.00 Temperature 1511.46 
+Partition 67.163608 
+Bulk 67.163608 
+Liquid 65.229417 
+Solid 1.934192 
+clinopyroxene_0 1.881784 
+spinel_0 0.052408 
+Pressure 10500.00 Temperature 1522.15 
+Partition 65.231417 
+Bulk 65.231417 
+Liquid 63.390729 
+Solid 1.840688 
+clinopyroxene_0 1.794713 
+spinel_0 0.045975 
+Pressure 11500.00 Temperature 1532.80 
+Partition 63.392729 
+Bulk 63.392729 
+Liquid 61.640607 
+Solid 1.752122 
+clinopyroxene_0 1.712423 
+spinel_0 0.039700 
+Pressure 12500.00 Temperature 1543.42 
+Partition 61.642607 
+Bulk 61.642607 
+Liquid 59.974338 
+Solid 1.668269 
+clinopyroxene_0 1.634543 
+spinel_0 0.033726 
+Pressure 13500.00 Temperature 1554.01 
+Partition 59.976338 
+Bulk 59.976338 
+Liquid 58.387482 
+Solid 1.588856 
+clinopyroxene_0 1.560702 
+spinel_0 0.028154 
+Pressure 14500.00 Temperature 1567.29 
+Partition 58.389482 
+Bulk 58.389482 
+Liquid 56.450803 
+Solid 1.938679 
+garnet_0 1.938679 
+Pressure 15500.00 Temperature 1580.50 
+Partition 56.451803 
+Bulk 56.451803 
+Liquid 54.637432 
+Solid 1.814371 
+garnet_0 1.814371 
+Pressure 16500.00 Temperature 1593.27 
+Partition 54.638432 
+Bulk 54.638432 
+Liquid 52.997292 
+Solid 1.641140 
+garnet_0 1.641140 
+Pressure 17500.00 Temperature 1605.63 
+Partition 52.998292 
+Bulk 52.998292 
+Liquid 51.509501 
+Solid 1.488791 
+garnet_0 1.488791 
+Pressure 18500.00 Temperature 1617.59 
+Partition 51.510501 
+Bulk 51.510501 
+Liquid 50.156374 
+Solid 1.354127 
+garnet_0 1.354127 
+Pressure 19500.00 Temperature 1629.19 
+Partition 50.157374 
+Bulk 50.157374 
+Liquid 48.922838 
+Solid 1.234537 
+garnet_0 1.234537 
+Pressure 20500.00 Temperature 1640.43 
+Partition 48.923838 
+Bulk 48.923838 
+Liquid 47.795959 
+Solid 1.127878 
+garnet_0 1.127878 
+Pressure 21500.00 Temperature 1651.33 
+Partition 47.796959 
+Bulk 47.796959 
+Liquid 46.764584 
+Solid 1.032375 
+garnet_0 1.032375 
+Pressure 22500.00 Temperature 1661.92 
+Partition 46.765584 
+Bulk 46.765584 
+Liquid 45.819035 
+Solid 0.946549 
+garnet_0 0.946549 
+Pressure 23500.00 Temperature 1672.20 
+Partition 45.820035 
+Bulk 45.820035 
+Liquid 44.950876 
+Solid 0.869159 
+garnet_0 0.869159 
+Pressure 24500.00 Temperature 1682.20 
+Partition 44.951876 
+Bulk 44.951876 
+Liquid 44.152718 
+Solid 0.799157 
+garnet_0 0.799157 
+Pressure 25500.00 Temperature 1691.92 
+Partition 44.153718 
+Bulk 44.153718 
+Liquid 43.418061 
+Solid 0.735657 
+garnet_0 0.735657 
+Pressure 26500.00 Temperature 1701.39 
+Partition 43.419061 
+Bulk 43.419061 
+Liquid 42.741162 
+Solid 0.677900 
+garnet_0 0.677900 
+Pressure 27500.00 Temperature 1710.60 
+Partition 42.742162 
+Bulk 42.742162 
+Liquid 42.116925 
+Solid 0.625237 
+garnet_0 0.625237 
+Pressure 28500.00 Temperature 1719.58 
+Partition 42.117925 
+Bulk 42.117925 
+Liquid 41.540814 
+Solid 0.577110 
+garnet_0 0.577110 
+Pressure 29500.00 Temperature 1728.34 
+Partition 41.541814 
+Bulk 41.541814 
+Liquid 41.008778 
+Solid 0.533036 
+garnet_0 0.533036 
+Pressure 30500.00 Temperature 1736.90 
+Partition 41.009778 
+Bulk 41.009778 
+Liquid 40.517183 
+Solid 0.492596 
+garnet_0 0.492596 
+Pressure 31500.00 Temperature 1746.18 
+Partition 40.518183 
+Bulk 40.518183 
+Liquid 39.934282 
+Solid 0.583901 
+garnet_0 0.267516 
+clinopyroxene_0 0.316386 
+Pressure 32500.00 Temperature 1755.80 
+Partition 39.936282 
+Bulk 39.936282 
+Liquid 39.321829 
+Solid 0.614453 
+garnet_0 0.151717 
+clinopyroxene_0 0.462736 
+Pressure 33500.00 Temperature 1765.36 
+Partition 39.323829 
+Bulk 39.323829 
+Liquid 38.733512 
+Solid 0.590317 
+garnet_0 0.121132 
+clinopyroxene_0 0.469185 
+Pressure 34500.00 Temperature 1774.84 
+Partition 38.735512 
+Bulk 38.735512 
+Liquid 38.167270 
+Solid 0.568242 
+garnet_0 0.092845 
+clinopyroxene_0 0.462387 
+corundum 0.013009 
+Pressure 35500.00 Temperature 1784.04 
+Partition 38.170270 
+Bulk 38.170270 
+Liquid 37.620967 
+Solid 0.549303 
+garnet_0 0.064631 
+clinopyroxene_0 0.410674 
+corundum 0.073998 
+Pressure 36500.00 Temperature 1793.15 
+Partition 37.623967 
+Bulk 37.623967 
+Liquid 37.099398 
+Solid 0.524569 
+garnet_0 0.051763 
+clinopyroxene_0 0.400224 
+corundum 0.072583 
+Pressure 37500.00 Temperature 1802.17 
+Partition 37.102398 
+Bulk 37.102398 
+Liquid 36.601034 
+Solid 0.501364 
+garnet_0 0.040513 
+clinopyroxene_0 0.389568 
+corundum 0.071283 
+Pressure 38500.00 Temperature 1811.10 
+Partition 36.604034 
+Bulk 36.604034 
+Liquid 36.124476 
+Solid 0.479558 
+garnet_0 0.030679 
+clinopyroxene_0 0.378781 
+corundum 0.070098 
+Pressure 39500.00 Temperature 1819.96 
+Partition 36.127476 
+Bulk 36.127476 
+Liquid 35.668442 
+Solid 0.459034 
+garnet_0 0.022086 
+clinopyroxene_0 0.367923 
+corundum 0.069025 

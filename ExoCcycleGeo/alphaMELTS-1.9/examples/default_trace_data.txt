@@ -1,0 +1,426 @@
+Valency: Na 1
+Ionic Radius: Na 1.18
+Valency: P 5 
+Ionic Radius: P 0.38
+Valency: K 1
+Ionic Radius: K 1.51
+Valency: Sc 3
+Ionic Radius: Sc 0.870
+Valency: Ti 4
+Ionic Radius: Ti 0.74
+Valency: V 5
+Ionic Radius: V 0.54
+Valency: Cr 3
+Ionic Radius: Cr 0.615
+Valency: Mn 2
+Ionic Radius: Mn 0.96
+Valency: Co 2
+Ionic Radius: Co 0.90
+Valency: Ni 2
+Ionic Radius: Ni 0.690
+Valency: Ga 3
+Ionic Radius: Ga 0.620
+Valency: Rb 1
+Ionic Radius: Rb 1.61
+Valency: Sr 2
+Ionic Radius: Sr 1.26
+Valency: Y 3
+Ionic Radius: Y 1.019
+Valency: Nb 5
+Ionic Radius: Nb 0.64
+Valency: Cd 2
+Ionic Radius: Cd 1.10
+Valency: In 3
+Ionic Radius: In 0.92
+Valency: Cs 1
+Ionic Radius: Cs 1.74
+Valency: Ba 2
+Ionic Radius: Ba 1.42
+Valency: La 3
+Ionic Radius: La 1.16
+Valency: Ce 3
+Ionic Radius: Ce 1.143
+Valency: Pr 3
+Ionic Radius: Pr 1.126
+Valency: Nd 3
+Ionic Radius: Nd 1.109
+Valency: Sm 3
+Ionic Radius: Sm 1.079
+Valency: Eu 3
+Ionic Radius: Eu 1.066
+Valency: Gd 3
+Ionic Radius: Gd 1.053
+Valency: Tb 3
+Ionic Radius: Tb 1.040
+Valency: Dy 3
+Ionic Radius: Dy 1.027
+Valency: Ho 3
+Ionic Radius: Ho 1.015
+Valency: Er 3
+Ionic Radius: Er 1.004
+Valency: Tm 3
+Ionic Radius: Tm 0.994
+Valency: Yb 3
+Ionic Radius: Yb 0.985
+Valency: Lu 3
+Ionic Radius: Lu 0.977
+Valency: Ta 5
+Ionic Radius: Ta 0.64
+Valency: Ra 2
+Ionic Radius: Ra 1.48
+Valency: Ac 3
+Ionic Radius: Ac 1.25
+Valency: Th 4
+Ionic Radius: Th 1.035
+Valency: Pa
+Ionic Radius: Pa 5 0.78
+Valency: U 4
+Ionic Radius: U 0.975
+Set D: anthophyllite H2O 1.0
+Set D: apatite Ce 3.02
+Set D: apatite Pr 3.44
+Set D: apatite Nd 3.86
+Set D: apatite Sm 4.7
+Set D: apatite Eu 4.575
+Set D: apatite Gd 4.45
+Set D: apatite Tb 4.325
+Set D: apatite Dy 4.2
+Set D: apatite Ho 3.72
+Set D: apatite Er 3.24
+Set D: apatite Tm 2.76
+Set D: apatite Yb 2.28
+Set D: apatite Lu 1.8
+Set D: apatite H2O 1.0
+Set D: clinoamphibole Na 0.53
+Set D: clinoamphibole K 1.2
+Set D: clinoamphibole Ti 1.5
+Set D: clinoamphibole Cr 0.34
+Set D: clinoamphibole Mn 0.6
+Set D: clinoamphibole Co 1.4
+Set D: clinoamphibole Ga 1.0
+Set D: clinoamphibole Rb 0.2
+Set D: clinoamphibole Sr 0.12
+Set D: clinoamphibole Y 1.0
+Set D: clinoamphibole Zr 0.5
+Set D: clinoamphibole Nb 0.8
+Set D: clinoamphibole Cs 0.14
+Set D: clinoamphibole Ba 0.76
+Set D: clinoamphibole La 0.17
+Set D: clinoamphibole Ce 0.26
+Set D: clinoamphibole Pr 0.35
+Set D: clinoamphibole Nd 0.44
+Set D: clinoamphibole Sm 0.76
+Set D: clinoamphibole Eu 0.88
+Set D: clinoamphibole Gd 0.86
+Set D: clinoamphibole Tb 0.83
+Set D: clinoamphibole Dy 0.78
+Set D: clinoamphibole Ho 0.73
+Set D: clinoamphibole Er 0.68
+Set D: clinoamphibole Tm 0.64
+Set D: clinoamphibole Yb 0.59
+Set D: clinoamphibole Lu 0.51
+Set D: clinoamphibole Ta 0.38
+Set D: clinoamphibole Pb 0.1
+Set D: clinoamphibole H2O 1
+Set D: clinopyroxene Na 0.2
+Set D: clinopyroxene P 0.03
+Set D: clinopyroxene K 0.002
+Set D: clinopyroxene Sc 0.51
+Set D: clinopyroxene Ti 0.18
+Set D: clinopyroxene V 1.31
+Set D: clinopyroxene Cr 3.0
+Set D: clinopyroxene Mn 0.44
+Set D: clinopyroxene Co 2.0
+Set D: clinopyroxene Ni 9.4
+Set D: clinopyroxene Cu 0.36
+Set D: clinopyroxene Ga 0.74
+Set D: clinopyroxene Rb 0.001
+Set D: clinopyroxene Sr 0.1283
+Set D: clinopyroxene Y 0.2
+Set D: clinopyroxene Zr 0.1
+Set D: clinopyroxene Nb 0.02
+Set D: clinopyroxene Cs 0.0002
+Set D: clinopyroxene Ba 0.0005
+Set D: clinopyroxene La 0.054
+Set D: clinopyroxene Ce 0.098
+Set D: clinopyroxene Pr 0.15
+Set D: clinopyroxene Nd 0.21
+Set D: clinopyroxene Sm 0.26
+Set D: clinopyroxene Eu 0.31
+Set D: clinopyroxene Gd 0.3
+Set D: clinopyroxene Tb 0.31
+Set D: clinopyroxene Dy 0.33
+Set D: clinopyroxene Ho 0.31
+Set D: clinopyroxene Er 0.3
+Set D: clinopyroxene Tm 0.29
+Set D: clinopyroxene Yb 0.28
+Set D: clinopyroxene Lu 0.28
+Set D: clinopyroxene Hf 0.22
+Set D: clinopyroxene Ta 0.02
+Set D: clinopyroxene Pb 0.01
+Set D: clinopyroxene Th 1.30E-03
+Set D: clinopyroxene U 9.00E-04
+Set D: clinopyroxene H2O 0.004
+Set D: cummingtonite Na 0.53
+Set D: cummingtonite K 1.2
+Set D: cummingtonite Ti 1.5
+Set D: cummingtonite Cr 0.34
+Set D: cummingtonite Mn 0.6
+Set D: cummingtonite Co 1.4
+Set D: cummingtonite Ga 1.0
+Set D: cummingtonite Rb 0.2
+Set D: cummingtonite Sr 0.12
+Set D: cummingtonite Y 1.0
+Set D: cummingtonite Zr 0.5
+Set D: cummingtonite Nb 0.8
+Set D: cummingtonite Cs 0.14
+Set D: cummingtonite Ba 0.76
+Set D: cummingtonite La 0.17
+Set D: cummingtonite Ce 0.26
+Set D: cummingtonite Pr 0.35
+Set D: cummingtonite Nd 0.44
+Set D: cummingtonite Sm 0.76
+Set D: cummingtonite Eu 0.88
+Set D: cummingtonite Gd 0.86
+Set D: cummingtonite Tb 0.83
+Set D: cummingtonite Dy 0.78
+Set D: cummingtonite Ho 0.73
+Set D: cummingtonite Er 0.68
+Set D: cummingtonite Tm 0.64
+Set D: cummingtonite Yb 0.59
+Set D: cummingtonite Lu 0.51
+Set D: cummingtonite Ta 0.38
+Set D: cummingtonite Pb 0.1
+Set D: cummingtonite H2O 1.0
+Set D: feldspar Na 0.39
+Set D: feldspar K 0.18
+Set D: feldspar Sc 0.02
+Set D: feldspar Ti 0.04
+Set D: feldspar Cr 0.05
+Set D: feldspar Mn 0.05
+Set D: feldspar Co 0.05
+Set D: feldspar Rb 0.03
+Set D: feldspar Sr 2.0
+Set D: feldspar Y 0.03
+Set D: feldspar Zr 0.01
+Set D: feldspar Nb 0.01
+Set D: feldspar Cs 0.025
+Set D: feldspar Ba 0.33
+Set D: feldspar La 0.27
+Set D: feldspar Ce 0.2
+Set D: feldspar Pr 0.17
+Set D: feldspar Nd 0.14
+Set D: feldspar Sm 0.11
+Set D: feldspar Eu 0.73
+Set D: feldspar Gd 0.066
+Set D: feldspar Tb 0.06
+Set D: feldspar Dy 0.055
+Set D: feldspar Ho 0.048
+Set D: feldspar Er 0.041
+Set D: feldspar Tm 0.036
+Set D: feldspar Yb 0.031
+Set D: feldspar Lu 0.025
+Set D: feldspar Hf 0.01
+Set D: feldspar Pb 0.36
+Set D: feldspar Th 0.05
+Set D: feldspar U 0.11
+Set D: feldspar H2O 0.0005
+Set D: garnet Na 0.04
+Set D: garnet P 0.1
+Set D: garnet K 0.001
+Set D: garnet Sc 2.27
+Set D: garnet Ti 0.28
+Set D: garnet V 1.57
+Set D: garnet Cr 5.5
+Set D: garnet Mn 2.05
+Set D: garnet Co 2.0
+Set D: garnet Ga 5.0
+Set D: garnet Rb 0.0007
+Set D: garnet Sr 6.00E-04
+Set D: garnet Y 2.11
+Set D: garnet Zr 0.32
+Set D: garnet Nb 0.07
+Set D: garnet Cs 0.0002
+Set D: garnet Ba 1.00E-05
+Set D: garnet La 0.01
+Set D: garnet Ce 0.021
+Set D: garnet Pr 0.054
+Set D: garnet Nd 0.087
+Set D: garnet Sm 0.217
+Set D: garnet Eu 0.32
+Set D: garnet Gd 0.498
+Set D: garnet Tb 0.75
+Set D: garnet Dy 1.06
+Set D: garnet Ho 1.53
+Set D: garnet Er 2.0
+Set D: garnet Tm 3.0
+Set D: garnet Yb 4.03
+Set D: garnet Lu 5.5
+Set D: garnet Hf 0.44
+Set D: garnet Ta 0.04
+Set D: garnet Pb 0.00001
+Set D: garnet Th 1.50E-03
+Set D: garnet U 9.60E-03
+Set D: garnet H2O 0.0004
+Set D: hornblende Na 0.53
+Set D: hornblende K 1.2
+Set D: hornblende Ti 1.5
+Set D: hornblende Cr 0.34
+Set D: hornblende Mn 0.6
+Set D: hornblende Co 1.4
+Set D: hornblende Ga 1.0
+Set D: hornblende Rb 0.2
+Set D: hornblende Sr 0.12
+Set D: hornblende Y 1.0
+Set D: hornblende Zr 0.5
+Set D: hornblende Nb 0.8
+Set D: hornblende Cs 0.14
+Set D: hornblende Ba 0.76
+Set D: hornblende La 0.17
+Set D: hornblende Ce 0.26
+Set D: hornblende Pr 0.35
+Set D: hornblende Nd 0.44
+Set D: hornblende Sm 0.76
+Set D: hornblende Eu 0.88
+Set D: hornblende Gd 0.86
+Set D: hornblende Tb 0.83
+Set D: hornblende Dy 0.78
+Set D: hornblende Ho 0.73
+Set D: hornblende Er 0.68
+Set D: hornblende Tm 0.64
+Set D: hornblende Yb 0.59
+Set D: hornblende Lu 0.51
+Set D: hornblende Ta 0.38
+Set D: hornblende Pb 0.1
+Set D: hornblende H2O 1.0
+Set D: lawsonite H2O 1.0
+Set D: muscovite H2O 1.0
+Set D: olivine Na 0.00001
+Set D: olivine K 0.00018
+Set D: olivine Sc 0.16
+Set D: olivine Ti 0.02
+Set D: olivine V 0.06
+Set D: olivine Cr 0.3
+Set D: olivine Mn 0.5
+Set D: olivine Co 1.0
+Set D: olivine Ni 9.4
+Set D: olivine Ga 0.04
+Set D: olivine Rb 0.00018
+Set D: olivine Sr 0.00019
+Set D: olivine Y 0.005
+Set D: olivine Zr 0.01
+Set D: olivine Nb 0.005
+Set D: olivine Cs 0.00005
+Set D: olivine Ba 0.0003
+Set D: olivine La 0.0004
+Set D: olivine Ce 0.0005
+Set D: olivine Pr 0.0008
+Set D: olivine Nd 0.001
+Set D: olivine Sm 0.0013
+Set D: olivine Eu 0.0016
+Set D: olivine Gd 0.0015
+Set D: olivine Tb 0.0015
+Set D: olivine Dy 0.0017
+Set D: olivine Ho 0.0016
+Set D: olivine Er 0.0015
+Set D: olivine Tm 0.0015
+Set D: olivine Yb 0.0015
+Set D: olivine Lu 0.0015
+Set D: olivine Ta 0.005
+Set D: olivine Pb 0.0001
+Set D: olivine Th 0.00001
+Set D: olivine U 0.00001
+Set D: olivine H2O 0.0004
+Set D: orthoamphibole Na 0.53
+Set D: orthoamphibole K 1.2
+Set D: orthoamphibole Ti 1.5
+Set D: orthoamphibole Cr 0.34
+Set D: orthoamphibole Mn 0.6
+Set D: orthoamphibole Co 1.4
+Set D: orthoamphibole Ga 1.0
+Set D: orthoamphibole Rb 0.2
+Set D: orthoamphibole Sr 0.12
+Set D: orthoamphibole Y 1.0
+Set D: orthoamphibole Zr 0.5
+Set D: orthoamphibole Nb 0.8
+Set D: orthoamphibole Cs 0.14
+Set D: orthoamphibole Ba 0.76
+Set D: orthoamphibole La 0.17
+Set D: orthoamphibole Ce 0.26
+Set D: orthoamphibole Pr 0.35
+Set D: orthoamphibole Nd 0.44
+Set D: orthoamphibole Sm 0.76
+Set D: orthoamphibole Eu 0.88
+Set D: orthoamphibole Gd 0.86
+Set D: orthoamphibole Tb 0.83
+Set D: orthoamphibole Dy 0.78
+Set D: orthoamphibole Ho 0.73
+Set D: orthoamphibole Er 0.68
+Set D: orthoamphibole Tm 0.64
+Set D: orthoamphibole Yb 0.59
+Set D: orthoamphibole Lu 0.51
+Set D: orthoamphibole Ta 0.38
+Set D: orthoamphibole Pb 0.1
+Set D: orthoamphibole H2O 1.0
+Set D: orthopyroxene Na 0.05
+Set D: orthopyroxene P 0.03
+Set D: orthopyroxene K 0.001
+Set D: orthopyroxene Sc 0.33
+Set D: orthopyroxene Ti 0.1
+Set D: orthopyroxene V 0.9
+Set D: orthopyroxene Cr 1.5
+Set D: orthopyroxene Mn 0.7
+Set D: orthopyroxene Co 2.0
+Set D: orthopyroxene Ni 9.4
+Set D: orthopyroxene Ga 0.2
+Set D: orthopyroxene Rb 0.0006
+Set D: orthopyroxene Sr 0.007
+Set D: orthopyroxene Y 0.005
+Set D: orthopyroxene Zr 0.03
+Set D: orthopyroxene Nb 0.005
+Set D: orthopyroxene Cs 0.0001
+Set D: orthopyroxene Ba 0.0001
+Set D: orthopyroxene La 0.002
+Set D: orthopyroxene Ce 0.003
+Set D: orthopyroxene Pr 0.0048
+Set D: orthopyroxene Nd 0.0068
+Set D: orthopyroxene Sm 0.01
+Set D: orthopyroxene Eu 0.013
+Set D: orthopyroxene Gd 0.016
+Set D: orthopyroxene Tb 0.019
+Set D: orthopyroxene Dy 0.022
+Set D: orthopyroxene Ho 0.026
+Set D: orthopyroxene Er 0.03
+Set D: orthopyroxene Tm 0.04
+Set D: orthopyroxene Yb 0.049
+Set D: orthopyroxene Lu 0.06
+Set D: orthopyroxene Hf 0.01
+Set D: orthopyroxene Ta 0.005
+Set D: orthopyroxene Pb 0.0013
+Set D: orthopyroxene Th 0.00001
+Set D: orthopyroxene U 0.00001
+Set D: orthopyroxene H2O 0.002
+Set D: spinel K 0.0001
+Set D: spinel Ti 0.15
+Set D: spinel Cr 300
+Set D: spinel Mn 0.25
+Set D: spinel Co 2.0
+Set D: spinel Ga 5.0
+Set D: spinel Rb 0.0001
+Set D: spinel Cs 0.0001
+Set D: spinel Ba 0.0001
+Set D: spinel La 0.01
+Set D: spinel Ce 0.01
+Set D: spinel Pr 0.01
+Set D: spinel Nd 0.01
+Set D: spinel Sm 0.01
+Set D: spinel Eu 0.01
+Set D: spinel Gd 0.01
+Set D: spinel Tb 0.01
+Set D: spinel Dy 0.01
+Set D: spinel Ho 0.01
+Set D: spinel Er 0.01
+Set D: spinel Tm 0.01
+Set D: spinel Yb 0.01
+Set D: spinel Lu 0.01
+Set D: talc H2O 1.0

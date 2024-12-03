@@ -1,0 +1,74 @@
+! ***********************************************
+!  Isentropic decompression melting example
+! ***********************************************
+
+! this variable chooses MELTS or pMELTS; for high-pressure use pMELTS
+ALPHAMELTS_VERSION         pMELTS
+
+! use the old (incorrect) garnet model if you want backwards compatibility with other pMELTS versions
+!ALPHAMELTS_OLD_GARNET     true
+
+! don't use this unless fO2 anomalies at the solidus are a problem
+!ALPHAMELTS_ALTERNATIVE_FO2	true
+
+! use this if you want to buffer fO2 for isentropic, isenthalpic or isochoric mode
+!ALPHAMELTS_IMPOSE_FO2     true
+
+! for flux melting we recommend running at constant P, T instead:
+! e.g. set ALPHAMELTS_MODE to isobaric and set ALPHAMELTS_DELTAT to zero
+!ALPHAMELTS_FLUX_MELTING           true
+!ALPHAMELTS_FLUX_MELTING_PATIENCE  200
+
+! isothermal, isobaric, isentropic, isenthalpic, isochoric, geothermal or PTPath
+ALPHAMELTS_MODE            isentropic
+!ALPHAMELTS_PTPATH_FILE	ptpath.txt
+
+! need to set DELTAP for polybaric paths; DELTAT for isobaric paths
+ALPHAMELTS_DELTAP        -1000
+ALPHAMELTS_DELTAT        0
+ALPHAMELTS_MAXP          40000
+ALPHAMELTS_MINP          10000
+ALPHAMELTS_MAXT          2400
+ALPHAMELTS_MINT          500
+
+! the next three turn on and off fractional melting
+!ALPHAMELTS_CONTINUOUS_MELTING   true
+!ALPHAMELTS_MINF                 0.005
+!ALPHAMELTS_CONTINUOUS_RATIO     0.01
+
+! fractionate water in a similar way to fractionating melt
+!ALPHAMELTS_FRACTIONATE_WATER    true
+!ALPHAMELTS_MINW                 0.005
+
+! the next eight options refer to the trace element engine
+!ALPHAMELTS_DO_TRACE            true
+!ALPHAMELTS_DO_TRACE_H2O	     true
+!ALPHAMELTS_HK_OL_TRACE_H2O     true
+!ALPHAMELTS_TRACE_DEFAULT_DPTX  true
+!ALPHAMELTS_TRACE_NORMALIZATION 2
+!ALPHAMELTS_TRACE_INPUT_FILE    yourtraceinfile.txt
+!ALPHAMELTS_TRACE_USELIQFEMG    true
+
+! probably you won't need these
+!ALPHAMELTS_MULTIPLE_LIQUIDS	   true
+!ALPHAMELTS_FRACTIONATE_SECOND_LIQUID true
+!ALPHAMELTS_FOCUS                     true
+!ALPHAMELTS_FOCUS_FACTOR              1.0005
+
+! the next one gives an output file that is always updated, even for single calculations
+!ALPHAMELTS_SAVE_ALL     true
+!ALPHAMELTS_SKIP_FAILURE true
+
+! can be used for running cubicquad2 (alphaMELTS menu option 16) if the program crashes beforehand
+!ALPHAMELTS_INTEGRATE_FILE integrate.txt
+
+! this information overwrites stuff in the initial melts file
+! a new melts file is created if this information is different
+!Initial Temperature: 1400
+!Initial Pressure: 40000
+!Log fO2 Path: NONE
+!Initial Entropy: 258.0
+
+! this are usually only set for automatic mode, they go into the batch file
+! if you need a subsolidus start in automatic mode
+!Subsolidus Phases: olivine clinopyroxene orthopyroxene spinel

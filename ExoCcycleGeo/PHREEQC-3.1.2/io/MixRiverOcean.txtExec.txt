@@ -1,0 +1,53 @@
+TITLE ExoCcycleGeo River-ocean mixing
+
+SOLUTION 1 Planetary ocean surface waters (PHREEQC v3 manual p. 282)
+
+	pH 	 	4.35259 charge
+	temp 	 	14.5114
+	pressure 	0.516783
+	pe 	 	-1.06047
+	-water 	 	0.760803
+	units		mol/kgw
+	Ca 		0 mol/kgw
+	Mg 		0 mol/kgw
+	Na 		0 mol/kgw
+	K		0.01021
+	Fe 		0 mol/kgw
+	Si 		0 mol/kgw
+	Cl 		0 mol/kgw
+	S(6) 		0 mol/kgw
+	C(4) 		0.00539329 mol/kgw
+	Ntg 		0.000305757 mol/kgw
+	O(0) 		0 mol/kgw
+
+SOLUTION 2 River inputs after continental weathering
+
+	pH 	 	6.59914 mol/kgw charge
+	temp 	 	14.5114 mol/kgw
+	pressure 	0.516783
+	pe 	 	-2.60419 mol/kgw
+	-water 	 	0.760803
+	units		mol/kgw
+	Ca 		6.06727e-06 mol/kgw
+	Mg 		5.45238e-06 mol/kgw
+	Na 		3.43008e-08 mol/kgw
+	K		0.0
+	Fe 		0.00165866 mol/kgw
+	Si 		0.00194117 mol/kgw
+	Cl 		0 mol/kgw
+	S(6) 		3.43008e-08 mol/kgw
+	C(4) 		0.00535232 mol/kgw
+	Ntg 		0.000305757 mol/kgw	Ntg(g) 	-0.409565
+	O(0) 		0 mol/kgw	O2(g) 	0
+
+MIX 1 Mix river into ocean
+	1 	 0.760803
+	2	1	
+
+SAVE solution 3
+
+DUMP
+	-file		../PHREEQC-3.1.2/io/dump.txt
+	-solution 	3
+
+END

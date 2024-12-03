@@ -1,0 +1,57 @@
+! *************************************
+!  Fractional crystallization example
+! *************************************
+
+! this variable chooses MELTS or pMELTS; for low-pressure use MELTS
+ALPHAMELTS_VERSION         MELTS
+
+! use the spinel volume model from Java MELTS
+!ALPHAMELTS_OLD_SPINEL	true
+
+! don't use this unless fO2 anomalies at the solidus are a problem
+!ALPHAMELTS_ALTERNATIVE_FO2	true
+
+! use this if you want to buffer fO2 for isentropic, isenthalpic or isochoric mode
+! e.g. if you are doing isenthalpic AFC
+!ALPHAMELTS_IMPOSE_FO2	true
+
+! use if you want assimilation and fractional crystallization (AFC)
+!ALPHAMELTS_ASSIMILATE   true
+
+! isothermal, isobaric, isentropic, isenthalpic, isochoric, geothermal or PTPath
+ALPHAMELTS_MODE          	isobaric
+!ALPHAMELTS_PTPATH_FILE	ptpath.txt
+
+! need to set DELTAP for polybaric paths; DELTAT for isobaric paths
+ALPHAMELTS_DELTAP        0
+ALPHAMELTS_DELTAT        -1
+ALPHAMELTS_MAXP          30000
+ALPHAMELTS_MINP          1
+ALPHAMELTS_MAXT          2400
+ALPHAMELTS_MINT          500
+
+! this one turns on fractional crystallization for all solids
+! use 'Fractionate:' in the melts file instead for selective fractionation
+ALPHAMELTS_FRACTIONATE_SOLIDS	true
+!ALPHAMELTS_MASSIN			0.001
+
+! free water is unlikely but can be extracted
+!ALPHAMELTS_FRACTIONATE_WATER   true
+!ALPHAMELTS_MINW          	     0.005
+
+! the next six options refer to the trace element engine
+!ALPHAMELTS_DO_TRACE      	     true
+!ALPHAMELTS_TRACE_DEFAULT_DPTX  true
+!ALPHAMELTS_TRACE_NORMALIZATION 2
+!ALPHAMELTS_TRACE_INPUT_FILE    yourtraceinfile.txt
+!ALPHAMELTS_TRACE_USELIQFEMG    true
+
+! the next one gives an output file that is always updated, even for single calculations
+!ALPHAMELTS_SAVE_ALL    	true
+!ALPHAMELTS_SKIP_FAILURE	true
+
+! this information overwrites stuff in the initial melts file
+! a new melts file is created if this information is different
+!Initial Temperature: 1400
+!Initial Pressure: 500
+!Log fO2 Path: FMQ

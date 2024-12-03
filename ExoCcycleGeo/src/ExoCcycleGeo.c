@@ -5,6 +5,16 @@
  Computes net C fluxes (in mol C m-2 s-1) at the surface-atmosphere interface
  of a terrestrial planet due to geophysical and geochemical processes.
  ============================================================================
+
+ *  Copyright (C) 2017-2024 Marc Neveu (marc.f.neveu@nasa.gov)
+ *
+ *  This program is free software: you can redistribute it and/or modify it under the terms of the
+ *  GNU General Public License as published by the Free Software Foundation, either version 3 of
+ *  the License, or (at your option) any later version. This program is distributed in the hope
+ *  that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ *  more details. You should have received a copy of the GNU General Public License along with this
+ *  program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "ExoCcycleGeo.h"
@@ -385,7 +395,15 @@ int main(int argc, char *argv[]) {
     xgas[4] = input[i]; i++;             // H2O mixing ratio
 
 	printf("\n");
-	printf("ExoCcycleGeo v24.7\n");
+	printf("ExoCcycleGeo v24.12\n");
+	printf("Copyright (C) 2017-2024 Marc Neveu (marc.f.neveu@nasa.gov)\n\n"       );
+	printf("This program is free software: you can redistribute it and/or\n"      );
+	printf("modify it under the terms of the GNU General Public License as\n"     );
+	printf("published by the Free Software Foundation, either version 3 of the\n" );
+	printf("License, or (at your option) any later version. This program is\n"    );
+	printf("distributed in the hope that it will be useful, but without any\n"    );
+	printf("warranty. See the GNU General Public License for more details:\n"     );
+	printf("<http://www.gnu.org/licenses/>.\n\n"                                  );
 	if (cmdline == 1) printf("Command line mode\n");
 
 	printf("|--------------------------------------------------------------|\n");
