@@ -27,6 +27,7 @@
 #include <Var.h>                        // To use the external PHREEQC geochemical code
 #include <unistd.h>
 #include <fcntl.h>
+#include "modifdyld.h"
 
 #define cmdline 0						// If execution from terminal as "./ExoCcycleGeo"
 

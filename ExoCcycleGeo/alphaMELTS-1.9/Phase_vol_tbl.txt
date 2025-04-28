@@ -2,4 +2,4 @@ Title: Primitive mantle composition from McDonough & Sun (1995),
 
 Phase Volumes:
 Pressure Temperature mass V liquid_0 olivine_0 spinel_0 
-256.29 1596.75 99.974537 33.805240 13.583034 20.079042 0.143164 
+256.33 1633.02 99.981612 33.992089 15.086643 18.791556 0.113891 

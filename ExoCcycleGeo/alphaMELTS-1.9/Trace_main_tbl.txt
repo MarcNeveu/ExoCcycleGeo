@@ -1,9 +1,9 @@
 Title: Primitive mantle composition from McDonough & Sun (1995),
 
-Pressure 256.29 Temperature 1596.75 
-Partition 99.974537 
-Bulk 99.974537 
-Liquid 36.119148 
-Solid 63.855389 
-olivine_0 63.253751 
-spinel_0 0.601639 
+Pressure 256.33 Temperature 1633.02 
+Partition 99.981612 
+Bulk 99.981612 
+Liquid 40.547246 
+Solid 59.434366 
+olivine_0 58.955574 
+spinel_0 0.478793 

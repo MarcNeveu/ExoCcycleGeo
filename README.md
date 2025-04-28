@@ -19,7 +19,10 @@ In *R*, type the command
 	install.packages("CHNOSZ")
 
 ## Install *Rcpp* and *RInside*
-*Rcpp* and *RInside* are libraries that allow *R* applications to be embedded in C or C++ codes. Go to http://cran.r-project.org/web/packages/Rcpp/index.html and http://cran.r-project.org/web/packages/RInside/index.html, or directly to http://dirk.eddelbuettel.com/code/rcpp to download the respective archives. On Mac, unzip the archives in */Library/Frameworks/R.framework/Resources/library/*, so that *Rcpp* and *RInside* are two subfolders of *library*.
+*Rcpp* and *RInside* are libraries that allow *R* applications to be embedded in C or C++ codes. From a Terminal window, open *R* and install the *Rcpp* and *RInside* packages:
+
+	install.packages("Rcpp")
+	install.packages("RInside")
 
 ## Install *IPHREEQC*
 The *IPHREEQC* library is a module that allows the *PHREEQC* application to be embedded in C or C++ codes. Go to http://wwwbrr.cr.usgs.gov/projects/GWC_coupled/phreeqc to download *IPHREEQC* and follow the default installation instructions (you need admin credentials on your machine):
@@ -96,17 +99,10 @@ Other inputs that can be modified in *Inputs/ExoCcycleGeoInput.txt* include:
     
 # Modifying the source code
 
-## Install *gcc*
-In Mac OS 10.8+, the default compiler *clang* has replaced the compiler *gcc*, which can lead to compatibility issues between Mac versions. For example, if compiled on Mac OS 10.15 Catalina, the code cannot be excuted on Mac OS 10.13 High Sierra and older versions. This issue can be resolved by reinstalling *gcc* and manually compiling the code with it. Go to http://hpc.sourceforge.net and follow the instructions there to download and install *gcc*.
-Once installed, you might need to break the symbolic link between the command *gcc* and *clang* by typing:
-
-    alias gcc=/usr/local/bin/gcc
-
-## Compiling and linking instructions
 If you wish to modify the code, set up your compiler and linker so that all the relevant flags are added. My compiling and linking commands (executed in a Terminal window from within the *ExoCcycleGeo/Debug* folder) look like this:
  
-    gcc -I/Library/Frameworks/R.framework/Versions/4.1/Resources/include -I/usr/local/include -I/Library/Frameworks/R.framework/Versions/4.1/Resources/library/RInside/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -O0 -g3 -Wall -c -fmessage-length=0 -o src/ExoCcycleGeo.o ../src/ExoCcycleGeo.c
-    gcc -L/Library/Frameworks/R.framework/Versions/4.1/Resources/lib -L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib -o ExoCcycleGeo src/ExoCcycleGeo.o /usr/local/lib/libiphreeqc-3.7.3.dylib /usr/local/lib/libiphreeqc.dylib -lR
+    gcc -I/usr/local/include -I/Library/Frameworks/R.framework/Versions/Current/Resources/include -I/Library/Frameworks/R.framework/Versions/Current/Resources/library/RInside/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -O0 -g3 -Wall -c -fmessage-length=0 -o src/ExoCcycleGeo.o ../src/ExoCcycleGeo.c
+    gcc -L/usr/lib -L/usr/local/lib -L/Library/Frameworks/R.framework/Versions/Current/Resources/lib /usr/local/lib/libiphreeqc-3.8.6.dylib /usr/local/lib/libiphreeqc.dylib /usr/local/lib/libiphreeqc.a -o ExoCcycleGeo src/ExoCcycleGeo.o -lR
 
 You might need to specify the full path to gcc (e.g. */usr/local/bin/gcc*) rather than simply the *gcc* alias.
 
@@ -125,6 +121,8 @@ Asimow, P.D., and M.S. Ghiorso (1998), Algorithmic modifications extending MELTS
 Ghiorso, M.S., and R.O. Sack (1995), Chemical Mass-Transfer in Magmatic Processes IV. A Revised and Internally Consistent Thermodynamic Model for the Interpolation and Extrapolation of Liquid-Solid Equilibria in Magmatic Systems at Elevated-Temperatures and Pressures, Contributions to Mineralogy and Petrology, 119 (2-3), 197-212.
 
 Ghiorso, M.S., M.M. Hirschmann, P.W. Reiners, and V.C. Kress (2002), The pMELTS: A revision of MELTS for improved calculation of phase relations and major element partitioning related to partial melting of the mantle to 3 GPa, Geochemistry Geophysics Geosystems, 3(5), art. no. 1030, doi:10.1029/2001GC000217.
+
+Neveu, M., Bartlow, T.L.C., Felton, R., Domagal-Goldman, S.D., and Desch, S. (2023) Geophysical and geochemical controls on abiotic carbon cycling on Earth-like planets, ESS Open Archive preprint (submitted to JGR: Planets), https://doi.org/10.22541/essoar.167751627.79222663/v1.
 
 Parkhurst, D.L. and Appelo, C.A.J., 2013. Description of input and examples for PHREEQC version 3: a computer program for speciation, batch-reaction, one-dimensional transport, and inverse geochemical calculations (No. 6-A43). US Geological Survey.
 
