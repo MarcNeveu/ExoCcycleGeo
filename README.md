@@ -25,11 +25,13 @@ In *R*, type the command
 	install.packages("RInside")
 
 ## Install *IPHREEQC*
-The *IPHREEQC* library is a module that allows the *PHREEQC* application to be embedded in C or C++ codes. Go to http://wwwbrr.cr.usgs.gov/projects/GWC_coupled/phreeqc to download *IPHREEQC* and follow the default installation instructions (you need admin credentials on your machine):
+The *IPHREEQC* library is a module that allows the *PHREEQC* application to be embedded in C or C++ codes. Go to http://wwwbrr.cr.usgs.gov/projects/GWC_coupled/phreeqc to download *IPHREEQC* (for Linux), unzip it, and follow the default installation instructions (you need admin credentials on your machine):
 
 	./configure
 	make
 	make install
+
+In v3.8.6, the *./configure* script omits copying a header file *PHRQ_exports.h* to the include folder. You can manually remedy this by copying, from the unzipped folder, *src/phreeqcpp/common/PHRQ_exports.h* to the */usr/local/include/* folder.
 
 ## Install *ExoCcycleGeo*
 Go to https://github.com/MarcNeveu/ExoCcycleGeo. Click the green *Clone or download* button to the right of the page, then either:
@@ -103,10 +105,6 @@ If you wish to modify the code, set up your compiler and linker so that all the 
  
     gcc -I/usr/local/include -I/Library/Frameworks/R.framework/Versions/Current/Resources/include -I/Library/Frameworks/R.framework/Versions/Current/Resources/library/RInside/include -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -O0 -g3 -Wall -c -fmessage-length=0 -o src/ExoCcycleGeo.o ../src/ExoCcycleGeo.c
     gcc -L/usr/lib -L/usr/local/lib -L/Library/Frameworks/R.framework/Versions/Current/Resources/lib /usr/local/lib/libiphreeqc-3.8.6.dylib /usr/local/lib/libiphreeqc.dylib /usr/local/lib/libiphreeqc.a -o ExoCcycleGeo src/ExoCcycleGeo.o -lR
-
-You might need to specify the full path to gcc (e.g. */usr/local/bin/gcc*) rather than simply the *gcc* alias.
-
-Your *include* directories might be more simply found at *-I/usr/include*.
 
 Email me if you have any issues.
 
