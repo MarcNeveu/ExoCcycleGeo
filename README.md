@@ -94,10 +94,14 @@ Other inputs that can be modified in *Inputs/ExoCcycleGeoInput.txt* include:
 
 ## Reading outputs
 
-- *CompoOceanAtm.txt* provides the size and composition of the ocean and atmosphere at each time step.
-- *Geotherm.txt* provides the pressure, temperature, melt fraction, and density profiles at each time step, from the upper mantle up to the surface.
-- *Outgassing.txt* provides geophysical parameters of the planet at each time step.
-- *Output.txt* provides reservoirs and fluxes of carbon at each time step.
+- *CompoAtmosph.txt* provides the composition of the atmosphere at each time step.
+- *CompoOcean.txt* provides the size and composition of the ocean at each time step.
+- *ContweatherFluxes.txt* provides the bicarbonate trapping capacity of cations dissolved in rivers at each time step.
+- *Geotherm.txt* provides the pressure, temperature, melt fraction, and density profiles at each time step, in radial grid zones from the upper mantle up to the surface.
+- *Outgassing.txt* provides geodynamic parameters of the planet at each time step.
+- *ReservoirsFluxes.txt* provides reservoirs and fluxes of carbon at each time step.
+
+These files are all tab-separated. Parameters and units are provided in the first 1-2 rows of each file.
     
 # Modifying the source code
 
