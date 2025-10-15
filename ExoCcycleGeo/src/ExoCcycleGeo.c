@@ -57,14 +57,12 @@ int main(int argc, char *argv[]) {
 
 	// User-specified planet interior parameters
 	double m_p = 0.0;                  // Planet mass (kg)
+	double Fe_FeMg = 1.0;			   // Fe/(Fe+Mg) ratio
+	double fPx = 0.0;       		   // fraction of upper mantle that is pyroxene (the rest is assumed to be olivine)
 	double m_c = 0.0;                  // Core mass (kg), default ≈0.3*m_p for Earth, Kite et al. (2009) use 0.325*m_p
-	int layerCode1 = 0;                // Inner layer material code used to compute a compressed planet structure (see Compression_planmat.txt database)
-	int layerCode2 = 0;                // Middle layer material code (see Compression_planmat.txt database)
-	int layerCode3 = 0;                // Outer layer material code (see Compression_planmat.txt database)
-	int radionuclides = 0;             // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
-	int rheology = 0;                  // 0 = dry olivine (KK08), 1 = wet olivine (KK08)
-    int redox = 0;                     // 1: current Earth surface, 2: hematite-magnetite, 3: fayalite-magnetite-quartz, 4: iron-wustite, code won't run with other values.
+	double C_OH = 1000.0;        	   // ppm H/Si in the mantle (Korenaga & Karato 2008, citing Hirth & Kohlstedt 1996)
     double magmaCmassfrac = 0.0;       // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; HArtley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
+	int radionuclides = 0;             // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
     double fCH4 = 0.0;                 // Mole fraction of C outgassed as CH4, relative to CH4+CO2
 
     // User-specified planet surface parameters
@@ -195,15 +193,15 @@ int main(int argc, char *argv[]) {
 	double p = 0.0;                    // Frank-Kamenetskii parameter (Solomatov 1995; denoted theta in Foley et al. 2020 chapter) (no dim)
 
 	// Viscosity law constants (can't be #define'd because they are used as exponents)
-	double DryOlDiff[nParamFlowLaw];   // Dry diffusion creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2009))
-	DryOlDiff[0] = 261.0e3;            // Activation energy (J mol-1), default 261.0±28e3 (KK08)
-	DryOlDiff[1] = 6.0e-6;             // Activation volume (m3 mol-1), default 6±5e-6 (KK08)
-	DryOlDiff[2] = 5.25;               // Exponent of pre-exponential factor, default 5.25±0.03 (KK08)
-	DryOlDiff[3] = 1.0;                // Stress exponent (KK08)
-	DryOlDiff[4] = 2.98;               // Grain size exponent, default 2.98±0.02 (KK08)
-	DryOlDiff[5] = 0.0;                // Water content exponent, default 0.0 (this is a dry law) (KK08)
-	DryOlDiff[6] = -45.0e3;            // Activation energy dependence on Fe/(Fe+Mg) (Zhao et al. 2009 by analogy with gbs-accommodated dislocation creep, as did Ruedas et al. 2013 eq. 13)
-	DryOlDiff[7] = 1.5;                // Fe/(Fe+Mg) exponent (Zhao et al. 2009 by analogy with gbs-accommodated dislocation creep, as did Ruedas et al. 2013)
+//	double DryOlDiff[nParamFlowLaw];   // Dry diffusion creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2009))
+//	DryOlDiff[0] = 261.0e3;            // Activation energy (J mol-1), default 261.0±28e3 (KK08)
+//	DryOlDiff[1] = 6.0e-6;             // Activation volume (m3 mol-1), default 6±5e-6 (KK08)
+//	DryOlDiff[2] = 5.25;               // Exponent of pre-exponential factor, default 5.25±0.03 (KK08)
+//	DryOlDiff[3] = 1.0;                // Stress exponent (KK08)
+//	DryOlDiff[4] = 2.98;               // Grain size exponent, default 2.98±0.02 (KK08)
+//	DryOlDiff[5] = 0.0;                // Water content exponent, default 0.0 (this is a dry law) (KK08)
+//	DryOlDiff[6] = -45.0e3;            // Activation energy dependence on Fe/(Fe+Mg) (Zhao et al. 2009 by analogy with gbs-accommodated dislocation creep, as did Ruedas et al. 2013 eq. 13)
+//	DryOlDiff[7] = 1.5;                // Fe/(Fe+Mg) exponent (Zhao et al. 2009 by analogy with gbs-accommodated dislocation creep, as did Ruedas et al. 2013)
 
 	double WetOlDiff[nParamFlowLaw];   // Wet diffusion creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2018))
 	WetOlDiff[0] = 387.0e3;            // Activation energy (J mol-1), default 387±53e3
@@ -215,15 +213,15 @@ int main(int argc, char *argv[]) {
 	WetOlDiff[6] = -120.0e3;           // Activation energy dependence on Fe/(Fe+Mg) (Zhao et al. 2009 by analogy with dislocation creep)
 	WetOlDiff[7] = 0.5;                // Fe/(Fe+Mg) exponent (Zhao et al. 2009  by analogy with dislocation creep)
 
-	double DryOlDisl[nParamFlowLaw];   // Dry dislocation creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2009))
-	DryOlDisl[0] = 610.0e3;            // Activation energy (J mol-1), default 610±30e3
-	DryOlDisl[1] = 13.0e-6;            // Activation volume (m3 mol-1), default 13±8e-6
-	DryOlDisl[2] = 6.09;               // Exponent of pre-exponential factor, default 6.09±0.11
-	DryOlDisl[3] = 4.94;               // Stress exponent, default 4.94±0.05
-	DryOlDisl[4] = 0.0;                // Grain size exponent
-	DryOlDisl[5] = 0.0;                // Water content exponent, default 0.0 (this is a dry law)
-	DryOlDisl[6] = -45.0e3;            // Activation energy dependence on Fe/(Fe+Mg) (Zhao et al. 2009, really for grain boundary sliding-accommodated dislocation)
-	DryOlDisl[7] = 1.5;                // Fe/(Fe+Mg) exponent (Zhao et al. 2009)
+//	double DryOlDisl[nParamFlowLaw];   // Dry dislocation creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2009))
+//	DryOlDisl[0] = 610.0e3;            // Activation energy (J mol-1), default 610±30e3
+//	DryOlDisl[1] = 13.0e-6;            // Activation volume (m3 mol-1), default 13±8e-6
+//	DryOlDisl[2] = 6.09;               // Exponent of pre-exponential factor, default 6.09±0.11
+//	DryOlDisl[3] = 4.94;               // Stress exponent, default 4.94±0.05
+//	DryOlDisl[4] = 0.0;                // Grain size exponent
+//	DryOlDisl[5] = 0.0;                // Water content exponent, default 0.0 (this is a dry law)
+//	DryOlDisl[6] = -45.0e3;            // Activation energy dependence on Fe/(Fe+Mg) (Zhao et al. 2009, really for grain boundary sliding-accommodated dislocation)
+//	DryOlDisl[7] = 1.5;                // Fe/(Fe+Mg) exponent (Zhao et al. 2009)
 
 	double WetOlDisl[nParamFlowLaw];   // Wet dislocation creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2018))
 	WetOlDisl[0] = 523.0e3;            // Activation energy (J mol-1), default 523±100e3
@@ -242,9 +240,6 @@ int main(int argc, char *argv[]) {
 	for (i=0;i<nParamFlowLaw;i++) flowLawDisl[i] = 0.0;
 
 	const double grainSize = 1.0e4;	   // Grain size for computation of viscosity and creep laws (µm)
-	const double C_OH = 1000.0;        // ppm H/Si in the mantle (Korenaga & Karato 2008, citing Hirth & Kohlstedt 1996) TODO make this an input
-	const double Fe_FeMg = 1.0;        // Fe/(Fe+Mg) ratio TODO make this an input
-	const double fPx = 0.0;            // fraction of upper mantle that is pyroxene (the rest is assumed to be olivine) TODO make this an input
 
 //	printf("fPx \t Viscosity (Pa s)\n");
 //	for (i=0;i<100;i++) {
@@ -370,15 +365,13 @@ int main(int argc, char *argv[]) {
 	tend = input[i]*Gyr2sec; i++;        // Simulation end time
 	// Interior inputs
 	m_p = input[i]*mEarth; i++;
-	m_c = input[i]*m_p; i++;
-	layerCode1 = (int) input[i]; i++;    // Inner layer material code (see planmat dbase)
-	layerCode2 = (int) input[i]; i++;    // Middle layer material code (see planmat dbase)
-	layerCode3 = (int) input[i]; i++;    // Outer layer material code (see planmat dbase)
+	Fe_FeMg = input[i]; i++;             // Fe/Mg, to be converted into Fe/(Fe+Mg) ratio
+	fPx = input[i]; i++;                 // Mg/Si, to be converted into pyroxene/(pyroxene + olivine)
+	m_c = input[i]*m_p; i++;             // Core mass, TODO convert from FeO/Fe
+	C_OH = input[i]; i++;                // Mantle H2O (ppm by mass)
+	magmaCmassfrac = input[i]; i++;      // Mass fraction of C in magmas. default 350 ppm; range 115-670 ppm (Aiuppa et al. 2021)
 	radionuclides = (int) input[i]; i++; // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
-	rheology = (int) input[i]; i++;      // 0 = dry olivine (KK08), 1 = wet olivine (KK08)
 	staglid = (int) input[i]; i++;       // 0 = plate tectonics, 1 = stagnant lid
-	redox = (int) input[i]; i++;         // 1 = current Earth surface, 2 = hematite-magnetite, 3 = fayalite-magnetite-quartz, 4 = iron-wustite, code won't run with other values
-    magmaCmassfrac = input[i]/1.0e6; i++; // Mass fraction of C in magmas. default 350 ppm; range 115-670 ppm (Aiuppa et al. 2021)
     fCH4 = input[i]; i++;				 // Mole fraction of C outgassed as CH4, relative to CH4+CO2
     // Surface inputs
 	Mocean = input[i]; i++;              // Mass of ocean (kg, default: Earth=1.4e21)
@@ -416,20 +409,18 @@ int main(int argc, char *argv[]) {
 	printf("| Planet Interior ||||||||||||||||||||||||||||||||||||||||||||||\n");
 	printf("|-----------------------------------------------|--------------|\n");
 	printf("| Planet mass (Earth masses, min 0.5, max 2)    | %g \n", m_p/mEarth);
-	printf("| Core mass fraction (default 0.325)            | %g \n", m_c/m_p);
-	printf("| Inner layer material code (see planmat dbase) | %d \n", layerCode1);
-	printf("| Mid   layer material code (see planmat dbase) | %d \n", layerCode2);
-	printf("| Outer layer material code (see planmat dbase) | %d \n", layerCode3);
+	printf("|        Fe/Mg (0.6 to 1.5, Earth 1.0)          | %g \n", Fe_FeMg);
+	printf("|        Mg/Si (0.5 to 2, Earth 0.95)           | %g \n", fPx);
+	printf("|        FeO/Fe (0 to 0.2, Earth 0.08)          | %g \n", m_c/m_p); // TODO convert FeO/Fe to m_c, layerCodeX
+	printf("| Mantle H2O (ppm by mass, Earth 300-1000)      | %g \n", C_OH);
+	printf("|        C (ppm by mass, Earth 115-670, def 350)| %g \n", magmaCmassfrac);
 	printf("| Radionuclides (1 hi, 2 int, 3 lo, def. int)   | %d \n", radionuclides);
-	printf("| Rheology (0 dry oliv, 1 wet oliv KK08)        | %d \n", rheology);
 	printf("| Tectonic mode (0 plate tecton, 1 stagnant lid)| %d \n", staglid);
-	printf("| Upper mantle redox (1 surf, 2 HM, 3 FMQ, 4 IW)| %d \n", redox);
-	printf("| Mass fraction of C in the mantle (def. 0.002) | %g \n", magmaCmassfrac);
 	printf("| Mole fraction of C outgassed as CH4/(CH4+CO2) | %g \n", fCH4);
 	printf("|-----------------------------------------------|--------------|\n");
 	printf("| Surface ||||||||||||||||||||||||||||||||||||||||||||||||||||||\n");
 	printf("|-----------------------------------------------|--------------|\n");
-	printf("| Mass of surface ocean (kg, def. 1.4e21)       | %g \n", Mocean);
+	printf("| Mass of surface ocean (kg, modrn Earth 1.4e21)| %g \n", Mocean);
 	printf("| Areal land fraction (default 0.29)            | %g \n", Lnow);
 	printf("| Initial temperature (K, default 288)          | %g \n", Tsurf0);
 	printf("| Initial pressure (bar)                        | %g \n", Psurf);
@@ -446,11 +437,22 @@ int main(int argc, char *argv[]) {
 	printf("|--------------------------------------------------------------|\n");
 
 	printf("\n");
+	
+	fPx = 2.0 - (Fe_FeMg + 1.0)*fPx;       // Conversion from Mg/Si to fPx = (Fe,Mg)SiO3 / ((Fe,Mg)SiO3 + (Fe,Mg)2SiO4). 
+	                                       // Since (Fe+Mg)/Si = (Fe/Mg) (Mg/Si) + (Mg/Si) = 1 for fPx = 1 (all pyroxene), 2 for fPx = 0 (all olivine), then fPx = 2 - (Fe+Mg)/Si = 2 - ((Fe/Mg) + 1) (Mg/Si)
+	if (fPx < 0.0 && fPx > 1.0) {
+		printf ("ExoCcycleGeo: Pyroxene fraction = %g is not between 0 and 1. Adjust Fe/Mg and Mg/Si accordingly and restart\n");
+		exit(0);
+	}
+	Fe_FeMg = Fe_FeMg/(Fe_FeMg+1.0);       // Conversion from Fe/Mg to Fe/(Fe+Mg) = Fe/Mg / (Fe/Mg + Mg/Mg)
+	magmaCmassfrac = magmaCmassfrac/1.0e6; // Conversion from ppm
+	
+	printf("fPx = %g; Fe/(Fe+Mg) = %g\n", fPx, Fe_FeMg);
 
 	int timesteps = (int) ((tend-tstart)/dtime0);
 	if (timesteps <= 0) timesteps = 1;
-	double FCoutgas_mem[timesteps][2];        // Memorized outgassing flux in case MELTS calculations fluctuate too much (mol s-1) TODO this only works if timestep doesn't change, but it will
-	for (i=0;i<timesteps;i++) FCoutgas_mem[i][0] = 0.0; FCoutgas_mem[i][1] = 0.0;
+//	double FCoutgas_mem[timesteps][2];        // Memorized outgassing flux in case MELTS calculations fluctuate too much (mol s-1) TODO this only works if timestep doesn't change, but it will
+//	for (i=0;i<timesteps;i++) FCoutgas_mem[i][0] = 0.0; FCoutgas_mem[i][1] = 0.0;
 
 	printf("Computing geo C fluxes through time...\n");
 
@@ -521,25 +523,26 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Rheology
-	switch (rheology) {
-	case 0: // Dry olivine rheology of Korenaga & Karato (2008)
-		for (i=0;i<6;i++) {
-			flowLawDiff[i] = DryOlDiff[i];
-			flowLawDisl[i] = DryOlDisl[i];
-		}
-		break;
-	case 1: // Wet olivine rheology of Korenaga & Karato (2008)
+//	switch (rheology) {
+//	case 0: // Dry olivine rheology of Korenaga & Karato (2008)
+//		for (i=0;i<6;i++) {
+//			flowLawDiff[i] = DryOlDiff[i];
+//			flowLawDisl[i] = DryOlDisl[i];
+//		}
+//		break;
+//	case 1: // Wet olivine rheology of Korenaga & Karato (2008)
 		for (i=0;i<6;i++) {
 			flowLawDiff[i] = WetOlDiff[i];
 			flowLawDisl[i] = WetOlDisl[i];
 		}
-		break;
-	default:
-		printf("ExoCcycleGeo: Choice of rheology is not recognized. Exiting.\n");
-		exit(0);
-	}
+//		break;
+//	default:
+//		printf("ExoCcycleGeo: Choice of rheology is not recognized. Exiting.\n");
+//		exit(0);
+//	}
 
 	// Redox (from most oxidized to most reduced)
+	int redox = 1; // TODO deprecated, remove
 	switch(redox) {
 	case 1: // Present-day Earth surface
 		printf("Redox set to present-day Earth surface\n");

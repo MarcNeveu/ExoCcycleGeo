@@ -27,7 +27,7 @@
 #include <Var.h>                        // To use the external PHREEQC geochemical code
 #include <unistd.h>
 #include <fcntl.h>
-#include "modifdyld.h"
+//#include "modifdyld.h"
 
 #define cmdline 0						// If execution from terminal as "./ExoCcycleGeo"
 
@@ -148,32 +148,32 @@ double *exoCinput (double *input, char path[1024]) {
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
 			else if (line_no == 12) {
-				fgets(line, tab, f);  // Core mass fraction
+				fgets(line, tab, f);  // Fe/Mg ratio
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
 			else if (line_no == 13) {
-				fgets(line, tab, f);  // Inner layer material code
+				fgets(line, tab, f);  // Mg/Si ratio
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
 			else if (line_no == 14) {
-				fgets(line, tab, f);  // Mid layer material code
+				fgets(line, tab, f);  // FeO/Fe ratio
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
 			else if (line_no == 15) {
-				fgets(line, tab, f);  // Outer layer material code
+				fgets(line, tab, f);  // Mantle H2O content
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
 			else if (line_no == 16) {
-				fgets(line, tab, f);  // Radionuclide inventory
+				fgets(line, tab, f);  // Mass fraction of carbon in the mantle
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
 			else if (line_no == 17) {
-				fgets(line, tab, f);  // Rheology
+				fgets(line, tab, f);  // Radionuclide inventory
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
@@ -183,73 +183,63 @@ double *exoCinput (double *input, char path[1024]) {
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
 			else if (line_no == 19) {
-				fgets(line, tab, f);  // Upper mantle redox
-				scan = fscanf(f, "%lg", &input[i]), i++;
-				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
-			}
-			else if (line_no == 20) {
-				fgets(line, tab, f);  // Mass fraction of carbon in the mantle
-				scan = fscanf(f, "%lg", &input[i]), i++;
-				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
-			}
-			else if (line_no == 21) {
 				fgets(line, tab, f);  // Mole fraction of C outgassed as CH4, relative to CH4+CO2
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
 			// Surface
-			else if (line_no == 25) {
+			else if (line_no == 23) {
 				fgets(line, tab, f);  // Mass of surface ocean (kg)
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
-			else if (line_no == 26) {
+			else if (line_no == 24) {
 				fgets(line, tab, f);  // Areal land fraction
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
-			else if (line_no == 27) {
+			else if (line_no == 25) {
 				fgets(line, tab, f);  // Initial temperature (K)
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
-			else if (line_no == 28) {
+			else if (line_no == 26) {
 				fgets(line, tab, f);  // Initial pressure (bar)
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
-			else if (line_no == 29) {
+			else if (line_no == 27) {
 				fgets(line, tab, f);  // Runoff rate (m/day)
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
-			else if (line_no == 30) {
+			else if (line_no == 28) {
 				fgets(line, tab, f);  // Water residence time on continents (years)
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
 			// Atmosphere
-			else if (line_no == 34) {
+			else if (line_no == 32) {
 				fgets(line, tab, f);  // Atmospheric CO2 mixing ratio
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
-			else if (line_no == 35) {
+			else if (line_no == 33) {
 				fgets(line, tab, f);  // Atmospheric CH4 mixing ratio
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
-			else if (line_no == 36) {
+			else if (line_no == 34) {
 				fgets(line, tab, f);  // Atmospheric O2 mixing ratio
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
-			else if (line_no == 37) {
+			else if (line_no == 35) {
 				fgets(line, tab, f);  // Atmospheric N2 mixing ratio
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
 			}
-			else if (line_no == 38) {
+			else if (line_no == 36) {
 				fgets(line, tab, f);  // Atmospheric H2O mixing ratio
 				scan = fscanf(f, "%lg", &input[i]), i++;
 				if (scan != 1) printf("Error scanning ExoCcycleGeo input file at entry i = %d\n",i);
