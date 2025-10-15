@@ -12,9 +12,9 @@ ExoCcycleGeo v20.x Input File
 | Planet mass (Earth masses, min 0.5, max 2)    | 1            |
 |        Fe/Mg (0.6 to 1.5, Earth 1.0)          | 1.0          |
 |        Mg/Si (0.5 to 2, Earth 0.95)           | 0.95         |
-|        FeO/Fe (0 to 0.2, Earth 0.08)          | 0.08         |
+|        FeO/(FeO+Fe) (0 to 0.15, Earth 0.08)   | 0.08         |
 | Mantle H2O (ppm by mass, Earth 300-1000)      | 1000         |
-|        C (ppm by mass, Earth 115-670, def 350)| 700          |
+| Magma C (ppm by mass, Earth 115-670, def 350) | 700          |
 | Radionuclides (1 hi, 2 int, 3 lo, def. int)   | 3            |
 | Tectonic mode (0 plate tecton, 1 stagnant lid)| 0            |
 | Mole fraction of C outgassed as CH4 (vs. CO2) | 0.5          |

@@ -57,9 +57,9 @@ int main(int argc, char *argv[]) {
 
 	// User-specified planet interior parameters
 	double m_p = 0.0;                  // Planet mass (kg)
-	double Fe_FeMg = 1.0;			   // Fe/(Fe+Mg) ratio
-	double fPx = 0.0;       		   // fraction of upper mantle that is pyroxene (the rest is assumed to be olivine)
-	double m_c = 0.0;                  // Core mass (kg), default ≈0.3*m_p for Earth, Kite et al. (2009) use 0.325*m_p
+	double Fe_FeMg = 0.0;			   // Fe/(Fe+Mg) ratio (mol mol-1)
+	double Mg_Si = 0.0;                // Bulk Mg/Si ratio (mol mol-1)
+	double FeO_Fe = 0.0;               // Bulk FeO/Fe ratio (mol mol-1)
 	double C_OH = 1000.0;        	   // ppm H/Si in the mantle (Korenaga & Karato 2008, citing Hirth & Kohlstedt 1996)
     double magmaCmassfrac = 0.0;       // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; HArtley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
 	int radionuclides = 0;             // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
@@ -101,6 +101,11 @@ int main(int argc, char *argv[]) {
 	double realtime = 0.0;             // Real time since birth of planetary system (s)
 
 	// Planet parameters
+	double m_c = 0.0;                  // Core mass (kg), default ≈0.3*m_p for Earth, Kite et al. (2009) use 0.325*m_p
+	double fPx = 0.0;       		   // Fraction of upper mantle that is pyroxene (mol/mol-1, the rest is assumed to be olivine)
+	int layerCode1 = 0;                // Inner layer material code used to compute a compressed planet structure (see Compression_planmat.txt database)
+	int layerCode2 = 0;                // Middle layer material code (see Compression_planmat.txt database)
+	int layerCode3 = 0;                // Outer layer material code (see Compression_planmat.txt database)
 	double r_p = 0.0;                  // Planet radius (m)
 	double r_c = 0.0;				   // Planet core radius (m)
 	double rho_p = 0.0;                // Planet bulk density (kg m-3)
@@ -366,8 +371,8 @@ int main(int argc, char *argv[]) {
 	// Interior inputs
 	m_p = input[i]*mEarth; i++;
 	Fe_FeMg = input[i]; i++;             // Fe/Mg, to be converted into Fe/(Fe+Mg) ratio
-	fPx = input[i]; i++;                 // Mg/Si, to be converted into pyroxene/(pyroxene + olivine)
-	m_c = input[i]*m_p; i++;             // Core mass, TODO convert from FeO/Fe
+	Mg_Si = input[i]; i++;               // Mg/Si, to be converted into pyroxene/(pyroxene + olivine)
+	FeO_Fe = input[i]; i++;              // Core mass, TODO convert from FeO/Fe
 	C_OH = input[i]; i++;                // Mantle H2O (ppm by mass)
 	magmaCmassfrac = input[i]; i++;      // Mass fraction of C in magmas. default 350 ppm; range 115-670 ppm (Aiuppa et al. 2021)
 	radionuclides = (int) input[i]; i++; // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
@@ -410,10 +415,10 @@ int main(int argc, char *argv[]) {
 	printf("|-----------------------------------------------|--------------|\n");
 	printf("| Planet mass (Earth masses, min 0.5, max 2)    | %g \n", m_p/mEarth);
 	printf("|        Fe/Mg (0.6 to 1.5, Earth 1.0)          | %g \n", Fe_FeMg);
-	printf("|        Mg/Si (0.5 to 2, Earth 0.95)           | %g \n", fPx);
-	printf("|        FeO/Fe (0 to 0.2, Earth 0.08)          | %g \n", m_c/m_p); // TODO convert FeO/Fe to m_c, layerCodeX
+	printf("|        Mg/Si (0.5 to 2, Earth 0.95)           | %g \n", Mg_Si);
+	printf("|        FeO/(FeO+Fe) (0 to 0.2, Earth 0.08)    | %g \n", FeO_Fe);
 	printf("| Mantle H2O (ppm by mass, Earth 300-1000)      | %g \n", C_OH);
-	printf("|        C (ppm by mass, Earth 115-670, def 350)| %g \n", magmaCmassfrac);
+	printf("| Magma C (ppm by mass, Earth 115-670, def 350) | %g \n", magmaCmassfrac);
 	printf("| Radionuclides (1 hi, 2 int, 3 lo, def. int)   | %d \n", radionuclides);
 	printf("| Tectonic mode (0 plate tecton, 1 stagnant lid)| %d \n", staglid);
 	printf("| Mole fraction of C outgassed as CH4/(CH4+CO2) | %g \n", fCH4);
@@ -438,13 +443,72 @@ int main(int argc, char *argv[]) {
 
 	printf("\n");
 	
-	fPx = 2.0 - (Fe_FeMg + 1.0)*fPx;       // Conversion from Mg/Si to fPx = (Fe,Mg)SiO3 / ((Fe,Mg)SiO3 + (Fe,Mg)2SiO4). 
-	                                       // Since (Fe+Mg)/Si = (Fe/Mg) (Mg/Si) + (Mg/Si) = 1 for fPx = 1 (all pyroxene), 2 for fPx = 0 (all olivine), then fPx = 2 - (Fe+Mg)/Si = 2 - ((Fe/Mg) + 1) (Mg/Si)
-	if (fPx < 0.0 && fPx > 1.0) {
-		printf ("ExoCcycleGeo: Pyroxene fraction = %g is not between 0 and 1. Adjust Fe/Mg and Mg/Si accordingly and restart\n");
+	// Core mass fraction, based on Fe/Mg and FeO/Fe
+	m_c = m_p * (0.25 + (0.45-0.25)/(1.5-0.6)*(Fe_FeMg-0.6)); // With Fe/FeO = Earth, m_c/m_p = 0.25 for Fe/Mg = 0.6, 0.45 for Fe/Mg = 1.5 (Unterborn and Panero 2019), 0.325 canonical (Fe/Mg = 1). Linear relationship gives m_c/m_p = 0.338 for Fe/Mg = 1 and 0.325 for Fe/Mg = 0.94
+	
+	/* Earth has 6-8% FeO, 33% CMF (Fe) -> Fe/FeO.
+       Mars has 18% FeO, 15-20% CMF. CMF actually closer to 25% and so FeO likely lower (Stahler et al. 2021 Science).
+       Mercury has no FeO, 70% CMF.
+       Little is known about Venus’ core. But CMF (Fe/FeO) can’t be decided by present-day oxidation state which is much more oxidized. So, keep the two independent. 
+       (Unterborn et al. p. 5-31) */
+    if (FeO_Fe < 0.0 || FeO_Fe > 0.15) {
+		printf ("ExoCcycleGeo: FeO fraction = %g is not between 0 and 0.15. Adjust accordingly and restart\n", fPx);
 		exit(0);
 	}
+    m_c = (m_c / 0.338) * (0.7 + (0.33-0.7)/0.08*FeO_Fe); // = (m_c / m_c_Earth) * (FeO-based modifier). Linear modifier pegged at Earth and Mercury, this gives Mars 15% CMF for 12% FeO
+	printf("Core mass fraction = %.3g\n", m_c/m_p);
+	
+	// Set planmat core structure layers
+	layerCode1 = 101; // Default 101, alpha (bcc) Fe
+	layerCode2 = 107; // Default 107, liquid Fe + 10% S
+	
+	// Set mantle layerCode3 based on composition. 203 (MgO) provides the best structural match to modern Earth (because crust has extracted Si?) but is not an option below.
+	
+	// Adjust Fe/Mg of the mantle = FeO/Mg, assuming all pure Fe is in the core and all FeO in the mantle. Fe and silicates stay well-mixed if Fe is oxidized (Foley et al. 2020; Elkins-Tanton & Seager 2008)
+	Fe_FeMg = FeO_Fe*Fe_FeMg;
+	
+	// Pyroxene fraction in upper mantle
+	fPx = 2.0 - (Fe_FeMg + 1.0)*Mg_Si;     // Conversion from Mg/Si to fPx = (Fe,Mg)SiO3 / ((Fe,Mg)SiO3 + (Fe,Mg)2SiO4). 
+	                                       // Since (Fe+Mg)/Si = (Fe/Mg) (Mg/Si) + (Mg/Si) = 1 for fPx = 1 (all pyroxene), 2 for fPx = 0 (all olivine), then fPx = 2 - (Fe+Mg)/Si = 2 - ((Fe/Mg) + 1) (Mg/Si)
+	if (fPx < 0.0 || fPx > 1.0) {
+		printf ("ExoCcycleGeo: Pyroxene fraction = %g is not between 0 and 1. Adjust Fe/Mg and Mg/Si accordingly and restart\n", fPx);
+		exit(0);
+	}
+	
+	if (Mg_Si*(1.0+Fe_FeMg) < 0.5) { // Stishovite SiO2 dominates
+		layerCode3 = 204; // Stishovite SiO2, high pressure		
+		printf ("Mantle material code in Data/Compression_planmat: %d, Stishovite SiO2, high pressure\n", layerCode3);
+	}
+	else {
+		if (fPx > 0.5) { // Pyroxene dominates
+			if (Fe_FeMg < 0.25) {
+				layerCode3 = 201; // MgSiO3 perovskite	
+				printf ("Mantle material code in Data/Compression_planmat: %d, MgSiO3 perovskite\n", layerCode3);
+			}
+			else {
+				layerCode3 = 202; // (Mg,Fe)SiO3
+				printf ("Mantle material code in Data/Compression_planmat: %d, (Mg,Fe)SiO3\n", layerCode3);
+			}
+		}
+		else { // Olivine dominates
+			if (Fe_FeMg < 0.25) {
+					layerCode3 = 205; // Olivine, forsterite Mg2SiO4 0.1-760 MPa
+					printf ("Mantle material code in Data/Compression_planmat: %d, Olivine, forsterite Mg2SiO4 0.1-760 MPa\n", layerCode3);
+			}
+			else if (Fe_FeMg < 0.75) {
+					layerCode3 = 206; // Olivine, 50% Fo/50% Fa MgFeSiO4, 0.1-760 MPa
+					printf ("Mantle material code in Data/Compression_planmat: %d, Olivine, 50%% Fo/50%% Fa MgFeSiO4, 0.1-760 MPa\n", layerCode3);
+			}
+			else {
+				layerCode3 = 207; // Olivine, fayalite Fe2SiO4 0.1-760 MP	
+				printf ("Mantle material code in Data/Compression_planmat: %d, Olivine, fayalite Fe2SiO4 0.1-760 MP\n", layerCode3);
+			}
+		}
+	}
+	
 	Fe_FeMg = Fe_FeMg/(Fe_FeMg+1.0);       // Conversion from Fe/Mg to Fe/(Fe+Mg) = Fe/Mg / (Fe/Mg + Mg/Mg)
+	
+	// Conversion from ppm of magma C mass fraction
 	magmaCmassfrac = magmaCmassfrac/1.0e6; // Conversion from ppm
 	
 	printf("fPx = %g; Fe/(Fe+Mg) = %g\n", fPx, Fe_FeMg);
@@ -457,7 +521,7 @@ int main(int argc, char *argv[]) {
 	printf("Computing geo C fluxes through time...\n");
 
 	// Get pressure and density profiles with depth, accounting for compression and self-gravity
-	compression(NR, m_p, m_c, Tsurf, 101, 107, 203, &r, &P, &rho, &g, &iCMB, path);
+	compression(NR, m_p, m_c, Tsurf, layerCode1, layerCode2, layerCode3, &r, &P, &rho, &g, &iCMB, path);
 
 	r_p = r[NR];
 	r_c = r[iCMB];
