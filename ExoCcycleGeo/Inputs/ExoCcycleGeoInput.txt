@@ -16,6 +16,7 @@ ExoCcycleGeo v20.x Input File
 | Mantle H2O (ppm by mass, Earth 300-1000)      | 1000         |
 | Magma C (ppm by mass, Earth 115-670, def 350) | 700          |
 | Radionuclides (1 hi, 2 int, 3 lo, def. int)   | 3            |
+| Radionuclide content multiplier (0.5-2)       | 1            |
 | Tectonic mode (0 plate tecton, 1 stagnant lid)| 0            |
 | Mole fraction of C outgassed as CH4 (vs. CO2) | 0.5          |
 |-----------------------------------------------|--------------|

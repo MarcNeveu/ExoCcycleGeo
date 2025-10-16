@@ -63,6 +63,7 @@ int main(int argc, char *argv[]) {
 	double C_OH = 1000.0;        	   // ppm H/Si in the mantle (Korenaga & Karato 2008, citing Hirth & Kohlstedt 1996)
     double magmaCmassfrac = 0.0;       // Mass fraction of C in magmas. Default 0.004 = 0.4±0.25% H2O and CO2 in MORB and OIB parent magmas (Jones et al. 2018; HArtley et al. 2014; Hekinian et al. 2000; Gerlach & Graeber 1985; Anderson 1995)
 	int radionuclides = 0;             // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
+    double radioMult = 0.0;            // Multiplier of radionuclide abundances, 0.5-2 (Unterborn et al. 2020, p. 5-19)
     double fCH4 = 0.0;                 // Mole fraction of C outgassed as CH4, relative to CH4+CO2
 
     // User-specified planet surface parameters
@@ -376,6 +377,7 @@ int main(int argc, char *argv[]) {
 	C_OH = input[i]; i++;                // Mantle H2O (ppm by mass)
 	magmaCmassfrac = input[i]; i++;      // Mass fraction of C in magmas. default 350 ppm; range 115-670 ppm (Aiuppa et al. 2021)
 	radionuclides = (int) input[i]; i++; // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
+	radioMult = input[i]; i++;           // Radionuclide content multiplier
 	staglid = (int) input[i]; i++;       // 0 = plate tectonics, 1 = stagnant lid
     fCH4 = input[i]; i++;				 // Mole fraction of C outgassed as CH4, relative to CH4+CO2
     // Surface inputs
@@ -420,6 +422,7 @@ int main(int argc, char *argv[]) {
 	printf("| Mantle H2O (ppm by mass, Earth 300-1000)      | %g \n", C_OH);
 	printf("| Magma C (ppm by mass, Earth 115-670, def 350) | %g \n", magmaCmassfrac);
 	printf("| Radionuclides (1 hi, 2 int, 3 lo, def. int)   | %d \n", radionuclides);
+	printf("| Radionuclide content multiplier (0.5-2)       | %g \n", radioMult);
 	printf("| Tectonic mode (0 plate tecton, 1 stagnant lid)| %d \n", staglid);
 	printf("| Mole fraction of C outgassed as CH4/(CH4+CO2) | %g \n", fCH4);
 	printf("|-----------------------------------------------|--------------|\n");
@@ -446,11 +449,11 @@ int main(int argc, char *argv[]) {
 	// Core mass fraction, based on Fe/Mg and FeO/Fe
 	m_c = m_p * (0.25 + (0.45-0.25)/(1.5-0.6)*(Fe_FeMg-0.6)); // With Fe/FeO = Earth, m_c/m_p = 0.25 for Fe/Mg = 0.6, 0.45 for Fe/Mg = 1.5 (Unterborn and Panero 2019), 0.325 canonical (Fe/Mg = 1). Linear relationship gives m_c/m_p = 0.338 for Fe/Mg = 1 and 0.325 for Fe/Mg = 0.94
 	
-	/* Earth has 6-8% FeO, 33% CMF (Fe) -> Fe/FeO.
+	/* Earth has 6-8% FeO, 33% CMF
        Mars has 18% FeO, 15-20% CMF. CMF actually closer to 25% and so FeO likely lower (Stahler et al. 2021 Science).
        Mercury has no FeO, 70% CMF.
        Little is known about Venus’ core. But CMF (Fe/FeO) can’t be decided by present-day oxidation state which is much more oxidized. So, keep the two independent. 
-       (Unterborn et al. p. 5-31) */
+       (Unterborn et al. 2020 p. 5-31) */
     if (FeO_Fe < 0.0 || FeO_Fe > 0.15) {
 		printf ("ExoCcycleGeo: FeO fraction = %g is not between 0 and 0.15. Adjust accordingly and restart\n", fPx);
 		exit(0);
@@ -475,32 +478,32 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 	
-	if (Mg_Si*(1.0+Fe_FeMg) < 0.5) { // Stishovite SiO2 dominates
+	if (Mg_Si*(1.0+Fe_FeMg) < 0.5) { // Stishovite SiO2 dominates, unreachable in practice since this corresponds to fPx > 1
 		layerCode3 = 204; // Stishovite SiO2, high pressure		
 		printf ("Mantle material code in Data/Compression_planmat: %d, Stishovite SiO2, high pressure\n", layerCode3);
 	}
 	else {
 		if (fPx > 0.5) { // Pyroxene dominates
 			if (Fe_FeMg < 0.25) {
-				layerCode3 = 201; // MgSiO3 perovskite	
+				layerCode3 = 201; // MgSiO3 perovskite, Earth-like case, reachable if FeO/Fe = 0.15, Fe/Mg = 0.6-1.5 and Mg/Si = 0.9-0.95
 				printf ("Mantle material code in Data/Compression_planmat: %d, MgSiO3 perovskite\n", layerCode3);
 			}
 			else {
-				layerCode3 = 202; // (Mg,Fe)SiO3
+				layerCode3 = 202; // (Mg,Fe)SiO3, reachable if FeO/Fe = 0.15, Fe/Mg = 7.5 and Mg/Si = 0.5-0.6
 				printf ("Mantle material code in Data/Compression_planmat: %d, (Mg,Fe)SiO3\n", layerCode3);
 			}
 		}
 		else { // Olivine dominates
 			if (Fe_FeMg < 0.25) {
-					layerCode3 = 205; // Olivine, forsterite Mg2SiO4 0.1-760 MPa
+					layerCode3 = 205; // Olivine, forsterite Mg2SiO4 0.1-760 MPa, reachable if FeO/Fe = 0.15, Fe/Mg = 0.6-1.6 and Mg/Si = 1.5-1.8
 					printf ("Mantle material code in Data/Compression_planmat: %d, Olivine, forsterite Mg2SiO4 0.1-760 MPa\n", layerCode3);
 			}
 			else if (Fe_FeMg < 0.75) {
-					layerCode3 = 206; // Olivine, 50% Fo/50% Fa MgFeSiO4, 0.1-760 MPa
+					layerCode3 = 206; // Olivine, 50% Fo/50% Fa MgFeSiO4, 0.1-760 MPa, reachable if FeO/Fe = 0.15, Fe/Mg = 1.7-2.5 and Mg/Si = 1.4-1.5
 					printf ("Mantle material code in Data/Compression_planmat: %d, Olivine, 50%% Fo/50%% Fa MgFeSiO4, 0.1-760 MPa\n", layerCode3);
 			}
 			else {
-				layerCode3 = 207; // Olivine, fayalite Fe2SiO4 0.1-760 MP	
+				layerCode3 = 207; // Olivine, fayalite Fe2SiO4 0.1-760 MPa, reachable if FeO/Fe = 0.15, Fe/Mg = 8.5 and Mg/Si = 0.7
 				printf ("Mantle material code in Data/Compression_planmat: %d, Olivine, fayalite Fe2SiO4 0.1-760 MP\n", layerCode3);
 			}
 		}
@@ -958,36 +961,36 @@ int main(int argc, char *argv[]) {
 		// Equilibrate ocean and atmosphere
 		//-------------------------------------------------------------------
 
-		if (Tsurf > Tfreeze+0.01) {
-			printf("Equilibrating ocean and atmosphere... ");
-
-			AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
-
-			if (Psurf < 0.01) {
-				printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
-				exit(0);
-			}
-
-			// If CH4 mixing ratio > 1.0 CO2, organic haze (Haqq-Misra et al. 2008, https://doi.org/10.1089/ast.2007.0197) (really Photochem should be telling ExoCcycleGeo this)
-			if (xgas[1] > 1.0*xgas[0]) {
-				hChazeFallout += 1.0e-4*xgas[1]*nAir/128.0*1320.7*1.0e-6/Asurf; // 1320.7 cm3/mol is the molar volume of KerogenC128 (Helgeson et al. 2009, https://doi.org/10.1016/j.gca.2008.03.004)
-				// Thickness of aerosol deposit, output, in what reservoir to put it?, decrease riverine flux accordingly
-				xgas[1] -= 1.0e-4*xgas[1];
-
-				AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
-
-				if (Psurf < 0.01) {
-					printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
-					exit(0);
-				}
-			}
-
-			RCatm = (xgas[0]+xgas[1])*nAir;
-			RCocean = (xaq[0]+xaq[1])*Mocean;
-			pHout = pH;
-
-			cleanup(path); // Remove PHREEQC selected output file
-		}
+//		if (Tsurf > Tfreeze+0.01) {
+//			printf("Equilibrating ocean and atmosphere... ");
+//
+//			AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
+//
+//			if (Psurf < 0.01) {
+//				printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
+//				exit(0);
+//			}
+//
+//			// If CH4 mixing ratio > 1.0 CO2, organic haze (Haqq-Misra et al. 2008, https://doi.org/10.1089/ast.2007.0197) (really Photochem should be telling ExoCcycleGeo this)
+//			if (xgas[1] > 1.0*xgas[0]) {
+//				hChazeFallout += 1.0e-4*xgas[1]*nAir/128.0*1320.7*1.0e-6/Asurf; // 1320.7 cm3/mol is the molar volume of KerogenC128 (Helgeson et al. 2009, https://doi.org/10.1016/j.gca.2008.03.004)
+//				// Thickness of aerosol deposit, output, in what reservoir to put it?, decrease riverine flux accordingly
+//				xgas[1] -= 1.0e-4*xgas[1];
+//
+//				AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
+//
+//				if (Psurf < 0.01) {
+//					printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
+//					exit(0);
+//				}
+//			}
+//
+//			RCatm = (xgas[0]+xgas[1])*nAir;
+//			RCocean = (xaq[0]+xaq[1])*Mocean;
+//			pHout = pH;
+//
+//			cleanup(path); // Remove PHREEQC selected output file
+//		}
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from outgassing
@@ -1433,6 +1436,7 @@ int main(int argc, char *argv[]) {
 		  + x232Th * 2.64e-5 * exp(log(0.5)/(14.0  *Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 232-Th
 		  +  x235U * 56.9e-5 * exp(log(0.5)/( 0.704*Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 235-U
 		  +  x238U * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * (realtime - 4.5*Gyr2sec)); // 238-U
+		H = H*radioMult; // Multiplier input (default is 1)
 		// Effective thermal conductivity scaled with Nu
 		Tmantle = Tmantle + dtime*(H/Cp - 3.0*kappa*Nu*(Tmantle-Tref)/(r_p-r_c)*r_p*r_p/(pow(r_p,3.0)-pow(r_c,3.0)));
 
