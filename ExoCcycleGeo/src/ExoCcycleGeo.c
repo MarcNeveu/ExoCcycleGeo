@@ -192,7 +192,8 @@ int main(int argc, char *argv[]) {
 	double Tref = 0.0;                 // Temperature at outer boundary of convective zone (surface or base of stagnant lid)
 	double meltmass = 0.0;             // Total mass of outgassing mantle melt (kg)
 	double rhomelt = 0.0;              // Density of the melt (kg m-3)
-	double zNewcrust = 0.0;            // Thickness of crust generated from mantle melt (m)
+    double dMmelt_dt = 0.0;            // Rate of mantle mass melting (kg s-1)
+	double dzCrust_dt = 0.0;           // Rate of crustal thickening due to mantle melting (m s-1)
 	double zLith = 0.0;                // Depth of lithosphere (both thermal: geotherm inflexion to adiabat and mechanical: brittle-ductile transition) (m)
 	double tConv = 0.0;                // Convection timescale (s), 200 Myr for deep Earth mantle today
 	double vConv = 0.0;                // Convective velocity (m s-1)
@@ -1110,7 +1111,7 @@ int main(int argc, char *argv[]) {
 							if (fabs(1.0-P[i]/(sys_tbl[j][0]*bar2Pa)) > 1.0e-3) printf("ExoCcycleGeo: pressures from grid (%g bar) and MELTS (%g bar) misaligned at grid index %d\n", P[i]/bar2Pa, sys_tbl[j][0], i);
 							if (fabs(1.0-T[i]/ sys_tbl[j][1]        ) > 1.0e-3) printf("ExoCcycleGeo: temperatures from grid (%g K) and MELTS (%g K) misaligned at grid index %d\n", T[i], sys_tbl[j][1], i);
 							Meltfrac[i] = sys_tbl[j][3];
-							rhomelt = sys_tbl[j][13]*1000.0; // g cm-3 to kg m-3, taken at depth of highest melt fraction, for calculation of thickness of new crust generated
+							rhomelt = sys_tbl[j][13]*1000.0; // g cm-3 to kg m-3, taken at depth of highest melt fraction for calculation of thickness of new crust generated
 							if (imin == 0) imin = i;
 						}
 						imax = i;
@@ -1358,15 +1359,14 @@ int main(int argc, char *argv[]) {
 			}
 //		}
 
-		if (staglid) FCoutgas = meltmass * magmaCmassfrac / molmassC / tConv; // mol C s-1
-		else FCoutgas = LplateRdg * WplateRdg * vConv * Meltfrac[0] * rhomelt * magmaCmassfrac / molmassC;
+        if (staglid) dMmelt_dt = meltmass / tConv;
+        else dMmelt_dt = LplateRdg * WplateRdg * vConv * Meltfrac[0] * rhomelt;
+		
+		FCoutgas = dMmelt_dt * magmaCmassfrac / molmassC;
 
-		if (rhomelt > 0.0 && r[iLith] > r_c) {
-			if (staglid) zNewcrust = meltmass/rhomelt / tConv            / (4.0*PI_greek) / pow(r_p-zCrust,2.0);
-			else zNewcrust = LplateRdg * WplateRdg * vConv * Meltfrac[0] / (4.0*PI_greek) / pow(r_p-zCrust,2.0); // Derived by expressing V = 4/3*pi*(r_p^3-(r_p-zCrust)^3), differentiating with time, and rearranging to express zNewCrust = dzCrust/dt = f(dV/dt, zCrust, r_p)
-		}
-		else zNewcrust = 0.0;
-		zCrust = zCrust + zNewcrust*dtime;
+		if (rhomelt > 0.0 && r[iLith] > r_c) dzCrust_dt = dMmelt_dt/rhomelt / (4.0*PI_greek) / pow(r_p-zCrust,2.0); // Derived by expressing V = 4/3*pi*(r_p^3-(r_p-zCrust)^3), differentiating with time, and rearranging to express dzCrust_dt = f(dV/dt, zCrust, r_p)
+		else dzCrust_dt = 0.0;
+		zCrust = zCrust + dzCrust_dt*dtime;
 
 //		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iLith]-r[iCMB])*0.4; // mol C s-1, 40% melt reaches the surface
 //		if (realtime < 1.0*Gyr2sec) FCoutgas = FCoutgas * (realtime/(0.4*Gyr2sec)-1.5); // Ramp up outgassing from 0.6 to 1.0 Gyr to avoid step function
@@ -1414,7 +1414,7 @@ int main(int argc, char *argv[]) {
 		printf("---------------------------------------------------------------------------\n");
 		printf("Quantity                                | Earth benchmark   | Model result \n");
 		printf("---------------------------------------------------------------------------\n");
-		printf("New crust generation rate (m Myr-1)     | 40                | %.3g \n", zNewcrust*Myr2sec);
+		printf("New crust generation rate (m Myr-1)     | 40                | %.3g \n", dzCrust_dt*Myr2sec);
 		printf("New crust density (kg m-3)              | 2800              | %.4g \n", rhomelt);
 		printf("C and H2O outgassing rate (mol s-1)     | 129000-407000     | %.6g \n", FCoutgas);
 		printf("Magma C mass fraction (ppm)             | 350 (115-670)     | %.3g \n", magmaCmassfrac*1.0e6);
@@ -1437,6 +1437,11 @@ int main(int argc, char *argv[]) {
 		  +  x235U * 56.9e-5 * exp(log(0.5)/( 0.704*Gyr2sec) * (realtime - 4.5*Gyr2sec))  // 235-U
 		  +  x238U * 9.46e-5 * exp(log(0.5)/( 4.47 *Gyr2sec) * (realtime - 4.5*Gyr2sec)); // 238-U
 		H = H*radioMult; // Multiplier input (default is 1)
+		// Correct for radionuclide loss from the mantle due to partitioning into the crust (Turcotte & Schubert 2002, Table 4.3, p. 248):
+		// Depleted mantle has 1/30, continental crust 50x, and oceanic crust (tholeiitic basalt) 2.5x the radionuclide content of the reference mantle.
+		// Mass of crust = 4/3*pi*(r_p^3-(r_p-zCrust)^3))*rhomelt. Cap crustal thickness at 50 km to account for material recycling into the mantle, even in the stagnant lid regime (Bedard 2018)
+		// Mass of mantle = m_p-m_c
+		H = H * (1.0 - (1.0-1.0/30.0) * 4/3*PI_greek*(pow(r_p,3)-pow(r_p-fmin(zCrust,50.0e3),3))*rhomelt / (m_p-m_c));
 		// Effective thermal conductivity scaled with Nu
 		Tmantle = Tmantle + dtime*(H/Cp - 3.0*kappa*Nu*(Tmantle-Tref)/(r_p-r_c)*r_p*r_p/(pow(r_p,3.0)-pow(r_c,3.0)));
 
@@ -1616,7 +1621,7 @@ int main(int argc, char *argv[]) {
 			if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 			else {
 				fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %d\n", realtime/Gyr2sec, Tmantle, Ra,
-						nu*rho[(int)((NR+iCMB)/2.0)], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, p, FCoutgas, vConv*1.0e-6*Myr2sec, tConv, zCrust, zCrust/zNewcrust, staglid);
+						nu*rho[(int)((NR+iCMB)/2.0)], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, p, FCoutgas, vConv*1.0e-6*Myr2sec, tConv, zCrust, zCrust/dzCrust_dt, staglid);
 			}
 			fclose (fout);
 
