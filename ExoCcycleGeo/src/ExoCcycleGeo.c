@@ -470,7 +470,8 @@ int main(int argc, char *argv[]) {
 	
 	// Adjust Fe/Mg of the mantle = FeO/Mg, assuming all pure Fe is in the core and all FeO in the mantle. Fe and silicates stay well-mixed if Fe is oxidized (Foley et al. 2020; Elkins-Tanton & Seager 2008)
 	Fe_FeMg = FeO_Fe*Fe_FeMg;
-	
+	printf("Mantle Fe/Mg %g (Primitive Mantle is 0.12);\t Mg/Si %g (PM is 1.2, higher due to segregation of Si in the core)\n", Fe_FeMg, Mg_Si); // Values lower than primitive mantle
+
 	// Pyroxene fraction in upper mantle
 	fPx = 2.0 - (Fe_FeMg + 1.0)*Mg_Si;     // Conversion from Mg/Si to fPx = (Fe,Mg)SiO3 / ((Fe,Mg)SiO3 + (Fe,Mg)2SiO4). 
 	                                       // Since (Fe+Mg)/Si = (Fe/Mg) (Mg/Si) + (Mg/Si) = 1 for fPx = 1 (all pyroxene), 2 for fPx = 0 (all olivine), then fPx = 2 - (Fe+Mg)/Si = 2 - ((Fe/Mg) + 1) (Mg/Si)
@@ -516,6 +517,24 @@ int main(int argc, char *argv[]) {
 	magmaCmassfrac = magmaCmassfrac/1.0e6; // Conversion from ppm
 	
 	printf("fPx = %g; Fe/(Fe+Mg) = %g\n", fPx, Fe_FeMg);
+	
+	char infile[2048];
+	char *meltsfile = (char*) malloc(2048*sizeof(char));
+	
+	infile[0] = '\0';
+	meltsfile[0] = '\0';
+	
+	if (cmdline == 1) strncat(infile ,path, strlen(path)-20);
+	else strncat(infile, path, strlen(path)-18);
+	strcat(infile,"alphaMELTS-1.9/ExoC/ExoCcycleGeo_primMantleMS95.melts");
+	
+	if (cmdline == 1) strncat(meltsfile ,path, strlen(path)-20);
+	else strncat(meltsfile, path, strlen(path)-18);
+	strcat(meltsfile,"alphaMELTS-1.9/ExoC/ExoCcycleGeo.melts");
+
+	WriteMELTSinput(infile, Fe_FeMg, Mg_Si, &meltsfile);
+
+	free (meltsfile);
 
 	int timesteps = (int) ((tend-tstart)/dtime0);
 	if (timesteps <= 0) timesteps = 1;
@@ -1441,7 +1460,7 @@ int main(int argc, char *argv[]) {
 		// Depleted mantle has 1/30, continental crust 50x, and oceanic crust (tholeiitic basalt) 2.5x the radionuclide content of the reference mantle.
 		// Mass of crust = 4/3*pi*(r_p^3-(r_p-zCrust)^3))*rhomelt. Cap crustal thickness at 50 km to account for material recycling into the mantle, even in the stagnant lid regime (Bedard 2018)
 		// Mass of mantle = m_p-m_c
-		H = H * (1.0 - (1.0-1.0/30.0) * 4/3*PI_greek*(pow(r_p,3)-pow(r_p-fmin(zCrust,50.0e3),3))*rhomelt / (m_p-m_c));
+		H = H * (1.0 - (1.0-1.0/30.0) * 4.0/3.0*PI_greek*(pow(r_p,3.0)-pow(r_p-fmin(zCrust,50.0e3),3.0))*rhomelt / (m_p-m_c));
 		// Effective thermal conductivity scaled with Nu
 		Tmantle = Tmantle + dtime*(H/Cp - 3.0*kappa*Nu*(Tmantle-Tref)/(r_p-r_c)*r_p*r_p/(pow(r_p,3.0)-pow(r_c,3.0)));
 

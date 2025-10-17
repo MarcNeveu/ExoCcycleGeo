@@ -30,6 +30,7 @@ int ExtractWrite(int instance, double*** data, int line, int nvar);
 const char* ConCat (const char *str1, const char *str2);
 int WritePHREEQCInput(const char *TemplateFile, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
 		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput);
+int WriteMELTSinput(const char *TemplateFile, double Fe_FeMg, double Mg_Si, char **tempinput);
 int cleanup (char path[1024]);
 double molmass_atm (double *xgas);
 int alphaMELTS_init (char *path);
@@ -732,6 +733,85 @@ int WritePHREEQCInput(const char *TemplateFile, double temp, double pressure, do
 
 /*--------------------------------------------------------------------
  *
+ * Subroutine WriteMELTSinput
+ *
+ * Generate input file from a template.
+ *
+ *--------------------------------------------------------------------*/
+
+int WriteMELTSinput(const char *TemplateFile, double Fe_FeMg, double Mg_Si, char **tempinput) {
+	
+	double FeO = 0.0;
+	double MgO = 0.0;
+	double SiO2 = 0.0;
+
+	FILE *fin;
+	FILE *fout;
+	char FeO_str[128];
+	char MgO_str[128];
+	char SiO2_str[128];
+	char inputVal[128];
+
+	FeO_str[0] = '\0';
+	MgO_str[0] = '\0';
+	SiO2_str[0] = '\0';
+	inputVal[0] = '\0';
+
+	int line_length = 300;
+	char line[line_length]; // Individual line
+
+	// Convert ratios to absolute oxide wt.%, assuming FeO, MgO, and SiO2 total 90 wt.% of the mantle
+	Fe_FeMg = 1.0 / (1.0/Fe_FeMg - 1.0); // 1/(Fe/Mg) = 1/(Fe/(Fe+Mg)) - Fe/Fe, so Fe/Mg = 1/(1/Fe/(Fe+Mg) - 1)
+	double FeO_MgO = Fe_FeMg * (56.0+16.0)/(24.0+16.0); // TODO replace hardcoded molar masses by molmass?
+	double MgO_SiO2 = Mg_Si * (24.0+16.0)/(28.0+2*16.0);
+	// FeO/MgO*MgO/SiO2 + MgO/SiO2 + 1.0 = 90.0/SiO2
+	SiO2 = 90.0/(FeO_MgO*MgO_SiO2 + MgO_SiO2 + 1.0);
+	MgO = MgO_SiO2 * SiO2;
+	FeO = FeO_MgO * MgO;
+	printf("FeO: %g, MgO: %g, SiO2: %g, total %g\n", FeO, MgO, SiO2, FeO+MgO+SiO2);
+
+	sprintf(FeO_str, "%g", FeO);
+	sprintf(MgO_str, "%g", MgO);
+	sprintf(SiO2_str, "%g", SiO2);
+	
+	strcpy(inputVal, "Initial Composition: SiO2 ");
+	strcat(inputVal, SiO2_str);
+	strcpy(SiO2_str, inputVal);
+	
+	strcpy(inputVal, "Initial Composition: FeO ");
+	strcat(inputVal, FeO_str);
+	strcpy(FeO_str, inputVal);
+	
+	strcpy(inputVal, "Initial Composition: MgO ");
+	strcat(inputVal, MgO_str);
+	strcpy(MgO_str, inputVal);
+
+	fin = fopen (TemplateFile,"r"); 	// Open input file
+	if (fin == NULL) printf("WriteMELTSinput: Missing input file. Path: %s\n", TemplateFile);
+	fout = fopen (*tempinput,"w");      // Open output file
+	if (fout == NULL) printf("WriteMELTSinput: Missing output file. Path: %s\n", *tempinput);
+
+	while (fgets(line, line_length, fin)) {
+
+		// Block switches
+		if (line[21] == 'S' && line[22] == 'i' && line[23] == 'O' && line[24] == '2') fprintf(fout, "%s\n", SiO2_str);
+		else if (line[21] == 'F' && line[22] == 'e' && line[23] == 'O' && line[24] == ' ') fprintf(fout, "%s\n", FeO_str);
+		else if (line[21] == 'M' && line[22] == 'g' && line[23] == 'O' && line[24] == ' ') fprintf(fout, "%s\n", MgO_str);
+		else fputs(line,fout);
+	}
+	if (ferror(fin)) {
+		printf("WritePHREEQCInput: Error reading template input file %s\n",TemplateFile);
+		return 1;
+	}
+
+	fclose(fin);
+	fclose(fout);
+
+	return 0;
+}
+
+/*--------------------------------------------------------------------
+ *
  * Subroutine cleanup
  *
  * Remove PHREEQC selected output files so as not to clutter the
@@ -916,7 +996,7 @@ int alphaMELTS_init (char *path) {
 	while (fgets(line, line_length, fin)) {
 		if (line[0] == '$' && line[1] == 'i' && line[2] == 'n' && line[3] == '_')
 			fprintf(fout, "$in_file = '%s/alphaMELTS-1.9/ExoC/ExoC_env.txt';\n", str);
-		else if (line[1] == '(' && line[2] && '(' && line[3] == '-' && line[4] == 'f' && line[5] == ' ' && line[6] == '\"' && line[7] == '/') {
+		else if (line[1] == '(' && line[2] == '(' && line[3] == '-' && line[4] == 'f' && line[5] == ' ' && line[6] == '\"' && line[7] == '/') {
 			if (!entry2) {
 				fprintf(fout, "\t((-f \"%s/alphaMELTS-1.9/alphamelts_macosx64\") &&\n", str);
 				fprintf(fout, "!(system \"%s/alphaMELTS-1.9/alphamelts_macosx64 < %s/alphaMELTS-1.9/ExoC/ExoCbatch.txt\")) ||\n", str, str);
