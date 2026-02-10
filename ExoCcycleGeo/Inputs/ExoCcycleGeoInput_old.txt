@@ -3,26 +3,27 @@ ExoCcycleGeo v20.x Input File
 |--------------------------------------------------------------|
 | Grid |||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |-----------------------------------------------|--------------|
-| Simulation time step (Myr, default 1, adapts) | 10           |
+| Simulation time step (Myr, default 1, adapts) | 10           | 1
 | Simulation start time (Gyr, default 0.6)      | 0.6          |
-| Simulation end   time (Gyr, default 5)        | 4.57         |
+| Simulation end   time (Gyr, default 5)        | 4.57            | 4.57
 |-----------------------------------------------|--------------|
 | Planet Interior ||||||||||||||||||||||||||||||||||||||||||||||
 |-----------------------------------------------|--------------|
 | Planet mass (Earth masses, min 0.5, max 2)    | 1            |
-|        Fe/Mg (0.6 to 1.5, Earth 0.88)         | 0.88         |
-|        Mg/Si (0.5 to 2, Earth 0.97)           | 0.97         |
-|        FeO/(FeO+Fe) (0 to 0.15, Earth 0.08)   | 0.08         |
-| Mantle H2O (ppm by mass, Earth 300-1000)      | 1000         |
-| Magma C (ppm by mass, Earth 300-10000)        | 2000         |
-| Radionuclides (1 hi, 2 int, 3 lo, def. int)   | 4            |
-| Radionuclide content multiplier (0.5-2)       | 1            |
+| Core mass fraction (default 0.325)            | 0.325        |
+| Inner layer material code (see planmat dbase) | 101          |
+| Mid   layer material code (see planmat dbase) | 107          |
+| Outer layer material code (see planmat dbase) | 201          |
+| Radionuclides (1 hi, 2 int, 3 lo, def. int)   | 3            |
+| Rheology (0 dry oliv, 1 wet oliv KK08)        | 0            |
 | Tectonic mode (0 plate tecton, 1 stagnant lid)| 0            |
-| Mole fraction of C outgassed as CH4 (vs. CO2) | 0.5          |
+| Upper mantle redox (1 surf, 2 HM, 3 FMQ, 4 IW)| 3            |
+| Mass fraction of C in the mantle (def. 350ppm)| 700          |
+| Mole fraction of C outgassed as CH4/(CH4+CO2) | 0.5          |
 |-----------------------------------------------|--------------|
 | Surface ||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |-----------------------------------------------|--------------|
-| Mass of surface ocean (kg, modrn Earth 1.4e21)| 1.4e21       |
+| Mass of surface ocean (kg, mod Earth 1.4e21)  | 1.4e21       |
 | Areal land fraction (modern Earth 0.29)       | 0.29         |
 | Initial temperature (K, modern Earth 288)     | 288          | Archean
 | Initial pressure (bar)                        | 1            | 0.5

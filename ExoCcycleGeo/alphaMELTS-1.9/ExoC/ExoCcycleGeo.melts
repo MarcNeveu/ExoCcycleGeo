@@ -14,12 +14,12 @@ Title: Use table file to generate MELTS inputs along the P,T profile from ExoCcy
 Title: One row per P,T[,fO2] condition, column headers: Temperature, Pressure, logfO2
 Title: fO2 could deal with redox changes upon ascent a la Gaillard and Scaillet 2007 
 Title: May need to remove corresponding values in the env file.
-Initial Composition: SiO2 45.0
+Initial Composition: SiO2 52.0649
 Initial Composition: TiO2 0.201
 Initial Composition: Al2O3 4.45
 Initial Composition: Cr2O3 0.384
-Initial Composition: FeO 8.05
-Initial Composition: MgO 37.8
+Initial Composition: FeO 4.26649
+Initial Composition: MgO 33.6686
 Initial Composition: CaO 3.55
 Initial Composition: Na2O 0.36
 Initial Composition: K2O 0.029

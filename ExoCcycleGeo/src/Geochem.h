@@ -792,15 +792,13 @@ int WriteMELTSinput(const char *TemplateFile, double Fe_FeMg, double Mg_Si, char
 	if (fout == NULL) printf("WriteMELTSinput: Missing output file. Path: %s\n", *tempinput);
 
 	while (fgets(line, line_length, fin)) {
-
-		// Block switches
 		if (line[21] == 'S' && line[22] == 'i' && line[23] == 'O' && line[24] == '2') fprintf(fout, "%s\n", SiO2_str);
 		else if (line[21] == 'F' && line[22] == 'e' && line[23] == 'O' && line[24] == ' ') fprintf(fout, "%s\n", FeO_str);
 		else if (line[21] == 'M' && line[22] == 'g' && line[23] == 'O' && line[24] == ' ') fprintf(fout, "%s\n", MgO_str);
 		else fputs(line,fout);
 	}
 	if (ferror(fin)) {
-		printf("WritePHREEQCInput: Error reading template input file %s\n",TemplateFile);
+		printf("WriteMELTSinput: Error reading template input file %s\n",TemplateFile);
 		return 1;
 	}
 

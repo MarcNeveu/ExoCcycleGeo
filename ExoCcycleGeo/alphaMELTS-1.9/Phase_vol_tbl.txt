@@ -1,5 +1,5 @@
 Title: Primitive mantle composition from McDonough & Sun (1995),
 
 Phase Volumes:
-Pressure Temperature mass V liquid_0 olivine_0 orthopyroxene_0 clinopyroxene_0 feldspar_0 spinel_0 
-310.61 1284.02 99.945099 31.935998 1.757869 19.888231 4.449671 2.364813 3.216773 0.258641 
+Pressure Temperature mass V liquid_0 olivine_0 clinopyroxene_0 clinopyroxene_1 feldspar_0 spinel_0 
+304.53 1308.42 99.087965 32.484356 3.548365 8.566608 17.510043 0.652268 2.009773 0.197300 

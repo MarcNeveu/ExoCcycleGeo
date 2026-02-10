@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
 
 	// Quantities to be computed by thermal/geodynamic model
 	int staglid = 1;                   // 1 if stagnant-lid, 0 if mobile-lid
-    double Tmantle = 0.0;              // Temperature at mid-mantle depth (K), initially set by accretion
+    double Tmantle = 0.0;              // Temperature of the upper mantle (K), initially set by accretion
 	double H = 0.0;                    // Specific radiogenic heating rate (J s-1 kg-1)
 	double x40K = 0.0;                 // Abundance of the radionuclide 40 K by mass
 	double x232Th = 0.0;               // Abundance of the radionuclide 232 Th by mass
@@ -376,7 +376,7 @@ int main(int argc, char *argv[]) {
 	Mg_Si = input[i]; i++;               // Mg/Si, to be converted into pyroxene/(pyroxene + olivine)
 	FeO_Fe = input[i]; i++;              // Core mass, TODO convert from FeO/Fe
 	C_OH = input[i]; i++;                // Mantle H2O (ppm by mass)
-	magmaCmassfrac = input[i]; i++;      // Mass fraction of C in magmas. default 350 ppm; range 115-670 ppm (Aiuppa et al. 2021)
+	magmaCmassfrac = input[i]; i++;      // Mass fraction of C in magmas; range 0.03-1 wt.%, higher than mass fraction of C in upper mantle, which is 350 ppm; range 115-670 ppm (Aiuppa et al. 2021)
 	radionuclides = (int) input[i]; i++; // 0 = Custom (LK07 lo), 1 = High (TS02), 2 = Intermediate (R91), 3 = Low (LK07), default = Intermediate (McDS95)
 	radioMult = input[i]; i++;           // Radionuclide content multiplier
 	staglid = (int) input[i]; i++;       // 0 = plate tectonics, 1 = stagnant lid
@@ -396,8 +396,8 @@ int main(int argc, char *argv[]) {
     xgas[4] = input[i]; i++;             // H2O mixing ratio
 
 	printf("\n");
-	printf("ExoCcycleGeo v24.12\n");
-	printf("Copyright (C) 2017-2024 Marc Neveu (marc.f.neveu@nasa.gov)\n\n"       );
+	printf("ExoCcycleGeo v26.2\n");
+	printf("Copyright (C) 2017-2026 Marc Neveu (marc.f.neveu@nasa.gov)\n\n"       );
 	printf("This program is free software: you can redistribute it and/or\n"      );
 	printf("modify it under the terms of the GNU General Public License as\n"     );
 	printf("published by the Free Software Foundation, either version 3 of the\n" );
@@ -421,7 +421,7 @@ int main(int argc, char *argv[]) {
 	printf("|        Mg/Si (0.5 to 2, Earth 0.95)           | %g \n", Mg_Si);
 	printf("|        FeO/(FeO+Fe) (0 to 0.2, Earth 0.08)    | %g \n", FeO_Fe);
 	printf("| Mantle H2O (ppm by mass, Earth 300-1000)      | %g \n", C_OH);
-	printf("| Magma C (ppm by mass, Earth 115-670, def 350) | %g \n", magmaCmassfrac);
+	printf("| Magma C (ppm by mass, Earth 300-10000)        | %g \n", magmaCmassfrac);
 	printf("| Radionuclides (1 hi, 2 int, 3 lo, def. int)   | %d \n", radionuclides);
 	printf("| Radionuclide content multiplier (0.5-2)       | %g \n", radioMult);
 	printf("| Tectonic mode (0 plate tecton, 1 stagnant lid)| %d \n", staglid);
@@ -672,7 +672,7 @@ int main(int argc, char *argv[]) {
 	//-------------------------------------------------------------------
 
 	// Radiative transfer
-	S0 = 1368.0;
+	S0 = 1368.0; // W m-2
 	albedo = 0.3;
 
     // Ocean
@@ -701,7 +701,7 @@ int main(int argc, char *argv[]) {
 		RCocean = (xaq[0]+xaq[1])*Mocean;
 		RCatmoc = RCatm + RCocean;
 		RCmantle = 1.0e4*(RCatmoc); // Dasgupta and Hirschmann (2010): 0.8 to 12.5 e23 g = 0.07 to 1.04 e23 mol
-		RCmantle = (m_p-m_c)*magmaCmassfrac/10.0/0.012; // Dasgupta and Hirschmann (2010): parent mantle of magma is depleted in C relative to magma, has 20-1800 ppm. Choosing 200 ppm by default (0.002/10)
+		RCmantle = (m_p-m_c)*magmaCmassfrac/10.0/0.012; // Dasgupta and Hirschmann (2010): parent mantle of magma is depleted in C relative to magma, has 20-1800 ppm. Aiuppa et al. (2021) have 117-669 ppm. Choosing 200 ppm by default (0.002/10)
 
 		// Print first line of outputs
 		title[0] = '\0';
@@ -917,7 +917,7 @@ int main(int argc, char *argv[]) {
 		printf("\nTime: %g Gyr\n", realtime/Gyr2sec);
 
 		//-------------------------------------------------------------------
-		// Update surface temperature (unnecessary once coupled to Atmos)
+		// Update surface temperature
 		//-------------------------------------------------------------------
 
 		// Parameterization of Caldeira & Kasting (1992) equation (4), valid between psi=-8 to -2 and T=0 to 100C
@@ -1436,7 +1436,7 @@ int main(int argc, char *argv[]) {
 		printf("New crust generation rate (m Myr-1)     | 40                | %.3g \n", dzCrust_dt*Myr2sec);
 		printf("New crust density (kg m-3)              | 2800              | %.4g \n", rhomelt);
 		printf("C and H2O outgassing rate (mol s-1)     | 129000-407000     | %.6g \n", FCoutgas);
-		printf("Magma C mass fraction (ppm)             | 350 (115-670)     | %.3g \n", magmaCmassfrac*1.0e6);
+		printf("Magma C mass fraction (ppm)             | 300-10000         | %.3g \n", magmaCmassfrac*1.0e6);
 		printf("Convective velocity (cm yr-1)           | ~1                | %.2g \n", vConv*100.0*1.0e-6*Myr2sec);
 		printf("Mantle convection timescale (Myr)       | ~50-200           | %.4g \n", tConv/Myr2sec);
 		printf("Rayleigh number                         | ~1e6-1e7          | %.2g \n", Ra);
