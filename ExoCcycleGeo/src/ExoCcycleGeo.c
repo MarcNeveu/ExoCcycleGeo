@@ -1362,7 +1362,7 @@ int main(int argc, char *argv[]) {
 				else {
 					fprintf(fout, "Time (Gyr) \t Pressure (bar) \t Depth (km) \t Melt fraction \t Temp (K) \t Density (kg m-3)\n");
 					for (i=iCMB;i<=NR;i++) {
-						if (P[i] > PminMELTS && P[i] < PmaxMELTS)
+						//if (P[i] > PminMELTS && P[i] < PmaxMELTS)
 							fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g\n", realtime/Gyr2sec, P[i]/bar2Pa, (r_p-r[i])/km2m, Meltfrac[i], T[i], rho[i]);
 					}
 				}
@@ -1445,6 +1445,7 @@ int main(int argc, char *argv[]) {
 		printf("Thickness of lithosphere (km)           | 100               | %.3g \n", zLith/km2m);
 		printf("Temperature at base of lithosphere (ºC) | 1400              | %.4g \n", Tmantle-Kelvin);
 		printf("Adiabatic temperature gradient (K km-1) | 0.5               | %.2g \n", (T[iCMB+1]-Tmantle)/(r_p-zLith-r_c)*km2m);
+		printf("Upper mantle viscosity (Pa s)           | 1e19 to 1e21      | %.2g \n", nu*rho[iLith]);
 		printf("---------------------------------------------------------------------------\n");
 		printf("\n");
 
