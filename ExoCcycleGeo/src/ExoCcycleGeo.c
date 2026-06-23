@@ -189,7 +189,7 @@ int main(int argc, char *argv[]) {
 	double zCrust = 0.0;               // Crustal thickness (m), i.e. depth of layer crystallized from a melt
 	double Ra = 0.0;                   // Rayleigh number for mantle convection (no dim)
 	double Nu = 1.0;                   // Nusselt number (no dim)
-	double Tref = 0.0;                 // Temperature at outer boundary of convective zone (surface or base of stagnant lid)
+//	double Tref = 0.0;                 // Temperature at outer boundary of convective zone (surface or base of stagnant lid)
 	double meltmass = 0.0;             // Total mass of outgassing mantle melt (kg)
 	double rhomelt = 0.0;              // Density of the melt (kg m-3)
     double dMmelt_dt = 0.0;            // Rate of mantle mass melting (kg s-1)
@@ -197,7 +197,9 @@ int main(int argc, char *argv[]) {
 	double zLith = 0.0;                // Depth of lithosphere (both thermal: geotherm inflexion to adiabat and mechanical: brittle-ductile transition) (m)
 	double tConv = 0.0;                // Convection timescale (s), 200 Myr for deep Earth mantle today
 	double vConv = 0.0;                // Convective velocity (m s-1)
-	double p = 0.0;                    // Frank-Kamenetskii parameter (Solomatov 1995; denoted theta in Foley et al. 2020 chapter) (no dim)
+	double p_Sol = 0.0;                // Frank-Kamenetskii parameter (Solomatov 1995; denoted theta in Foley et al. 2020 chapter) (no dim)
+	double p = 0.0;					   //  = p_Sol in stagnant lid tectonics mode, 1 otherwise
+	double intExtVolcRatio = 10.0;     // Intrusive to extrusive erupted mass ratio (Greeley and Schneid 1991; White et al. 2006)
 
 	// Viscosity law constants (can't be #define'd because they are used as exponents)
 //	double DryOlDiff[nParamFlowLaw];   // Dry diffusion creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2009))
@@ -211,8 +213,8 @@ int main(int argc, char *argv[]) {
 //	DryOlDiff[7] = 1.5;                // Fe/(Fe+Mg) exponent (Zhao et al. 2009 by analogy with gbs-accommodated dislocation creep, as did Ruedas et al. 2013)
 
 	double WetOlDiff[nParamFlowLaw];   // Wet diffusion creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2018))
-	WetOlDiff[0] = 387.0e3;            // Activation energy (J mol-1), default 387±53e3
-	WetOlDiff[1] = 25.0e-6;            // Activation volume (m3 mol-1), default 25±4e-6
+	WetOlDiff[0] = 334.0e3; //387.0e3;            // Activation energy (J mol-1), default 387±53e3
+	WetOlDiff[1] = 21.0e-6; //25.0e-6;            // Activation volume (m3 mol-1), default 25±4e-6
 	WetOlDiff[2] = 4.32;               // Exponent of pre-exponential factor, default 4.32±0.38
 	WetOlDiff[3] = 1.0;                // Stress exponent
 	WetOlDiff[4] = 2.56;               // Grain size exponent, default 2.56±0.24
@@ -396,7 +398,7 @@ int main(int argc, char *argv[]) {
     xgas[4] = input[i]; i++;             // H2O mixing ratio
 
 	printf("\n");
-	printf("ExoCcycleGeo v26.2\n");
+	printf("ExoCcycleGeo v26.6\n");
 	printf("Copyright (C) 2017-2026 Marc Neveu (marc.f.neveu@nasa.gov)\n\n"       );
 	printf("This program is free software: you can redistribute it and/or\n"      );
 	printf("modify it under the terms of the GNU General Public License as\n"     );
@@ -557,7 +559,8 @@ int main(int argc, char *argv[]) {
 	Asurf = 4.0*PI_greek*r_p*r_p;
 	nAir = Psurf*bar2Pa*Asurf/g[NR]/molmass_atm(xgas);
 
-	zLith = (r_p-r_c)/Nu;              // Initial value, thickness of entire mantle since Nu is initiated to 1
+//	zLith = (r_p-r_c)/Nu;              // Initial value, thickness of entire mantle since Nu is initiated to 1
+	zLith = 0.01*r_p;
 	for (i=0;i<NR;i++) {
 		if (r[i] <= r_p - zLith && r[i+1] > r_p-zLith) iLith = i;
 	}
@@ -566,6 +569,7 @@ int main(int argc, char *argv[]) {
 
 	// Calculate Tmantle from accretion (Canup et al. 2021 Pluto chapter; volume averaging leads to 3/5 term)
 	Tmantle = Tsurf0 + 0.6*4.0*h_frac*chi*G*PI_greek*rho_p*r_p*r_p/(3.0*Cp);
+//	Tmantle = 1700.0;
 
 	// Calculate temperatures (not computed in the core)
 	for (i=0   ;i<iCMB;i++) T[i] = 0.0; // Temperatures not computed in the core
@@ -1027,34 +1031,41 @@ int main(int argc, char *argv[]) {
 //		printf("Tmantle=%g T_CMB=%g Tp=%g\n", Tmantle, Tadiab[iCMB], Tp);
 
 		// Solomatov (1995) equation (24) stagnant lid scaling, see also Foley et al. (2020) chapter just before equation (4.5)
-		p = (flowLawDiff[0] + flowLawDiff[6]*(Fe_FeMg - Fe_FeMg_ref))/(R_G*Tmantle*Tmantle)*(Tmantle-Tsurf); // Taking diffusion creep as the dominant mechanism at low stress
-
+		p_Sol = (flowLawDiff[0] + flowLawDiff[6]*(Fe_FeMg - Fe_FeMg_ref))/(R_G*Tmantle*Tmantle)*(Tmantle-Tsurf); // Taking diffusion creep as the dominant mechanism at low stress
+		if (staglid) p = p_Sol;
+		else p = 1.0;
+	
 		//  Upper mantle viscosity
-		nu = combVisc(Tmantle, P[iLith], flowLawDiff, flowLawDisl, grainSize, C_OH, Fe_FeMg, fPx, tConv)/rho[iLith];
+		nu = combVisc(Tmantle, rho[NR]*g[NR]*100.0e3, flowLawDiff, flowLawDisl, grainSize, C_OH, Fe_FeMg, fPx, tConv)/rho[iLith]; // TODO P = P[iLith] induces spurious? feedback
 //		nu = 1.0e19/3500.0;
 //		nu = 1.0e16*exp((2.0e5 + P[(int)((iLith+iCMB)/2.0)]*1.1e-6)/(R_G*Tmantle))/rho[(int)((iLith+iCMB)/2)]; // Cízková et al. (2012)
 //		nu = 1.0e16*exp((2.0e5 + P[iCMB]*1.1e-6)/(R_G*(Tmantle - alpha*g[iCMB]*Tmantle/Cp * (r[iCMB] - 0.5*(r_p+r_c)))))/rho[iCMB]; // Cízková et al. (2012) for CMB depth
 
 		// Vigor of convection, assuming whole-mantle convection (Kite et al. 2009)
-		if (staglid) {
-			// Delta_Tth that drives stagnant lid convection
-			for (i=iLith;i<NR;i++) {
-				if ((Tmantle-T[i])/(Tmantle-Tsurf) > 1.0/p) {
-					Tref = T[i];
-					break;
-				}
-			}
-		}
-		else Tref = Tsurf;
+//		if (staglid) { // May not need this switch
+//			// Delta_Tth that drives stagnant lid convection
+//			for (i=NR-1;i>iCMB;i--) {
+//				if ((Tmantle-T[i])/(Tmantle-Tsurf) < 1.0/p) {
+//					Tref = T[i];
+//					break;
+//				}
+//			}
+//		}
+//		else Tref = Tsurf;
 
-		Ra = alpha*g[iLith]*(Tmantle-Tref)*pow(r_p-r_c,3.0)/(kappa*nu);
+		Ra = alpha*g[iLith]*(Tmantle-Tsurf)/p*pow(r_p - (p-1.0)/p*zLith - r_c,3.0)/(kappa*nu); // Second term in pow() is zero if plate tectonics, and equal to the lid thickness (total lithosphere minus upper convective boundary layer zLith/p) in stagnant lid mode
 		if (Ra < Ra_c) {
 			printf("No convection\n");
 			Ra = Ra_c;
 		}
 		Nu = pow(Ra/Ra_c, beta);
 
-		zLith = (r_p-r_c)/Nu; // zLith = d/Nu per equation 4.3 of Foley et al. (2020). If Nu = 1, Tmantle = T_CMB (initialization).
+//		if (staglid) { // May not need this switch
+			zLith = p*(r_p - (p-1.0)/p*zLith - r_c)/Nu; // p*delta_rh with delta_rh from equation 4.6 of Foley et al. (2020), note the typo of a missing d (fluid thickness) factor in their equation. Multiplication by p is from just above their eq. 4.5.
+			zLith = fmin(zLith, r_p-r_c);
+//		}
+//		else zLith = (r_p - (p-1.0)/p*zLith - r_c)/Nu; // zLith \sim d/Nu per equation 4.3 of Foley et al. (2020). If Nu = 1, Tmantle = T_CMB (initialization).
+		
 		for (i=iCMB;i<NR;i++) {
 			if (r[i] < r_p-zLith && r[i+1] > r_p-zLith) iLith = i;
 		}
@@ -1092,7 +1103,7 @@ int main(int argc, char *argv[]) {
 			for (i=iCMB;i<NR;i++) {
 				if (P[i] > PminMELTS && P[i] < PmaxMELTS) { // Nominally, 1 to 4 GPa
 					if (T[i]-Kelvin > TminMELTS) {
-						fprintf(fout, "%g %g\n", P[i]/bar2Pa, T[i]-Kelvin); // Don't input below 750 C to avoid MELTS crashing.
+						fprintf(fout, "%g %g\n", P[i]/bar2Pa, T[i]-Kelvin-300.0); // Don't input below 750 C to avoid MELTS crashing. !! TODO remove -300.0
 						ir++;
 					}
 					else break;
@@ -1381,9 +1392,9 @@ int main(int argc, char *argv[]) {
         if (staglid) dMmelt_dt = meltmass / tConv;
         else dMmelt_dt = LplateRdg * WplateRdg * vConv * Meltfrac[0] * rhomelt;
 		
-		FCoutgas = dMmelt_dt * magmaCmassfrac / molmassC;
+		FCoutgas = dMmelt_dt / intExtVolcRatio * magmaCmassfrac / molmassC;
 
-		if (rhomelt > 0.0 && r[iLith] > r_c) dzCrust_dt = dMmelt_dt/rhomelt / (4.0*PI_greek) / pow(r_p-zCrust,2.0); // Derived by expressing V = 4/3*pi*(r_p^3-(r_p-zCrust)^3), differentiating with time, and rearranging to express dzCrust_dt = f(dV/dt, zCrust, r_p)
+		if (rhomelt > 0.0 && r[iLith] > r_c) dzCrust_dt = dMmelt_dt / intExtVolcRatio / rhomelt / (4.0*PI_greek) / pow(r_p-zCrust,2.0); // Derived by expressing V = 4/3*pi*(r_p^3-(r_p-zCrust)^3), differentiating with time, and rearranging to express dzCrust_dt = f(dV/dt, zCrust, r_p)
 		else dzCrust_dt = 0.0;
 		zCrust = zCrust + dzCrust_dt*dtime;
 
@@ -1463,7 +1474,7 @@ int main(int argc, char *argv[]) {
 		// Mass of mantle = m_p-m_c
 		H = H * (1.0 - (1.0-1.0/30.0) * 4.0/3.0*PI_greek*(pow(r_p,3.0)-pow(r_p-fmin(zCrust,50.0e3),3.0))*rhomelt / (m_p-m_c));
 		// Effective thermal conductivity scaled with Nu
-		Tmantle = Tmantle + dtime*(H/Cp - 3.0*kappa*Nu*(Tmantle-Tref)/(r_p-r_c)*r_p*r_p/(pow(r_p,3.0)-pow(r_c,3.0)));
+		Tmantle = Tmantle + dtime*(H/Cp - 3.0*kappa*Nu*(Tmantle-Tsurf)/p/(r_p-r_c)*r_p*r_p/(pow(r_p,3.0)-pow(r_c,3.0)));
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from continental weathering
@@ -1641,7 +1652,7 @@ int main(int argc, char *argv[]) {
 			if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 			else {
 				fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %d\n", realtime/Gyr2sec, Tmantle, Ra,
-						nu*rho[(int)((NR+iCMB)/2.0)], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, p, FCoutgas, vConv*1.0e-6*Myr2sec, tConv, zCrust, zCrust/dzCrust_dt, staglid);
+						nu*rho[iLith], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, p_Sol, FCoutgas, vConv*1.0e-6*Myr2sec, tConv, zCrust, zCrust/dzCrust_dt, staglid);
 			}
 			fclose (fout);
 

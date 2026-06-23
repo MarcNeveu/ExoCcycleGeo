@@ -67,6 +67,8 @@ double combVisc (double T, double P, double flowLawDiff[nParamFlowLaw], double f
 	viscDryDisl = viscosity(T, P, flowLawDisl, grainSize, C_OH, Fe_FeMg, fPx, dtime); // Korenaga & Karato (2008), dry dislocation
 	visc = 1.0/(1.0/viscDryDiff + 1.0/viscDryDisl); // Parallel combination
 
+//	visc = 1.0e18*exp(400.0e3/8.314*(1.0/T-1.0/1600.0));
+
 	return visc;
 }
 

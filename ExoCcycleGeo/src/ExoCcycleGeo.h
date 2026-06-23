@@ -57,13 +57,13 @@
 
 // Accretion parameters
 #define chi 2.0                         // Ratio of planetesimal velocity to escape velocity
-#define h_frac 0.1                      // Fraction of impactor energy deposited at depth
+#define h_frac 0.15                      // Fraction of impactor energy deposited at depth
 
 // Geodynamics parameters
 #define k 4.18                          // Mantle thermal conductivity (W m-1 K-1) (Turcotte and Schubert 2002)
 #define alpha 3.0e-5                    // Mantle thermal expansivity (K-1) (Turcotte and Schubert 2002)
 #define Cp 1295.0                       // Mantle specific heat capacity (J kg-1 K-1) (Akaogi & Ito 1993)
-#define beta 1.0/3.0                    // Exponent for scaling Nusselt number to Rayleigh number, 1/4 to 1/3 (Schubert et al. 2001)
+#define beta 0.25                    // Exponent for scaling Nusselt number to Rayleigh number, 1/4 to 1/3 (Schubert et al. 2001)
 #define Ra_c 1707.762                   // Critical Rayleigh number for convection, http://home.iitk.ac.in/~sghorai/NOTES/benard/node15.html, see also Koschmieder EL (1993) Benard cells and Taylor vortices, Cambridge U Press, p. 20.
 #define TminMELTS 750.0                 // Don't run MELTS below 750ºC to avoid it crashing (ºC)
 #define PmaxMELTS 4.0e9                 // Don't run pMELTS at pressures above 4 GPa
