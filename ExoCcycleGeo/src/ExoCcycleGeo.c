@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
 	double vConv = 0.0;                // Convective velocity (m s-1)
 	double p_Sol = 0.0;                // Frank-Kamenetskii parameter (Solomatov 1995; denoted theta in Foley et al. 2020 chapter) (no dim)
 	double p = 0.0;					   //  = p_Sol in stagnant lid tectonics mode, 1 otherwise
-	double intExtVolcRatio = 10.0;     // Intrusive to extrusive erupted mass ratio (Greeley and Schneid 1991; White et al. 2006)
+	double f_Volc = 0.01;              // Fraction of planet area where mantle melting and hot spot eruptions take place (Grott et al. 2011)
 
 	// Viscosity law constants (can't be #define'd because they are used as exponents)
 //	double DryOlDiff[nParamFlowLaw];   // Dry diffusion creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2009))
@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
 //	DryOlDiff[7] = 1.5;                // Fe/(Fe+Mg) exponent (Zhao et al. 2009 by analogy with gbs-accommodated dislocation creep, as did Ruedas et al. 2013)
 
 	double WetOlDiff[nParamFlowLaw];   // Wet diffusion creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2018))
-	WetOlDiff[0] = 334.0e3; //387.0e3;            // Activation energy (J mol-1), default 387±53e3
+	WetOlDiff[0] = 300.0e3; //334.0e3; //387.0e3;            // Activation energy (J mol-1), default 387±53e3
 	WetOlDiff[1] = 21.0e-6; //25.0e-6;            // Activation volume (m3 mol-1), default 25±4e-6
 	WetOlDiff[2] = 4.32;               // Exponent of pre-exponential factor, default 4.32±0.38
 	WetOlDiff[3] = 1.0;                // Stress exponent
@@ -398,7 +398,7 @@ int main(int argc, char *argv[]) {
     xgas[4] = input[i]; i++;             // H2O mixing ratio
 
 	printf("\n");
-	printf("ExoCcycleGeo v26.6\n");
+	printf("ExoCcycleGeo v26.7\n");
 	printf("Copyright (C) 2017-2026 Marc Neveu (marc.f.neveu@nasa.gov)\n\n"       );
 	printf("This program is free software: you can redistribute it and/or\n"      );
 	printf("modify it under the terms of the GNU General Public License as\n"     );
@@ -751,8 +751,8 @@ int main(int argc, char *argv[]) {
 		strcat(title,"Outputs/Outgassing.txt");
 		fout = fopen(title,"w");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-		else fprintf(fout, "Time (Gyr) \t Tmantle (K) \t Ra \t Visc (Pa s) \t Heat flux (mW m-2) \t Lithospheric thickness (km) \t Frank-Kamenetskii parameter \t Outgassing flux (mol C s-1) \t Convective velocity (m yr-1) \t "
-				"Convective timescale (s) \t Crustal thickness (m) \t Crust generation timescale (s) \t Stagnant lid?\n");
+		else fprintf(fout, "Time (Gyr) \t Tmantle (K) \t Ra \t Visc (Pa s) \t Heat flux through lithosphere (mW m-2) \t Lithospheric thickness (km) \t Frank-Kamenetskii parameter \t Outgassing flux (Tmol C yr-1) \t Convective velocity (m yr-1) \t "
+				"Convective timescale (Myr) \t Crustal thickness (km) \t Crust generation timescale (Myr) \t Stagnant lid? \t Crustal production rate (km3/yr) \n");
 		fclose (fout);
 
 		title[0] = '\0';
@@ -1103,7 +1103,7 @@ int main(int argc, char *argv[]) {
 			for (i=iCMB;i<NR;i++) {
 				if (P[i] > PminMELTS && P[i] < PmaxMELTS) { // Nominally, 1 to 4 GPa
 					if (T[i]-Kelvin > TminMELTS) {
-						fprintf(fout, "%g %g\n", P[i]/bar2Pa, T[i]-Kelvin-300.0); // Don't input below 750 C to avoid MELTS crashing. !! TODO remove -300.0
+						fprintf(fout, "%g %g\n", P[i]/bar2Pa, T[i]-Kelvin); // Don't input below 750 C to avoid MELTS crashing.
 						ir++;
 					}
 					else break;
@@ -1156,7 +1156,7 @@ int main(int argc, char *argv[]) {
 					if (fabs(1.0-1000.0*g[NR-1]*(r_p - pow( pow(r_p,3.0) - Mocean/1000.0*3.0/(4.0*PI_greek) ,1.0/3.0))/(sys_tbl[0][0]*bar2Pa)) > 1.0e-3) printf("ExoCcycleGeo: pressures from grid (%g bar) and MELTS (%g bar) differ\n", P[i]/bar2Pa, sys_tbl[0][0]);
 					if (fabs(1.0-Tadiab[NR-1]/ sys_tbl[0][1]) > 1.0e-3) printf("ExoCcycleGeo: temperatures from grid (%g K) and MELTS (%g K) differ\n", Tadiab[NR-1], sys_tbl[0][1]);
 					Meltfrac[0] = sys_tbl[0][3];
-					rhomelt = sys_tbl[0][13]*1000.0; // g cm-3 to kg m-3, taken at depth of highest melt fraction, for calculation of thickness of new crust generated
+					rhomelt = sys_tbl[0][13]*1000.0; // g cm-3 to kg m-3, for calculation of thickness of new crust generated
 				}
 				else printf("Mantle potential temperature too low for melting\n");
 			}
@@ -1383,19 +1383,33 @@ int main(int argc, char *argv[]) {
 					for (i=imin-ir;i<=imax;i++) {
 						meltmass += Meltfrac[i]*4.0/3.0*PI_greek*(pow(r[i+1],3)-pow(r[i],3))*rho[i];
 					}
-					if (Meltfrac[imin-ir]*4.0/3.0*PI_greek*(pow(r[imin-ir+1],3)-pow(r[imin-ir],3))*rho[imin-ir] > 0.5*meltmass)
-						meltmass -= Meltfrac[imin-ir]*4.0/3.0*PI_greek*(pow(r[imin-ir+1],3)-pow(r[imin-ir],3))*rho[imin-ir]; // Spurious nonzero melt fraction only in the bottom grid zone of the MELTS calculation
+					if (Meltfrac[imin-ir]*4.0/3.0*PI_greek*(pow(r[imin-ir+1],3)-pow(r[imin-ir],3))*rho[imin-ir] > 0.5*meltmass) // Spurious nonzero melt fraction only in the bottom grid zone of the MELTS calculation
+						meltmass -= Meltfrac[imin-ir]*4.0/3.0*PI_greek*(pow(r[imin-ir+1],3)-pow(r[imin-ir],3))*rho[imin-ir]; 
 				}
 			}
 //		}
 
-        if (staglid) dMmelt_dt = meltmass / tConv;
-        else dMmelt_dt = LplateRdg * WplateRdg * vConv * Meltfrac[0] * rhomelt;
+//        if (staglid) dMmelt_dt = meltmass / tConv;
+        if  (staglid) {
+			if (rhomelt > 0.0 && r[iLith] > r_c) {
+				dzCrust_dt = meltmass * f_Volc / rhomelt * vConv / (4.0/3.0*PI_greek*pow(r_p,3.0));
+				dMmelt_dt = dzCrust_dt * rhomelt * 4.0*PI_greek * pow(r_p-zCrust,2.0);
+			}
+			else {
+				printf("ExoCcycleGeo: amount of melt could not be calculated because rhomelt < 0 or r[iLith] < r_c\n");
+				dMmelt_dt = 0.0;
+			}
+		}
+        else {
+			dMmelt_dt = LplateRdg * WplateRdg * vConv * Meltfrac[0] * rhomelt;
+			if (rhomelt > 0.0 && r[iLith] > r_c) dzCrust_dt = dMmelt_dt / rhomelt / (4.0*PI_greek) / pow(r_p-zCrust,2.0); // Derived by expressing V = 4/3*pi*(r_p^3-(r_p-zCrust)^3), differentiating with time, and rearranging to express dzCrust_dt = f(dV/dt, zCrust, r_p)
+			else {
+				printf("ExoCcycleGeo: amount of melt could not be calculated because rhomelt < 0 or r[iLith] < r_c\n");
+				dzCrust_dt = 0.0;
+			}
+		}
 		
-		FCoutgas = dMmelt_dt / intExtVolcRatio * magmaCmassfrac / molmassC;
-
-		if (rhomelt > 0.0 && r[iLith] > r_c) dzCrust_dt = dMmelt_dt / intExtVolcRatio / rhomelt / (4.0*PI_greek) / pow(r_p-zCrust,2.0); // Derived by expressing V = 4/3*pi*(r_p^3-(r_p-zCrust)^3), differentiating with time, and rearranging to express dzCrust_dt = f(dV/dt, zCrust, r_p)
-		else dzCrust_dt = 0.0;
+		FCoutgas = dMmelt_dt * magmaCmassfrac / molmassC;
 		zCrust = zCrust + dzCrust_dt*dtime;
 
 //		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iLith]-r[iCMB])*0.4; // mol C s-1, 40% melt reaches the surface
@@ -1452,7 +1466,7 @@ int main(int argc, char *argv[]) {
 		printf("Mantle convection timescale (Myr)       | ~50-200           | %.4g \n", tConv/Myr2sec);
 		printf("Rayleigh number                         | ~1e6-1e7          | %.2g \n", Ra);
 		printf("Half-mantle depth (km)                  | 1450              | %.4g \n", (r_p-r_c-zLith)/2.0/km2m);
-		printf("Heat flux (mW m-2)                      | 86 (radiodecay 40)| %.3g \n", k*(Tmantle-Tsurf)/zLith*1000.0);
+		printf("Heat flux through lithosphere (mW m-2)  | 86 (radiodecay 40)| %.3g \n", k*(Tmantle-Tsurf)/zLith*1000.0);
 		printf("Thickness of lithosphere (km)           | 100               | %.3g \n", zLith/km2m);
 		printf("Temperature at base of lithosphere (ºC) | 1400              | %.4g \n", Tmantle-Kelvin);
 		printf("Adiabatic temperature gradient (K km-1) | 0.5               | %.2g \n", (T[iCMB+1]-Tmantle)/(r_p-zLith-r_c)*km2m);
@@ -1472,9 +1486,13 @@ int main(int argc, char *argv[]) {
 		// Depleted mantle has 1/30, continental crust 50x, and oceanic crust (tholeiitic basalt) 2.5x the radionuclide content of the reference mantle.
 		// Mass of crust = 4/3*pi*(r_p^3-(r_p-zCrust)^3))*rhomelt. Cap crustal thickness at 50 km to account for material recycling into the mantle, even in the stagnant lid regime (Bedard 2018)
 		// Mass of mantle = m_p-m_c
-		H = H * (1.0 - (1.0-1.0/30.0) * 4.0/3.0*PI_greek*(pow(r_p,3.0)-pow(r_p-fmin(zCrust,50.0e3),3.0))*rhomelt / (m_p-m_c));
+//		H = H * (1.0 - (1.0-1.0/30.0) * 4.0/3.0*PI_greek*(pow(r_p,3.0)-pow(r_p-fmin(zCrust,50.0e3),3.0))*rhomelt / (m_p-m_c));
+		H = H * (1.0 - (1.0-1.0/30.0) * 4.0/3.0*PI_greek*(pow(r_p,3.0)-pow(r_p-fmin(zCrust,zLith ),3.0))*rhomelt / (m_p-m_c)); // Delamination when crust becomes a thick as lithosphere, van Thienen et al. 2005
 		// Effective thermal conductivity scaled with Nu
-		Tmantle = Tmantle + dtime*(H/Cp - 3.0*kappa*Nu*(Tmantle-Tsurf)/p/(r_p-r_c)*r_p*r_p/(pow(r_p,3.0)-pow(r_c,3.0)));
+		if (staglid) { // Advective heat loss from eruption in stagnant lid mode
+			 Tmantle = Tmantle + dtime*(H/Cp - 3.0*(kappa*Nu/p/(r_p-r_c) + dzCrust_dt)*(Tmantle-Tsurf)*r_p*r_p/(pow(r_p,3.0)-pow(r_c,3.0))); 
+		}
+		else Tmantle = Tmantle + dtime*(H/Cp - 3.0* kappa*Nu/p/(r_p-r_c)              *(Tmantle-Tsurf)*r_p*r_p/(pow(r_p,3.0)-pow(r_c,3.0))); 
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from continental weathering
@@ -1651,8 +1669,8 @@ int main(int argc, char *argv[]) {
 			fout = fopen(title,"a");
 			if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 			else {
-				fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %d\n", realtime/Gyr2sec, Tmantle, Ra,
-						nu*rho[iLith], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, p_Sol, FCoutgas, vConv*1.0e-6*Myr2sec, tConv, zCrust, zCrust/dzCrust_dt, staglid);
+				fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %d \t %g\n", realtime/Gyr2sec, Tmantle, Ra,
+						nu*rho[iLith], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, p_Sol, FCoutgas/1.0e12*Yr2sec, vConv*1.0e-6*Myr2sec, tConv/Myr2sec, zCrust/km2m, zCrust/dzCrust_dt/Myr2sec, staglid, dMmelt_dt/rhomelt*1.0e-9*Yr2sec);
 			}
 			fclose (fout);
 
