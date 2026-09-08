@@ -1,114 +1,327 @@
 Title: Primitive mantle composition from McDonough & Sun (1995),
 
-Pressure 99969.20 Temperature 2005.89 
-Partition 99.089510 
-Bulk 99.089510 
-Liquid 27.868503 
-Solid 71.221007 
-garnet_0 17.249659 
-orthopyroxene_0 53.446450 
-spinel_0 0.524898 
-Pressure 72242.80 Temperature 1980.38 
-Partition 99.092669 
-Bulk 99.092669 
-Liquid 26.917486 
-Solid 72.175182 
-garnet_0 16.511414 
-orthopyroxene_0 55.128533 
-spinel_0 0.535235 
-Pressure 74351.50 Temperature 1982.26 
-Partition 99.092150 
-Bulk 99.092150 
-Liquid 26.937154 
-Solid 72.154996 
-garnet_0 16.619237 
-orthopyroxene_0 55.002008 
-spinel_0 0.533751 
-Pressure 76398.70 Temperature 1984.21 
-Partition 99.091701 
-Bulk 99.091701 
-Liquid 26.969052 
-Solid 72.122649 
-garnet_0 16.711407 
-orthopyroxene_0 54.878737 
-spinel_0 0.532505 
-Pressure 42833.50 Temperature 1951.37 
-Partition 99.109324 
-Bulk 99.109324 
-Liquid 30.098453 
-Solid 69.010871 
-garnet_0 10.233361 
-orthopyroxene_0 58.145128 
-spinel_0 0.632383 
-Pressure 72188.60 Temperature 1980.33 
-Partition 99.092683 
-Bulk 99.092683 
-Liquid 26.917083 
-Solid 72.175600 
-garnet_0 16.508467 
-orthopyroxene_0 55.131857 
-spinel_0 0.535276 
-Pressure 48093.40 Temperature 1956.96 
-Partition 99.104468 
-Bulk 99.104468 
-Liquid 28.340439 
-Solid 70.764029 
-garnet_0 12.908082 
-orthopyroxene_0 57.263358 
-spinel_0 0.592589 
-Pressure 74297.50 Temperature 1982.21 
-Partition 99.092163 
-Bulk 99.092163 
-Liquid 26.936473 
-Solid 72.155689 
-garnet_0 16.616647 
-orthopyroxene_0 55.005256 
-spinel_0 0.533786 
-Pressure 56822.70 Temperature 1965.40 
-Partition 99.098636 
-Bulk 99.098636 
-Liquid 27.223494 
-Solid 71.875143 
-garnet_0 15.060122 
-orthopyroxene_0 56.257114 
-spinel_0 0.557907 
-Pressure 76344.90 Temperature 1984.16 
-Partition 99.091713 
-Bulk 99.091713 
-Liquid 26.968129 
-Solid 72.123584 
-garnet_0 16.709119 
-orthopyroxene_0 54.881929 
-spinel_0 0.532536 
-Pressure 72134.40 Temperature 1980.28 
-Partition 99.092697 
-Bulk 99.092697 
-Liquid 26.916687 
-Solid 72.176010 
-garnet_0 16.505509 
-orthopyroxene_0 55.135184 
-spinel_0 0.535317 
-Pressure 74243.50 Temperature 1982.16 
-Partition 99.092175 
-Bulk 99.092175 
-Liquid 26.935799 
-Solid 72.156376 
-garnet_0 16.614049 
-orthopyroxene_0 55.008505 
-spinel_0 0.533822 
-Pressure 42776.70 Temperature 1951.32 
-Partition 99.109383 
-Bulk 99.109383 
-Liquid 30.127382 
-Solid 68.982001 
-garnet_0 10.194398 
-orthopyroxene_0 58.154677 
-spinel_0 0.632927 
-Pressure 56767.10 Temperature 1965.34 
-Partition 99.098667 
-Bulk 99.098667 
-Liquid 27.226896 
-Solid 71.871771 
-garnet_0 15.051317 
-orthopyroxene_0 56.262400 
-spinel_0 0.558054 
+Pressure 39937.80 Temperature 1482.69 
+Partition 99.086145 
+Bulk 99.086145 
+Liquid 0.004884 
+Solid 99.081261 
+olivine_0 15.467865 
+garnet_0 12.899282 
+orthopyroxene_0 58.686725 
+clinopyroxene_0 11.003435 
+biotite_0 0.260832 
+spinel_0 0.646439 
+apatite 0.049468 
+water 0.067215 
+Pressure 39291.80 Temperature 1463.76 
+Partition 99.085875 
+Bulk 99.085875 
+Liquid 0.000000 ---
+Solid 99.085875 
+olivine_0 15.477112 
+garnet_0 12.908589 
+orthopyroxene_0 58.526443 
+clinopyroxene_0 11.149572 
+biotite_0 0.260998 
+spinel_0 0.645598 
+apatite 0.049544 
+water 0.068020 
+Pressure 38645.90 Temperature 1444.81 
+Partition 99.085596 
+Bulk 99.085596 
+Liquid 0.000000 ---
+Solid 99.085596 
+olivine_0 15.480029 
+garnet_0 12.923565 
+orthopyroxene_0 58.374524 
+clinopyroxene_0 11.284584 
+biotite_0 0.260955 
+spinel_0 0.644374 
+apatite 0.049544 
+water 0.068020 
+Pressure 38000.00 Temperature 1425.86 
+Partition 99.085321 
+Bulk 99.085321 
+Liquid 0.000000 ---
+Solid 99.085321 
+olivine_0 15.482813 
+garnet_0 12.938558 
+orthopyroxene_0 58.224635 
+clinopyroxene_0 11.417667 
+biotite_0 0.260911 
+spinel_0 0.643173 
+apatite 0.049544 
+water 0.068020 
+Pressure 37354.20 Temperature 1406.90 
+Partition 99.085049 
+Bulk 99.085049 
+Liquid 0.000000 ---
+Solid 99.085049 
+olivine_0 15.485466 
+garnet_0 12.953704 
+orthopyroxene_0 58.076658 
+clinopyroxene_0 11.548798 
+biotite_0 0.260868 
+spinel_0 0.641990 
+apatite 0.049544 
+water 0.068020 
+Pressure 36708.40 Temperature 1387.93 
+Partition 99.084781 
+Bulk 99.084781 
+Liquid 0.000000 ---
+Solid 99.084781 
+olivine_0 15.487984 
+garnet_0 12.969026 
+orthopyroxene_0 57.930647 
+clinopyroxene_0 11.677907 
+biotite_0 0.260825 
+spinel_0 0.640828 
+apatite 0.049544 
+water 0.068020 
+Pressure 36062.70 Temperature 1368.95 
+Partition 99.084516 
+Bulk 99.084516 
+Liquid 0.000000 ---
+Solid 99.084516 
+olivine_0 15.490364 
+garnet_0 12.984588 
+orthopyroxene_0 57.786607 
+clinopyroxene_0 11.804925 
+biotite_0 0.260781 
+spinel_0 0.639687 
+apatite 0.049544 
+water 0.068020 
+Pressure 35417.10 Temperature 1349.96 
+Partition 99.084254 
+Bulk 99.084254 
+Liquid 0.000000 ---
+Solid 99.084254 
+olivine_0 15.492601 
+garnet_0 13.000436 
+orthopyroxene_0 57.644554 
+clinopyroxene_0 11.929795 
+biotite_0 0.260738 
+spinel_0 0.638567 
+apatite 0.049544 
+water 0.068020 
+Pressure 34771.50 Temperature 1330.97 
+Partition 99.083996 
+Bulk 99.083996 
+Liquid 0.000000 ---
+Solid 99.083996 
+olivine_0 15.494684 
+garnet_0 13.016516 
+orthopyroxene_0 57.504653 
+clinopyroxene_0 12.052412 
+biotite_0 0.260695 
+spinel_0 0.637473 
+apatite 0.049544 
+water 0.068020 
+Pressure 34126.00 Temperature 1311.96 
+Partition 99.083741 
+Bulk 99.083741 
+Liquid 0.000000 ---
+Solid 99.083741 
+olivine_0 15.496618 
+garnet_0 13.033062 
+orthopyroxene_0 57.366605 
+clinopyroxene_0 12.172842 
+biotite_0 0.260652 
+spinel_0 0.636399 
+apatite 0.049544 
+water 0.068020 
+Pressure 33480.50 Temperature 1292.95 
+Partition 99.083490 
+Bulk 99.083490 
+Liquid 0.000000 ---
+Solid 99.083490 
+olivine_0 15.498387 
+garnet_0 13.049938 
+orthopyroxene_0 57.230700 
+clinopyroxene_0 12.290937 
+biotite_0 0.260609 
+spinel_0 0.635355 
+apatite 0.049544 
+water 0.068020 
+Pressure 32835.10 Temperature 1273.93 
+Partition 99.083242 
+Bulk 99.083242 
+Liquid 0.000000 ---
+Solid 99.083242 
+olivine_0 15.499990 
+garnet_0 13.067303 
+orthopyroxene_0 57.096766 
+clinopyroxene_0 12.406718 
+biotite_0 0.260566 
+spinel_0 0.634335 
+apatite 0.049544 
+water 0.068020 
+Pressure 32189.70 Temperature 1254.90 
+Partition 99.082997 
+Bulk 99.082997 
+Liquid 0.000000 ---
+Solid 99.082997 
+olivine_0 15.501420 
+garnet_0 13.085207 
+orthopyroxene_0 56.964773 
+clinopyroxene_0 12.520167 
+biotite_0 0.260523 
+spinel_0 0.633344 
+apatite 0.049544 
+water 0.068020 
+Pressure 31544.40 Temperature 1235.86 
+Partition 99.082756 
+Bulk 99.082756 
+Liquid 0.000000 ---
+Solid 99.082756 
+olivine_0 15.502669 
+garnet_0 13.103694 
+orthopyroxene_0 56.834734 
+clinopyroxene_0 12.631235 
+biotite_0 0.260479 
+spinel_0 0.632381 
+apatite 0.049544 
+water 0.068020 
+Pressure 30899.20 Temperature 1216.81 
+Partition 99.082519 
+Bulk 99.082519 
+Liquid 0.000000 ---
+Solid 99.082519 
+olivine_0 15.503729 
+garnet_0 13.122831 
+orthopyroxene_0 56.706603 
+clinopyroxene_0 12.739906 
+biotite_0 0.260436 
+spinel_0 0.631449 
+apatite 0.049544 
+water 0.068020 
+Pressure 30254.00 Temperature 1197.75 
+Partition 99.082285 
+Bulk 99.082285 
+Liquid 0.000000 ---
+Solid 99.082285 
+olivine_0 15.504590 
+garnet_0 13.142656 
+orthopyroxene_0 56.580368 
+clinopyroxene_0 12.846164 
+biotite_0 0.260392 
+spinel_0 0.630550 
+apatite 0.049544 
+water 0.068020 
+Pressure 29608.90 Temperature 1178.68 
+Partition 99.082055 
+Bulk 99.082055 
+Liquid 0.000000 ---
+Solid 99.082055 
+olivine_0 15.505244 
+garnet_0 13.163262 
+orthopyroxene_0 56.455959 
+clinopyroxene_0 12.949994 
+biotite_0 0.260349 
+spinel_0 0.629684 
+apatite 0.049544 
+water 0.068020 
+Pressure 28963.90 Temperature 1159.61 
+Partition 99.081828 
+Bulk 99.081828 
+Liquid 0.000000 ---
+Solid 99.081828 
+olivine_0 15.505680 
+garnet_0 13.184701 
+orthopyroxene_0 56.333348 
+clinopyroxene_0 13.051377 
+biotite_0 0.260305 
+spinel_0 0.628855 
+apatite 0.049544 
+water 0.068020 
+Pressure 28318.80 Temperature 1140.52 
+Partition 99.081606 
+Bulk 99.081606 
+Liquid 0.000000 ---
+Solid 99.081606 
+olivine_0 15.505885 
+garnet_0 13.206999 
+orthopyroxene_0 56.212525 
+clinopyroxene_0 13.150308 
+biotite_0 0.260260 
+spinel_0 0.628065 
+apatite 0.049544 
+water 0.068020 
+Pressure 27673.90 Temperature 1121.42 
+Partition 99.081388 
+Bulk 99.081388 
+Liquid 0.000000 ---
+Solid 99.081388 
+olivine_0 15.505850 
+garnet_0 13.230292 
+orthopyroxene_0 56.093383 
+clinopyroxene_0 13.246768 
+biotite_0 0.260216 
+spinel_0 0.627316 
+apatite 0.049544 
+water 0.068020 
+Pressure 27029.00 Temperature 1102.32 
+Partition 99.081228 
+Bulk 99.081228 
+Liquid 0.000000 ---
+Solid 99.081228 
+olivine_0 15.236093 
+garnet_0 12.859730 
+orthopyroxene_0 56.123561 
+clinopyroxene_0 13.395264 
+biotite_0 0.260195 
+spinel_0 0.626527 
+apatite 0.049544 
+chlorite_0 0.530315 
+Pressure 26384.20 Temperature 1083.20 
+Partition 99.081018 
+Bulk 99.081018 
+Liquid 0.000000 ---
+Solid 99.081018 
+olivine_0 15.235701 
+garnet_0 12.883071 
+orthopyroxene_0 56.010947 
+clinopyroxene_0 13.485483 
+biotite_0 0.260150 
+spinel_0 0.625847 
+apatite 0.049544 
+chlorite_0 0.530276 
+Pressure 25739.40 Temperature 1064.07 
+Partition 99.080813 
+Bulk 99.080813 
+Liquid 0.000000 ---
+Solid 99.080813 
+olivine_0 15.235030 
+garnet_0 12.907477 
+orthopyroxene_0 55.900007 
+clinopyroxene_0 13.573198 
+biotite_0 0.260105 
+spinel_0 0.625215 
+apatite 0.049544 
+chlorite_0 0.530236 
+Pressure 25094.70 Temperature 1044.93 
+Partition 99.080612 
+Bulk 99.080612 
+Liquid 0.000000 ---
+Solid 99.080612 
+olivine_0 15.234067 
+garnet_0 12.933035 
+orthopyroxene_0 55.790679 
+clinopyroxene_0 13.658396 
+biotite_0 0.260059 
+spinel_0 0.624636 
+apatite 0.049544 
+chlorite_0 0.530197 
+Pressure 24450.10 Temperature 1025.79 
+Partition 99.080417 
+Bulk 99.080417 
+Liquid 0.000000 ---
+Solid 99.080417 
+olivine_0 15.232794 
+garnet_0 12.959817 
+orthopyroxene_0 55.682912 
+clinopyroxene_0 13.741068 
+biotite_0 0.260013 
+spinel_0 0.624113 
+apatite 0.049544 
+chlorite_0 0.530156 

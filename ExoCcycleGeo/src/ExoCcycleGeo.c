@@ -200,6 +200,7 @@ int main(int argc, char *argv[]) {
 	double p_Sol = 0.0;                // Frank-Kamenetskii parameter (Solomatov 1995; denoted theta in Foley et al. 2020 chapter) (no dim)
 	double p = 0.0;					   //  = p_Sol in stagnant lid tectonics mode, 1 otherwise
 	double f_Volc = 0.01;              // Fraction of planet area where mantle melting and hot spot eruptions take place (Grott et al. 2011)
+	double IntExtRatio = 10.0;         // Ratio of intrusive to extrusive volcanism
 
 	// Viscosity law constants (can't be #define'd because they are used as exponents)
 //	double DryOlDiff[nParamFlowLaw];   // Dry diffusion creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2009))
@@ -213,8 +214,8 @@ int main(int argc, char *argv[]) {
 //	DryOlDiff[7] = 1.5;                // Fe/(Fe+Mg) exponent (Zhao et al. 2009 by analogy with gbs-accommodated dislocation creep, as did Ruedas et al. 2013)
 
 	double WetOlDiff[nParamFlowLaw];   // Wet diffusion creep flow law (Korenaga & Karato 2008, applicable for Fe/(Mg+Fe) = 0.1, modified for Fe content by Zhao et al. (2018))
-	WetOlDiff[0] = 300.0e3; //334.0e3; //387.0e3;            // Activation energy (J mol-1), default 387±53e3
-	WetOlDiff[1] = 21.0e-6; //25.0e-6;            // Activation volume (m3 mol-1), default 25±4e-6
+	WetOlDiff[0] = 334.0e3; //300.0e3; //387.0e3;            // Activation energy (J mol-1), default 387±53e3
+	WetOlDiff[1] = 25.0e-6;            // Activation volume (m3 mol-1), default 25±4e-6
 	WetOlDiff[2] = 4.32;               // Exponent of pre-exponential factor, default 4.32±0.38
 	WetOlDiff[3] = 1.0;                // Stress exponent
 	WetOlDiff[4] = 2.56;               // Grain size exponent, default 2.56±0.24
@@ -398,7 +399,7 @@ int main(int argc, char *argv[]) {
     xgas[4] = input[i]; i++;             // H2O mixing ratio
 
 	printf("\n");
-	printf("ExoCcycleGeo v26.7\n");
+	printf("ExoCcycleGeo v26.9\n");
 	printf("Copyright (C) 2017-2026 Marc Neveu (marc.f.neveu@nasa.gov)\n\n"       );
 	printf("This program is free software: you can redistribute it and/or\n"      );
 	printf("modify it under the terms of the GNU General Public License as\n"     );
@@ -448,7 +449,7 @@ int main(int argc, char *argv[]) {
 	printf("|--------------------------------------------------------------|\n");
 
 	printf("\n");
-	
+
 	// Core mass fraction, based on Fe/Mg and FeO/Fe
 	m_c = m_p * (0.25 + (0.45-0.25)/(1.5-0.6)*(Fe_FeMg-0.6)); // With Fe/FeO = Earth, m_c/m_p = 0.25 for Fe/Mg = 0.6, 0.45 for Fe/Mg = 1.5 (Unterborn and Panero 2019), 0.325 canonical (Fe/Mg = 1). Linear relationship gives m_c/m_p = 0.338 for Fe/Mg = 1 and 0.325 for Fe/Mg = 0.94
 	
@@ -910,6 +911,9 @@ int main(int argc, char *argv[]) {
 
 	printf("Starting time loop...\n");
 	while (realtime < tend) {
+		
+//		if (realtime < 0.1*Gyr2sec) staglid = 0;
+//		else staglid = 1;
 
 		dtime = fmin(dtime0, 0.1*fmin(RCatmoc, RCmantle)/fabs(netFC));
 		if (realtime >= tstart && realtime < tstart + 1.0*Myr2sec) dtime = fmin(dtime, 0.2*Myr2sec); // Start slow
@@ -1409,8 +1413,9 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		
-		FCoutgas = dMmelt_dt * magmaCmassfrac / molmassC;
+		FCoutgas = dMmelt_dt / IntExtRatio * magmaCmassfrac / molmassC;
 		zCrust = zCrust + dzCrust_dt*dtime;
+		if (zCrust > zLith) zCrust = zLith; // Crust otherwise founders back into the mantle
 
 //		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iLith]-r[iCMB])*0.4; // mol C s-1, 40% melt reaches the surface
 //		if (realtime < 1.0*Gyr2sec) FCoutgas = FCoutgas * (realtime/(0.4*Gyr2sec)-1.5); // Ramp up outgassing from 0.6 to 1.0 Gyr to avoid step function
@@ -1490,7 +1495,7 @@ int main(int argc, char *argv[]) {
 		H = H * (1.0 - (1.0-1.0/30.0) * 4.0/3.0*PI_greek*(pow(r_p,3.0)-pow(r_p-fmin(zCrust,zLith ),3.0))*rhomelt / (m_p-m_c)); // Delamination when crust becomes a thick as lithosphere, van Thienen et al. 2005
 		// Effective thermal conductivity scaled with Nu
 		if (staglid) { // Advective heat loss from eruption in stagnant lid mode
-			 Tmantle = Tmantle + dtime*(H/Cp - 3.0*(kappa*Nu/p/(r_p-r_c) + dzCrust_dt)*(Tmantle-Tsurf)*r_p*r_p/(pow(r_p,3.0)-pow(r_c,3.0))); 
+			 Tmantle = Tmantle + dtime*(H/Cp - 3.0*(kappa*Nu/p/(r_p-r_c) + 0.01*dzCrust_dt)*(Tmantle-Tsurf)*r_p*r_p/(pow(r_p,3.0)-pow(r_c,3.0))); 
 		}
 		else Tmantle = Tmantle + dtime*(H/Cp - 3.0* kappa*Nu/p/(r_p-r_c)              *(Tmantle-Tsurf)*r_p*r_p/(pow(r_p,3.0)-pow(r_c,3.0))); 
 
