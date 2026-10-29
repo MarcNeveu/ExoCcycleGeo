@@ -634,7 +634,7 @@ int main(int argc, char *argv[]) {
 //	}
 
 	// Redox (from most oxidized to most reduced)
-	int redox = 3; // TODO deprecated, remove. Now used only to set initial conditions.
+	int redox = 1; // TODO deprecated, remove. Now used only to set initial conditions.
 	switch(redox) {
 	case 1: // Present-day Earth surface
 		printf("Redox set to present-day Earth surface\n");
@@ -911,9 +911,6 @@ int main(int argc, char *argv[]) {
 
 	printf("Starting time loop...\n");
 	while (realtime < tend) {
-		
-//		if (realtime < 0.1*Gyr2sec) staglid = 0;
-//		else staglid = 1;
 
 		dtime = fmin(dtime0, 0.1*fmin(RCatmoc, RCmantle)/fabs(netFC));
 		if (realtime >= tstart && realtime < tstart + 1.0*Myr2sec) dtime = fmin(dtime, 0.2*Myr2sec); // Start slow
@@ -988,8 +985,8 @@ int main(int argc, char *argv[]) {
 		//-------------------------------------------------------------------
 		// Equilibrate ocean and atmosphere
 		//-------------------------------------------------------------------
-
-		if (Tsurf > Tfreeze+0.01) {
+			
+		if (realtime > tstart && Tsurf > Tfreeze+0.01) {
 			printf("Equilibrating ocean and atmosphere... ");
 
 			AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);

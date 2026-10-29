@@ -27,7 +27,6 @@
 int AqueousChem (char path[1024], char filename[64], double T, double *P, double *V, double *nAir, double *pH, double *pe, double *mass_w, double **xgas, double **xaq,
 		double ***xriver, int iResTime, int forcedPP, double kintime, int kinsteps, int nvar, double Pseaf, double mass_w_seaf, double *deltaCreac, int staglid, double dtime);
 int ExtractWrite(int instance, double*** data, int line, int nvar);
-const char* ConCat (const char *str1, const char *str2);
 int WritePHREEQCInput(const char *TemplateFile, double temp, double pressure, double gasvol, double pH, double pe, double mass_w,
 		double *xgas, double *xaq, double *xriver, int forcedPP, double kintime, int kinsteps, char **tempinput);
 int WriteMELTSinput(const char *TemplateFile, double Fe_FeMg, double Mg_Si, char **tempinput);
@@ -427,22 +426,6 @@ int ExtractWrite(int instance, double*** data, int line, int nvar) {
 
 /*--------------------------------------------------------------------
  *
- * Subroutine ConCat
- *
- * Concatenation. Takes 2 strings and returns the concatenated string.
- *
- *--------------------------------------------------------------------*/
-
-const char* ConCat(const char *str1, const char *str2) {
-	char buffer[100];
-	buffer[0] = '\0';
-
-	strcpy(buffer,str1);
-	return strcat(buffer,str2);
-}
-
-/*--------------------------------------------------------------------
- *
  * Subroutine WritePHREEQCInput
  *
  * Generate input file from a template.
@@ -598,108 +581,108 @@ int WritePHREEQCInput(const char *TemplateFile, double temp, double pressure, do
 
 		// SOLUTION
 		if (line[1] == 'p' && line[2] == 'H') {
-			if      (solution1) fprintf(fout, "%s charge\n", ConCat("\tpH \t \t",pH_str));
-			else if (solution2) fprintf(fout, "%s charge\n", ConCat("\tpH \t \t",river_str[3]));
+			if      (solution1) fprintf(fout, "\tpH \t \t%s charge\n", pH_str);
+			else if (solution2) fprintf(fout, "\tpH \t \t%s charge\n",river_str[3]);
 		}
 		else if (line[1] == 't' && line[2] == 'e' && line[3] == 'm' && line[4] == 'p') {
-			if      (solution1) fprintf(fout, "%s\n", ConCat("\ttemp \t \t",temp_str));
-			else if (solution2) fprintf(fout, "%s\n", ConCat("\ttemp \t \t",river_str[5]));
+			if      (solution1) fprintf(fout, "\ttemp \t \t%s\n", temp_str);
+			else if (solution2) fprintf(fout, "\ttemp \t \t%s\n",river_str[5]);
 		}
-		else if (line[1] == 'p' && line[2] == 'r' && line[3] == 'e' && line[4] == 's')         fprintf(fout, "%s\n", ConCat("\tpressure \t",pressure_str));
+		else if (line[1] == 'p' && line[2] == 'r' && line[3] == 'e' && line[4] == 's')         fprintf(fout, "\tpressure \t%s\n", pressure_str);
 		else if (line[1] == 'p' && line[2] == 'e') {
-			if      (solution1) fprintf(fout, "%s\n", ConCat("\tpe \t \t",pe_str));
-			else if (solution2) fprintf(fout, "%s\n", ConCat("\tpe \t \t",river_str[4]));
+			if      (solution1) fprintf(fout, "\tpe \t \t%s\n", pe_str);
+			else if (solution2) fprintf(fout, "\tpe \t \t%s\n",river_str[4]);
 		}
 		// Common water mass even for mixing calculation because proportions of solutions mixed are set in MIX block. These proportions could be set here instead, the outcome would be the same provided the ocean concentration and seafloor water mass are scaled accordingly in AqueousChem().
-		else if (!sel && line[1] == '-' && line[2] == 'w' && line[3] == 'a' && line[4] == 't') fprintf(fout, "%s\n", ConCat("\t-water \t \t",mass_w_str));
+		else if (!sel && line[1] == '-' && line[2] == 'w' && line[3] == 'a' && line[4] == 't') fprintf(fout, "\t-water \t \t%s\n", mass_w_str);
 		else if (!eqphases && line[1] == 'C' && line[2] == '(' && line[3] == '4' && line[4] == ')') {
 			if (forcedPP && xgas[0] > 0.0) {
 				strcat(aq_str[0], "\tCO2(g) \t");
 				strcat(aq_str[0], gas_str2[0]);
-				fprintf(fout, "%s\n", ConCat("\tC(4) \t\t", aq_str[0]));
+				fprintf(fout, "\tC(4) \t\t%s\n", aq_str[0]);
 			}
 			else {
-				if      (solution1) fprintf(fout, "%s\n", ConCat("\tC(4) \t\t",aq_str[0]));
-				else if (solution2) fprintf(fout, "%s\n", ConCat("\tC(4) \t\t",river_str[9])); // TODO this is C, get C(4) instead
+				if      (solution1) fprintf(fout, "\tC(4) \t\t%s\n",aq_str[0]);
+				else if (solution2) fprintf(fout, "\tC(4) \t\t%s\n",river_str[9]); // TODO this is C, get C(4) instead
 			}
 		}
 		else if (!eqphases && line[1] == 'C' && line[2] == '(' && line[3] == '-' && line[4] == '4') {
 			if (forcedPP && xgas[1] > 0.0) {
 				strcat(aq_str[1], "\tCH4(g) \t");
 				strcat(aq_str[1], gas_str2[1]);
-				fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t", aq_str[1]));
+				fprintf(fout, "\tC(-4) \t\t%s\n", aq_str[1]);
 			}
 			else {
-				if (solution1) fprintf(fout, "%s\n", ConCat("\tC(-4) \t\t",aq_str[1])); // TODO also set C(-4) from river for river-ocean mixing calculation
+				if (solution1) fprintf(fout, "\tC(-4) \t\t%s\n",aq_str[1]); // TODO also set C(-4) from river for river-ocean mixing calculation
 			}
 		}
 		else if (!eqphases && line[1] == 'O' && line[2] == '('  && line[3] == '0' && line[4] == ')') {
 			if ((forcedPP && xgas[2] > 0.0) || solution2) {
 				strcat(aq_str[2], "\tO2(g) \t");
 				strcat(aq_str[2], gas_str2[2]); // Doesn't matter if it's river_str (river-ocean mixing calculation) or aq_str (ocean start, continental weathering) because the value should be overwritten by gas_str at PHREEQC execution
-				fprintf(fout, "%s\n", ConCat("\tO(0) \t\t", aq_str[2]));
+				fprintf(fout, "\tO(0) \t\t%s\n", aq_str[2]);
 			}
-			else fprintf(fout, "%s\n", ConCat("\tO(0) \t\t", aq_str[2]));
+			else fprintf(fout, "\tO(0) \t\t%s\n", aq_str[2]);
 		}
 		else if (!eqphases && line[1] == 'N' && line[2] == 't'  && line[3] == 'g' && line[4] == '\t') {
 			if ((forcedPP && xgas[3] > 0.0) || solution2) {
 				strcat(aq_str[3], "\tNtg(g) \t");
 				strcat(aq_str[3], gas_str2[3]); // Doesn't matter if it's river_str (river-ocean mixing calculation) or aq_str (ocean start, continental weathering) because the value should be overwritten by gas_str at PHREEQC execution
-				fprintf(fout, "%s\n", ConCat("\tNtg \t\t", aq_str[3]));
+				fprintf(fout, "\tNtg \t\t%s\n", aq_str[3]);
 			}
-			else fprintf(fout, "%s\n", ConCat("\tNtg \t\t", aq_str[3]));
+			else fprintf(fout, "\tNtg \t\t%s\n", aq_str[3]);
 		}
 
 		// Next set of rows for ocean dissolution, mixing, and seafloor weathering, i.e., !forcedPP
 		else if (!forcedPP && line[1] == 'M' && line[2] == 'g') {
-			if      (solution1) fprintf(fout, "%s\n", ConCat("\tMg \t\t", aq_str[6]));
-			else if (solution2) fprintf(fout, "%s\n", ConCat("\tMg \t\t", river_str[11]));
+			if      (solution1) fprintf(fout, "\tMg \t\t%s\n", aq_str[6]);
+			else if (solution2) fprintf(fout, "\tMg \t\t%s\n", river_str[11]);
 		}
 		else if (!forcedPP && line[1] == 'C' && line[2] == 'a') {
-			if      (solution1) fprintf(fout, "%s\n", ConCat("\tCa \t\t", aq_str[7]));
-			else if (solution2) fprintf(fout, "%s\n", ConCat("\tCa \t\t", river_str[13]));
+			if      (solution1) fprintf(fout, "\tCa \t\t%s\n", aq_str[7]);
+			else if (solution2) fprintf(fout, "\tCa \t\t%s\n", river_str[13]);
 		}
 		else if (!forcedPP && line[1] == 'F' && line[2] == 'e') {
-			if      (solution1) fprintf(fout, "%s\n", ConCat("\tFe \t\t", aq_str[8]));
-			else if (solution2) fprintf(fout, "%s\n", ConCat("\tFe \t\t", river_str[14]));
+			if      (solution1) fprintf(fout, "\tFe \t\t%s\n", aq_str[8]);
+			else if (solution2) fprintf(fout, "\tFe \t\t%s\n", river_str[14]);
 		}
 		else if (!forcedPP && line[1] == 'S' && line[2] == 'i') {
-			if      (solution1) fprintf(fout, "%s\n", ConCat("\tSi \t\t", aq_str[9]));
-			else if (solution2) fprintf(fout, "%s\n", ConCat("\tSi \t\t", river_str[12]));
+			if      (solution1) fprintf(fout, "\tSi \t\t%s\n", aq_str[9]);
+			else if (solution2) fprintf(fout, "\tSi \t\t%s\n", river_str[12]);
 		}
 		else if (!forcedPP && line[1] == 'N' && line[2] == 'a') {
-			if      (solution1) fprintf(fout, "%s\n", ConCat("\tNa \t\t", aq_str[10]));
-			else if (solution2) fprintf(fout, "%s\n", ConCat("\tNa \t\t", river_str[10]));
+			if      (solution1) fprintf(fout, "\tNa \t\t%s\n", aq_str[10]);
+			else if (solution2) fprintf(fout, "\tNa \t\t%s\n", river_str[10]);
 		}
 		else if (!forcedPP && line[1] == 'S' && line[2] == '(') {
-			if      (solution1) fprintf(fout, "%s\n", ConCat("\tS(6) \t\t", aq_str[11]));
-			else if (solution2) fprintf(fout, "%s\n", ConCat("\tS(6) \t\t", river_str[10]));
+			if      (solution1) fprintf(fout, "\tS(6) \t\t%s\n", aq_str[11]);
+			else if (solution2) fprintf(fout, "\tS(6) \t\t%s\n", river_str[10]);
 		}
 		else if (!forcedPP && line[1] == 'C' && line[2] == 'l') {
-			if      (solution1) fprintf(fout, "%s\n", ConCat("\tCl \t\t", aq_str[12]));
-			else if (solution2) fprintf(fout, "%s\n", ConCat("\tCl \t\t", river_str[16]));
+			if      (solution1) fprintf(fout, "\tCl \t\t%s\n", aq_str[12]);
+			else if (solution2) fprintf(fout, "\tCl \t\t%s\n", river_str[16]);
 		}
 
 		// MIX -- could remove this line and set proportions of solutions to be mixed with specific water masses instead.
 		else if (mix && line[1] == '1') fprintf(fout, "\t1 \t %s\n", mass_w_str);
 
 		// KINETICS
-		else if (line[0] == '-' && line[1] == 's' && line[2] == 't' && line[3] == 'e')         fprintf(fout, "%s\n", ConCat("-steps\t",steps_str1));
+		else if (line[0] == '-' && line[1] == 's' && line[2] == 't' && line[3] == 'e')         fprintf(fout, "-steps\t%s\n", steps_str1);
 
 		// GAS_PHASE
-		else if (gasphase && line[1] == 'v' && line[2] == 'o' && line[3] == 'l') fprintf(fout, "%s\n", ConCat("\tvolume \t\t",vol_str));
-		else if (gasphase && line[1] == 'C' && line[2] == 'O' && line[3] == '2' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tCO2(g) \t\t",gas_str3[0]));
-		else if (gasphase && line[1] == 'C' && line[2] == 'H' && line[3] == '4' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tCH4(g) \t\t",gas_str3[1]));
-		else if (gasphase && line[1] == 'O' && line[2] == '2' && line[3] == '(' && line[4] == 'g') fprintf(fout, "%s\n", ConCat("\tO2(g) \t\t",gas_str3[2]));
-		else if (gasphase && line[1] == 'N' && line[2] == 't' && line[3] == 'g' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tNtg(g) \t\t",gas_str3[3]));
-		else if (gasphase && line[1] == 'H' && line[2] == '2' && line[3] == 'O' && line[4] == '(') fprintf(fout, "%s\n", ConCat("\tH2O(g) \t\t",gas_str3[4]));
+		else if (gasphase && line[1] == 'v' && line[2] == 'o' && line[3] == 'l') fprintf(fout, "\tvolume \t\t%s\n", vol_str);
+		else if (gasphase && line[1] == 'C' && line[2] == 'O' && line[3] == '2' && line[4] == '(') fprintf(fout, "\tCO2(g) \t\t%s\n", gas_str3[0]);
+		else if (gasphase && line[1] == 'C' && line[2] == 'H' && line[3] == '4' && line[4] == '(') fprintf(fout, "\tCH4(g) \t\t%s\n", gas_str3[1]);
+		else if (gasphase && line[1] == 'O' && line[2] == '2' && line[3] == '(' && line[4] == 'g') fprintf(fout, "\tO2(g) \t\t%s\n", gas_str3[2]);
+		else if (gasphase && line[1] == 'N' && line[2] == 't' && line[3] == 'g' && line[4] == '(') fprintf(fout, "\tNtg(g) \t\t%s\n", gas_str3[3]);
+		else if (gasphase && line[1] == 'H' && line[2] == '2' && line[3] == 'O' && line[4] == '(') fprintf(fout, "\tH2O(g) \t\t%s\n", gas_str3[4]);
 
 		// EQUILIBRIUM_PHASES
-		else if (eqphases && line[2] == 'C' && line[3] == 'O' && line[4] == '2' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tCO2(g) \t\t",gas_str1[0]));
-		else if (eqphases && line[2] == 'C' && line[3] == 'H' && line[4] == '4' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tCH4(g) \t\t",gas_str1[1]));
-		else if (eqphases && line[2] == 'O' && line[3] == '2' && line[4] == '(' && line[5] == 'g' && line[6] == ')') fprintf(fout, "%s\n", ConCat("\tO2(g) \t\t",gas_str1[2]));
-		else if (eqphases && line[2] == 'N' && line[3] == 't' && line[4] == 'g' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tNtg(g) \t\t",gas_str1[3]));
-		else if (eqphases && line[2] == 'H' && line[3] == '2' && line[4] == 'O' && line[5] == '(' && line[6] == 'g') fprintf(fout, "%s\n", ConCat("\tH2O(g) \t\t",gas_str1[4]));
+		else if (eqphases && line[2] == 'C' && line[3] == 'O' && line[4] == '2' && line[5] == '(' && line[6] == 'g') fprintf(fout, "\tCO2(g) \t\t%s\n", gas_str3[0]);
+		else if (eqphases && line[2] == 'C' && line[3] == 'H' && line[4] == '4' && line[5] == '(' && line[6] == 'g') fprintf(fout, "\tCH4(g) \t\t%s\n", gas_str3[1]);
+		else if (eqphases && line[2] == 'O' && line[3] == '2' && line[4] == '(' && line[5] == 'g' && line[6] == ')') fprintf(fout, "\tO2(g) \t\t%s\n", gas_str3[2]);
+		else if (eqphases && line[2] == 'N' && line[3] == 't' && line[4] == 'g' && line[5] == '(' && line[6] == 'g') fprintf(fout, "\tNtg(g) \t\t%s\n", gas_str3[3]);
+		else if (eqphases && line[2] == 'H' && line[3] == '2' && line[4] == 'O' && line[5] == '(' && line[6] == 'g') fprintf(fout, "\tH2O(g) \t\t%s\n", gas_str3[4]);
 
 		else fputs(line,fout);
 	}
