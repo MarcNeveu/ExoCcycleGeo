@@ -936,7 +936,7 @@ int main(int argc, char *argv[]) {
 		if (Tsurf <= Tfreeze) albedo = 0.9; // Ice-albedo feedback
 		else albedo = 0.3; // No strong reason to vary otherwise: insignificant change with land fraction (from 0.28 to 0.3 for L=0 to 0.29), cloud fraction is 0.67. Cloud albedo (assumed 0.4 on avg) or areal fraction could vary, but non intuitively with temp and xH2O
 		
-		Teff = pow((1.0-albedo)*S/(4.0*sigStefBoltz),0.25); // TODO include ice-albedo feedback?
+		Teff = pow((1.0-albedo)*S/(4.0*sigStefBoltz),0.25);
 
 		psi = log(xgas[0]*Psurf)/log(10.0);
 		if (psi <= -2) DeltaTghe = 815.17 + 4.895e7/Tsurf/Tsurf - 3.9787e5/Tsurf - 6.7084/psi/psi + 73.221/psi - 30882.0/Tsurf/psi;
@@ -974,17 +974,17 @@ int main(int argc, char *argv[]) {
 			RCmantle = RCmantle_old - dtime*netFC;
 			RCatmoc  = RCatmoc_old  + dtime*netFC;
 		}
-		else if (xgas[0]*nAir + dtime*netFC < 0.0) {
+		else if (xgas[0]*nAir + (1.0-fCH4)*dtime*netFC < 0.0) {
 			printf("Readjusting net C flux and reservoirs so number of moles of CO2 remains positive\n");
-			netFC = -xgas[0]*nAir/dtime*(1.0-1.0e-8);
-			RCmantle = RCmantle_old - dtime*netFC;
-			RCatmoc  = RCatmoc_old  + dtime*netFC;
+			netFC = -xgas[0]*nAir/((1.0-fCH4)*dtime)*(1.0-1.0e-8);
+			RCmantle = RCmantle_old - (1.0-fCH4)*dtime*netFC;
+			RCatmoc  = RCatmoc_old  + (1.0-fCH4)*dtime*netFC;
 		}
-		else if (xgas[1]*nAir + dtime*netFC < 0.0) {
+		else if (xgas[1]*nAir + fCH4*dtime*netFC < 0.0) {
 			printf("Readjusting net C flux and reservoirs so number of moles of CH4 remains positive\n");
-			netFC = -xgas[1]*nAir/dtime*(1.0-1.0e-8);
-			RCmantle = RCmantle_old - dtime*netFC;
-			RCatmoc  = RCatmoc_old  + dtime*netFC;
+			netFC = -xgas[1]*nAir/(fCH4*dtime)*(1.0-1.0e-8);
+			RCmantle = RCmantle_old - fCH4*dtime*netFC;
+			RCatmoc  = RCatmoc_old  + fCH4*dtime*netFC;
 		}
 
 		// For two-way coupling with photochem model, could update xgas[0] and xgas[1] with Photochem calculation provided Foutgas as input; in that case update below only with netFC-Foutgas
