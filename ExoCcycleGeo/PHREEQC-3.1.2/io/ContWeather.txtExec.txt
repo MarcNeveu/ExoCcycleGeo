@@ -1,6 +1,6 @@
 # DATABASE /Users/mneveu/Downloads/PhreeqcExoC/core11_idealgas.dat 
 
-TITLE Kinetics of continental crust weathering, avg. molar mass 149.8 g/mol <-- this number is ExoCcycleGeo input, compo from McSween et al. 1991
+TITLE Kinetics of continental crust weathering, avg. molar mass 141.9 g/mol <-- this number is ExoCcycleGeo input
 
 PHASES
 
@@ -78,8 +78,8 @@ SiO2(am) # Precipitation only, see PK04 for dissolution rates
 
 Albite
 	-formula	NaAlSi3O8		1
-	-m		0.305 # moles                   <------
-	-m0		0.305
+	-m		1.9e-2 # moles                   <------
+	-m0		1.9e-2
 	-tol		1e-8
 Anorthite # Part of input, other part in Bytownite
 	-formula	CaAl2(SiO4)2		1
@@ -93,8 +93,8 @@ Bytownite # Other part of Anorthite input
 	-tol		1e-8
 K-Feldspar
 	-formula	KAlSi3O8		1
-	-m		0.012 # moles                   <------
-	-m0		0.012
+	-m		0
+	-m0		0
 	-tol		1e-8
 
 # --- Feldspathoids ---
@@ -109,13 +109,13 @@ Nepheline
 
 Forsterite
 	-formula	Mg2SiO4			1
-	-m		1.9 # moles                   <------
-	-m0		1.9
+	-m		6.9e-1 # moles                   <------
+	-m0		6.9e-1
 	-tol		1e-8
-Fayalite # accounts for ordinary chondrite ferrosilite (0.65 of the 1.45 mol)
+Fayalite
 	-formula	Fe2SiO4			1
-	-m		1.45 # moles                   <------
-	-m0		1.45
+	-m		9.6e-2 # moles                   <------
+	-m0		9.6e-2
 	-tol		1e-8
 
 # --- Garnet ---
@@ -161,13 +161,13 @@ Cordierite_anhyd
 
 Diopside
 	-formula	CaMgSi2O6		1
-	-m		0.22 # moles                   <------
-	-m0		0.22
+	-m		0
+	-m0		0
 	-tol		1e-8
 Enstatite
 	-formula	MgSiO3			1
-	-m		1.6 # moles                   <------
-	-m0		1.6
+	-m		3.5e-1 # moles                   <------
+	-m0		3.5e-1
 	-tol		1e-8
 Jadeite
 	-formula	NaAl(SiO3)2		1
@@ -176,8 +176,8 @@ Jadeite
 	-tol		1e-8
 Wollastonite
 	-formula	CaSiO3			1
-	-m		0
-	-m0		0
+	-m		4.0e-2 # moles                   <------
+	-m0		4.0e-2
 	-tol		1e-8
 
 # --- Amphiboles ---
@@ -350,22 +350,22 @@ Anhydrite
 	-tol		1e-8
 Pyrite
 	-formula	FeS2		1
+	-m		2.7e-3 # moles                   <------
+	-m0		2.7e-3
+	-tol		1e-8
+Pyrrhotite
+	-formula	FeS		1
 	-m		0
 	-m0		0
-	-tol		1e-8
-Pyrrhotite # Troilite in ordinary chondrite compo
-	-formula	FeS		1
-	-m		0.67 # moles                   <------
-	-m0		0.67
 	-tol		1e-8
 Halite
 	-formula	NaCl		1
-	-m		0
-	-m0		0
+	-m		3.0e-2 # moles                   <------
+	-m0		3.0e-2
 	-tol		1e-8
 
 #-steps	6.32e8 in 400 steps # 20 years
--steps	4.19566e+07 in 1000 steps
+-steps	7.19957e+07 in 1000 steps
 -cvode	true
 
 INCREMENTAL_REACTIONS true
@@ -373,13 +373,13 @@ INCREMENTAL_REACTIONS true
 SOLUTION 1 Rainwater
 
 	pH 	 	7 charge
-	temp 	 	14.5453
-	pressure 	0.546867
-	-water 	 	743.83
+	temp 	 	1.10957
+	pressure 	0.702239
+	-water 	 	505.663
 	-units		mol/kgw
-	C(4) 		0.0046845 mol/kgw	CO2(g) 	-1.02719
-	C(-4) 		8.83595e-05 mol/kgw	CH4(g) 	-1.30174
-	Ntg 		0.000305563 mol/kgw	Ntg(g) 	-0.409563
+	C(4) 		0.153432 mol/kgw	CO2(g) 	-2.45408
+	C(-4) 		0.000763057 mol/kgw	CH4(g) 	-0.515327
+	Ntg 		0.000366312 mol/kgw	Ntg(g) 	-0.411075
 #	N(-3)		1.0 NH3(g) -20     # Archean Earth composition, Catling &  Zahnle 2020
 	O(0) 		0 mol/kgw
 	S		250.0e-6 as SO4-2  # Scaled from computed volcanic outgassing in Archean vs. abiotic modern (Berner et al. 1983)

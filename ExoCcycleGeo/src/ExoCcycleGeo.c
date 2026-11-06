@@ -6,7 +6,7 @@
  of a terrestrial planet due to geophysical and geochemical processes.
  ============================================================================
 
- *  Copyright (C) 2017-2024 Marc Neveu (marc.f.neveu@nasa.gov)
+ *  Copyright (C) 2017-2026 Marc Neveu (marc.f.neveu@nasa.gov)
  *
  *  This program is free software: you can redistribute it and/or modify it under the terms of the
  *  GNU General Public License as published by the Free Software Foundation, either version 3 of
@@ -51,7 +51,6 @@ int main(int argc, char *argv[]) {
 	// User-specified grid parameters
 	double dtime = 0.0;                // Time step (s)
 	double dtime0 = 0.0;			   // Input time step (s)
-	double dtime_old = 0.0;
 	double tstart = 0.0;               // Time at which to start carbon cycling calculations (s)
 	double tend = 0.0;                 // Time at which to end carbon cycling calculations (s)
 
@@ -76,7 +75,7 @@ int main(int argc, char *argv[]) {
 	double runoff0 = 0.0;			   // Input global mean runoff rate (m s-1)
 	double tResLand = 0.0;             // Residence time of water on continents (s)
 	double tResLandNow = 0.0;		   // Present-day residence time of water on continents (s)
-	double WplateRdg = 50000.0;        // Width of tectonic ridges and rifts (m)
+	double WplateRdg = 5000.0;         // Width of magma bodies at tectonic ridges and rifts (m). Default: a few km (Solomon & Toomey 1992; Smith & Cann 1993; Perfit & Chadwick 1998; Kennish & Lutz 1998)
 
     // User-specified planet atmosphere parameters
 	double *xgas = (double*) malloc(nAtmSpecies*sizeof(double));
@@ -399,7 +398,7 @@ int main(int argc, char *argv[]) {
     xgas[4] = input[i]; i++;             // H2O mixing ratio
 
 	printf("\n");
-	printf("ExoCcycleGeo v26.10\n");
+	printf("ExoCcycleGeo v26.11\n");
 	printf("Copyright (C) 2017-2026 Marc Neveu (marc.f.neveu@nasa.gov)\n\n"       );
 	printf("This program is free software: you can redistribute it and/or\n"      );
 	printf("modify it under the terms of the GNU General Public License as\n"     );
@@ -634,7 +633,7 @@ int main(int argc, char *argv[]) {
 //	}
 
 	// Redox (from most oxidized to most reduced)
-	int redox = 1; // TODO deprecated, remove. Now used only to set initial conditions.
+	int redox = 3; // TODO deprecated, remove. Now used only to set initial conditions.
 	switch(redox) {
 	case 1: // Present-day Earth surface
 		printf("Redox set to present-day Earth surface\n");
@@ -679,7 +678,7 @@ int main(int argc, char *argv[]) {
 	// Radiative transfer
 	S0 = 1368.0; // W m-2
 	albedo = 0.3;
-
+	
     // Ocean
 	pH = 8.22;
 
@@ -745,15 +744,19 @@ int main(int argc, char *argv[]) {
 		fout = fopen(title,"w");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 		fclose (fout);
-
+		
 		title[0] = '\0';
 		if (cmdline == 1) strncat(title,path,strlen(path)-20);
 		else strncat(title,path,strlen(path)-18);
 		strcat(title,"Outputs/Outgassing.txt");
 		fout = fopen(title,"w");
 		if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
-		else fprintf(fout, "Time (Gyr) \t Tmantle (K) \t Ra \t Visc (Pa s) \t Heat flux through lithosphere (mW m-2) \t Lithospheric thickness (km) \t Frank-Kamenetskii parameter \t Outgassing flux (Tmol C yr-1) \t Convective velocity (m yr-1) \t "
+		else {
+			fprintf(fout, "Time (Gyr) \t Tmantle (K) \t Ra \t Visc (Pa s) \t Heat flux through lithosphere (mW m-2) \t Lithospheric thickness (km) \t Frank-Kamenetskii parameter \t Outgassing flux (Tmol C yr-1) \t Convective velocity (m yr-1) \t "
 				"Convective timescale (Myr) \t Crustal thickness (km) \t Crust generation timescale (Myr) \t Stagnant lid? \t Crustal production rate (km3/yr) \n");
+			fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %d \t %g\n", realtime/Gyr2sec, Tmantle, Ra,
+						nu*rho[iLith], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, p, FCoutgas/1.0e12*Yr2sec, vConv*1.0e-6*Myr2sec, tConv/Myr2sec, zCrust/km2m, zCrust/dzCrust_dt/Myr2sec, staglid, dMmelt_dt/rhomelt*1.0e-9*Yr2sec);
+		}
 		fclose (fout);
 
 		title[0] = '\0';
@@ -913,6 +916,8 @@ int main(int argc, char *argv[]) {
 	while (realtime < tend) {
 
 		dtime = fmin(dtime0, 0.1*fmin(RCatmoc, RCmantle)/fabs(netFC));
+		dtime = fmin(dtime, 0.1*fmin(RCatmoc, RCmantle)/fabs(FCoutgas));
+		dtime = fmin(dtime, 0.1*fmin(RCatmoc, RCmantle)/fabs(FCseafsubd));
 		if (realtime >= tstart && realtime < tstart + 1.0*Myr2sec) dtime = fmin(dtime, 0.2*Myr2sec); // Start slow
 
 		if (realtime < 0.5*Gyr2sec) dtime = 0.1*Myr2sec;                           // Sufficient to achieve numerical convergence for geodynamics alone
@@ -928,7 +933,10 @@ int main(int argc, char *argv[]) {
 		// Parameterization of Caldeira & Kasting (1992) equation (4), valid between psi=-8 to -2 and T=0 to 100C
 		S = S0/(1.0-0.38*(realtime/Gyr2sec/4.55-1.0));
 //		S = S0;
-		Teff = pow((1.0-albedo)*S/(4.0*sigStefBoltz),0.25);
+		if (Tsurf <= Tfreeze) albedo = 0.9; // Ice-albedo feedback
+		else albedo = 0.3; // No strong reason to vary otherwise: insignificant change with land fraction (from 0.28 to 0.3 for L=0 to 0.29), cloud fraction is 0.67. Cloud albedo (assumed 0.4 on avg) or areal fraction could vary, but non intuitively with temp and xH2O
+		
+		Teff = pow((1.0-albedo)*S/(4.0*sigStefBoltz),0.25); // TODO include ice-albedo feedback?
 
 		psi = log(xgas[0]*Psurf)/log(10.0);
 		if (psi <= -2) DeltaTghe = 815.17 + 4.895e7/Tsurf/Tsurf - 3.9787e5/Tsurf - 6.7084/psi/psi + 73.221/psi - 30882.0/Tsurf/psi;
@@ -959,15 +967,28 @@ int main(int argc, char *argv[]) {
 //		}
 		Vatm = Vatm1*Tsurf/Tsurf1; // After 2nd time step, keep Vatm constant
 
-		// Redox of outgassing (see e.g. Gaillard and Scaillet 2014 EPSL or Scaillet and Gaillard 2011 Nature comment)
-
-		if (xgas[0]*nAir + 1.0*dtime*netFC < 0.0) {
-			netFC = -xgas[0]*nAir/(1.0*dtime)*(1.0-1.0e-8);
-			RCmantle = RCmantle_old - dtime_old*netFC; // Re-adjust reservoirs accordingly
-			RCatmoc  = RCatmoc_old  + dtime_old*netFC;
+		// If a negative netFC*dtime exceeds xgas*nAir, readjust net C flux and reservoirs.
+		if ((xgas[0]+xgas[1])*nAir + dtime*netFC < 0.0) {
+			printf("Readjusting net C flux and reservoirs so number of moles of air remains positive\n");
+			netFC = -(xgas[0]+xgas[1])*nAir/dtime*(1.0-1.0e-8);
+			RCmantle = RCmantle_old - dtime*netFC;
+			RCatmoc  = RCatmoc_old  + dtime*netFC;
+		}
+		else if (xgas[0]*nAir + dtime*netFC < 0.0) {
+			printf("Readjusting net C flux and reservoirs so number of moles of CO2 remains positive\n");
+			netFC = -xgas[0]*nAir/dtime*(1.0-1.0e-8);
+			RCmantle = RCmantle_old - dtime*netFC;
+			RCatmoc  = RCatmoc_old  + dtime*netFC;
+		}
+		else if (xgas[1]*nAir + dtime*netFC < 0.0) {
+			printf("Readjusting net C flux and reservoirs so number of moles of CH4 remains positive\n");
+			netFC = -xgas[1]*nAir/dtime*(1.0-1.0e-8);
+			RCmantle = RCmantle_old - dtime*netFC;
+			RCatmoc  = RCatmoc_old  + dtime*netFC;
 		}
 
 		// For two-way coupling with photochem model, could update xgas[0] and xgas[1] with Photochem calculation provided Foutgas as input; in that case update below only with netFC-Foutgas
+		// TODO better account for redox of outgassing? (see e.g. Gaillard and Scaillet 2014 EPSL or Scaillet and Gaillard 2011 Nature comment)
 		xgas[0] = (xgas[0]*nAir + (1.0-fCH4)*dtime*netFC)/(nAir + dtime*netFC); // (1-fCH4) fraction of added gas is CO2. Let equilibration with ocean speciate accurately
 		xgas[1] = (xgas[1]*nAir +      fCH4 *dtime*netFC)/(nAir + dtime*netFC); // Dilute CH4 (or concentrate if netFC < 0)
 
@@ -986,7 +1007,8 @@ int main(int argc, char *argv[]) {
 		// Equilibrate ocean and atmosphere
 		//-------------------------------------------------------------------
 			
-		if (realtime > tstart && Tsurf > Tfreeze+0.01) {
+//		if (realtime > tstart && Tsurf > Tfreeze+0.01) {
+		if (Tsurf > Tfreeze+0.01) {
 			printf("Equilibrating ocean and atmosphere... ");
 
 			AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
@@ -997,18 +1019,18 @@ int main(int argc, char *argv[]) {
 			}
 
 			// If CH4 mixing ratio > 1.0 CO2, organic haze (Haqq-Misra et al. 2008, https://doi.org/10.1089/ast.2007.0197) (really Photochem should be telling ExoCcycleGeo this)
-			if (xgas[1] > 1.0*xgas[0]) {
-				hChazeFallout += 1.0e-4*xgas[1]*nAir/128.0*1320.7*1.0e-6/Asurf; // 1320.7 cm3/mol is the molar volume of KerogenC128 (Helgeson et al. 2009, https://doi.org/10.1016/j.gca.2008.03.004)
-				// Thickness of aerosol deposit, output, in what reservoir to put it?, decrease riverine flux accordingly
-				xgas[1] -= 1.0e-4*xgas[1];
-
-				AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
-
-				if (Psurf < 0.01) {
-					printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
-					exit(0);
-				}
-			}
+//			if (xgas[1] > 1.0*xgas[0]) {
+//				hChazeFallout += 1.0e-4*xgas[1]*nAir/128.0*1320.7*1.0e-6/Asurf; // 1320.7 cm3/mol is the molar volume of KerogenC128 (Helgeson et al. 2009, https://doi.org/10.1016/j.gca.2008.03.004)
+//				// Thickness of aerosol deposit, output, in what reservoir to put it?, decrease riverine flux accordingly
+//				xgas[1] -= 1.0e-4*xgas[1];
+//
+//				AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
+//
+//				if (Psurf < 0.01) {
+//					printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
+//					exit(0);
+//				}
+//			}
 
 			RCatm = (xgas[0]+xgas[1])*nAir;
 			RCocean = (xaq[0]+xaq[1])*Mocean;
@@ -1039,8 +1061,6 @@ int main(int argc, char *argv[]) {
 		//  Upper mantle viscosity
 		nu = combVisc(Tmantle, rho[NR]*g[NR]*100.0e3, flowLawDiff, flowLawDisl, grainSize, C_OH, Fe_FeMg, fPx, tConv)/rho[iLith];
 //		nu = 1.0e19/3500.0;
-//		nu = 1.0e16*exp((2.0e5 + P[(int)((iLith+iCMB)/2.0)]*1.1e-6)/(R_G*Tmantle))/rho[(int)((iLith+iCMB)/2)]; // Cízková et al. (2012)
-//		nu = 1.0e16*exp((2.0e5 + P[iCMB]*1.1e-6)/(R_G*(Tmantle - alpha*g[iCMB]*Tmantle/Cp * (r[iCMB] - 0.5*(r_p+r_c)))))/rho[iCMB]; // Cízková et al. (2012) for CMB depth
 
 		// Vigor of convection, assuming whole-mantle convection (Kite et al. 2009)
 //		if (staglid) { // May not need this switch
@@ -1408,11 +1428,10 @@ int main(int argc, char *argv[]) {
 		}
 		
 		FCoutgas = dMmelt_dt / IntExtRatio * magmaCmassfrac / molmassC;
+//		if (realtime < 1.0*Gyr2sec) FCoutgas = FCoutgas * (realtime/(0.4*Gyr2sec)-1.5); // Ramp up outgassing from 0.6 to 1.0 Gyr to avoid step function
+
 		zCrust = zCrust + dzCrust_dt*dtime;
 		if (zCrust > zLith) zCrust = zLith; // Crust otherwise founders back into the mantle
-
-//		FCoutgas = meltmass*magmaCmassfrac/0.044*vConv/(r[iLith]-r[iCMB])*0.4; // mol C s-1, 40% melt reaches the surface
-//		if (realtime < 1.0*Gyr2sec) FCoutgas = FCoutgas * (realtime/(0.4*Gyr2sec)-1.5); // Ramp up outgassing from 0.6 to 1.0 Gyr to avoid step function
 
 //      // Alternative: Kite et al. (2009) eq. 25 They didn't scale with mass: [sum melt fraction (depth)] * [mass (depth)] / [total mass between surf and Psolidus]. Also their typo: P0>Pf.
 //		double Rmelt = 0.0;             // Rate of melt generation (m-2 s-1)
@@ -1521,9 +1540,9 @@ int main(int argc, char *argv[]) {
 			rainpH = xriver[1][3]; // xriver[0][3], the initial rain speciation, is returned as = 0, so this is as close as it gets (smallest reaction time)
 			massH2Oriver = xriver[iResTime][7];
 
-			if (hChazeFallout > 1.0) {
-				for (i=9;i<nvarKin;i++) xriver[iResTime][i] /= hChazeFallout; // Continental weathering decreasingly effective with increasing haze fallout thickness
-			}
+//			if (hChazeFallout > 1.0) {
+//				for (i=9;i<nvarKin;i++) xriver[iResTime][i] /= hChazeFallout; // Continental weathering decreasingly effective with increasing haze fallout thickness
+//			}
 
 			// River abundances of cations (mol/kg)
 //			xriver_Mg_evap = xriver[iResTime][11]/(1.0-fracEvap);
@@ -1538,7 +1557,7 @@ int main(int argc, char *argv[]) {
 			Ca_sulf_consumed = - xriver[iResTime][nvarKin-4] - xriver[iResTime][nvarKin-3]; // Anhydrite and gypsum
 			Fe_sulf_consumed = - xriver[iResTime][nvarKin-2] - xriver[iResTime][nvarKin-1]; // Pyrite and pyrrhotite
 
-			Mriver = Asurf*L*runoff/(1.0-fracEvap)*rhoH2O*dtime;
+			Mriver = Asurf*L*runoff/(1.0-fracEvap)*rhoH2O*dtime; // TODO make fracEvap a function of x_H2O, i.e., Tsurf? Whould that offset changes in runoff (due to more humidity), or amplify them (due to higher temp)?
 
 			// Individual carbon fluxes (mol/s). Rainout = (river runoff)/(1-fracEvap).
 			FC_Mg_carb =     Mg_carb_consumed/massH2Oriver*Mriver/dtime; // Factor of 1 because despite divalent cation vs. monovalent bicarbonate, 1 biarbonate is released in dissolution, so net 1
@@ -1563,11 +1582,12 @@ int main(int argc, char *argv[]) {
 //			printf("%g %g %g %g %g %g %g %g\n", xriver_Ca_evap, Ca_carb_consumed, Ca_sulf_consumed, massH2Oriver, FC_Ca_carb/1.0e12*Yr2sec, FC_Ca_sulf/1.0e12*Yr2sec, FC_Ca_sil/1.0e12*Yr2sec, FC_Ca/1.0e12*Yr2sec); // Tmol/yr
 //			printf("%g %g %g %g %g %g\n", xriver_Fe_evap, Fe_sulf_consumed, massH2Oriver, FC_Fe_sulf/1.0e12*Yr2sec, FC_Fe_sil/1.0e12*Yr2sec, FC_Fe/1.0e12*Yr2sec); // Tmol/yr
 		}
+		else if (Tsurf <= Tfreeze+0.01) printf("Surface temperature below freezing, no continental weathering\n"); // What about glacier grinding?
 
 		// Runoff removes part of the haze deposit at erosion rate scaled from modern Earth (assuming physical erosion here)
-		hChazeFallout -= 20.0e12/Yr2sec /2730.0 /0.29 /Asurf *dtime *runoff/runoff_Earth; // 20e12 kg: modern erosion rate on Earth (Borrelli et al. 2017, https://doi.org/10.1038/s41467-017-02142-7),
-		                                                                                  // scaled to global thickness using continental crust density of 2730 kg/m3 from Rudnick & Gao 2003 and modern Earth land areal fraction of 0.29
-		if (hChazeFallout < 0.0) hChazeFallout = 0.0;
+//		hChazeFallout -= 20.0e12/Yr2sec /2730.0 /0.29 /Asurf *dtime *runoff/runoff_Earth; // 20e12 kg: modern erosion rate on Earth (Borrelli et al. 2017, https://doi.org/10.1038/s41467-017-02142-7),
+//		                                                                                  // scaled to global thickness using continental crust density of 2730 kg/m3 from Rudnick & Gao 2003 and modern Earth land areal fraction of 0.29
+//		if (hChazeFallout < 0.0) hChazeFallout = 0.0;
 
 		//-------------------------------------------------------------------
 		// Calculate surface C flux from seafloor weathering and subduction
@@ -1584,8 +1604,8 @@ int main(int argc, char *argv[]) {
 			// Today indicative size of 7 major plates is 70e6 km2, corresponding to diameter 2*sqrt(70e6/(4*pi)) = 4720 km > mantle depth, even though (isoviscous) convection cell should have aspect ratio of 1 (Bercovici et al. 2015).
 			// For Earth inputs it is = mantle depth (2900 km) for Ra = 1e7, i.e., 2 billion years ago (oldest evidence of plate tectonics 2-3 Ga; Brown et al. 2020)
 
-			zCrack = realtime/Myr2sec; // Reflects secular cooling below crust, which prevents cracks from healing as fast
-//			zCrack = 6000.0;
+//			zCrack = realtime/Myr2sec; // Reflects secular cooling below crust, which prevents cracks from healing as fast
+			zCrack = 600.0; // 600 m (Johnson and Pruis, 2003) to 6 km (Vance et al., 2007), see also Hasenclever et al. (2014)
 
 //			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateRdg*vConv*zCrack*dtime;
 			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateRdg*(vConv*fmin(1.0,realtime/(1.5*Gyr2sec)))*zCrack*dtime; // vConv*fmin() term represents sluggish convection until full plate tectonics
@@ -1613,9 +1633,10 @@ int main(int argc, char *argv[]) {
 		// Compute net geo C fluxes
 		//-------------------------------------------------------------------
 		if (!staglid) farc = 0.25;
+//		if (!staglid) farc = 0.25*fmin(1.0,realtime/(1.5*Gyr2sec));
 		netFC = FCoutgas + (1.0-farc)*FCseafsubd; // FCcontw < 0, FCseafsubd < 0, ignore FCcontW since that's a flux to the ocean manifested in seafW
 
-		dtime_old = dtime; // Memorize in case reservoirs need to be readjusted at the next time step so a negative netFC*dtime doesn't exceed xgas*nAir
+		// Memorize in case reservoirs need to be readjusted at the next time step so a negative netFC*dtime doesn't exceed xgas*nAir
 		RCmantle_old = RCmantle;
 		RCatmoc_old = RCatmoc;
 
@@ -1669,7 +1690,7 @@ int main(int argc, char *argv[]) {
 			if (fout == NULL) printf("ExoCcycleGeo: Error opening %s output file.\n",title);
 			else {
 				fprintf(fout, "%g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %g \t %d \t %g\n", realtime/Gyr2sec, Tmantle, Ra,
-						nu*rho[iLith], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, p_Sol, FCoutgas/1.0e12*Yr2sec, vConv*1.0e-6*Myr2sec, tConv/Myr2sec, zCrust/km2m, zCrust/dzCrust_dt/Myr2sec, staglid, dMmelt_dt/rhomelt*1.0e-9*Yr2sec);
+						nu*rho[iLith], k*(Tmantle-Tsurf)/zLith*1000.0, zLith/km2m, p, FCoutgas/1.0e12*Yr2sec, vConv*1.0e-6*Myr2sec, tConv/Myr2sec, zCrust/km2m, zCrust/dzCrust_dt/Myr2sec, staglid, dMmelt_dt/rhomelt*1.0e-9*Yr2sec);
 			}
 			fclose (fout);
 

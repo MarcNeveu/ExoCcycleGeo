@@ -18,7 +18,7 @@
  *      Reference: Lorenzo A., Desch S.J. & Shim S.-H. (2014) On the Lower Radius Limit of Exoplanets
  *      45th LPSC, abstract 1636
  *
- *  Copyright (C) 2017-2024 Marc Neveu (marc.f.neveu@nasa.gov)
+ *  Copyright (C) 2017-2026 Marc Neveu (marc.f.neveu@nasa.gov)
  *
  *  This program is free software: you can redistribute it and/or modify it under the terms of the
  *  GNU General Public License as published by the Free Software Foundation, either version 3 of

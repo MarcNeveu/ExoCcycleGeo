@@ -2,4 +2,4 @@ Title: Primitive mantle composition from McDonough & Sun (1995),
 
 Solid Composition:
 Pressure Temperature mass SiO2 TiO2 Al2O3 Fe2O3 Cr2O3 FeO MgO CaO Na2O K2O P2O5 H2O 
-304.53 1527.45 55.448784 42.4217 0.00768822 0.123572 0.0606573 0.572474 5.58406 50.8287 0.400906 0.000238968 0 0 0
+304.12 1764.01 0.000000 ---

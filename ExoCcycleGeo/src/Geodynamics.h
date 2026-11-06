@@ -4,7 +4,7 @@
  *  Created on: Jun 14, 2019
  *      Author: Marc Neveu (marc.f.neveu@nasa.gov)
  *
- *  Copyright (C) 2017-2024 Marc Neveu (marc.f.neveu@nasa.gov)
+ *  Copyright (C) 2017-2026 Marc Neveu (marc.f.neveu@nasa.gov)
  *
  *  This program is free software: you can redistribute it and/or modify it under the terms of the
  *  GNU General Public License as published by the Free Software Foundation, either version 3 of

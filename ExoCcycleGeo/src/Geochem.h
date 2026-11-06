@@ -4,7 +4,7 @@
  *  Created on: Jun 14, 2019
  *      Author: Marc Neveu (marc.f.neveu@nasa.gov)
  *
- *  Copyright (C) 2017-2024 Marc Neveu (marc.f.neveu@nasa.gov)
+ *  Copyright (C) 2017-2026 Marc Neveu (marc.f.neveu@nasa.gov)
  *
  *  This program is free software: you can redistribute it and/or modify it under the terms of the
  *  GNU General Public License as published by the Free Software Foundation, either version 3 of
@@ -160,7 +160,7 @@ int AqueousChem (char path[1024], char filename[64], double T, double *P, double
 
 		// Scale mass of water twice: first since solution output by MixRiverOcean has approx. water mass Mocean/Mriver*(1+Mocean/Mriver) kg rather than 1 kg, second because we multiplied, post-mixing, the water mass by M/(1+M) to concentrate the ocean so as to conserve Mocean
 		sprintf(mass_w_str, "\t 4 \t %g", mass_w_seaf / (((*mass_w)/nAir0)*(1.0+((*mass_w)/nAir0))) / (((*mass_w)/nAir0)/(1.0+((*mass_w)/nAir0))));
-		AccumulateLine(phreeqc, mass_w_str); // Could avoid this scaling if the first rover-ocean mix starts with solution masses of 1 kg each
+		AccumulateLine(phreeqc, mass_w_str); // Could avoid this scaling if the first river-ocean mix starts with solution masses of 1 kg each
 		AccumulateLine(phreeqc, "SAVE solution 5\n");
 		AccumulateLine(phreeqc, "DUMP"); // !! DO NOT COMMENT, need DumpStrings below
 //		AccumulateLine(phreeqc, "\t-file ../PHREEQC-3.1.2/io/dump5PresMass.txt"); // Can comment this
@@ -815,8 +815,7 @@ int cleanup (char path[1024]) {
 	strcat(cmd,"rm ");
 	if (cmdline == 1) strncat(cmd,path,strlen(path)-20);
 	else strncat(cmd,path,strlen(path)-18);
-	if (cmdline == 1) strcat(cmd,"Debug/sel*");
-	else strcat(cmd,"sel*");
+	strcat(cmd,"Debug/sel*");
 	system(cmd);
 
 	// Restore path
