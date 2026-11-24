@@ -2,4 +2,4 @@ Title: Primitive mantle composition from McDonough & Sun (1995),
 
 Phase Masses:
 Pressure Temperature mass liquid_0 
-304.12 1764.01 99.133143 99.133143 
+303.50 1780.96 99.133113 99.133113 

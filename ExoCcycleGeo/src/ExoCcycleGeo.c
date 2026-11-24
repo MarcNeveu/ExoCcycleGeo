@@ -111,6 +111,7 @@ int main(int argc, char *argv[]) {
 	double rho_p = 0.0;                // Planet bulk density (kg m-3)
 	double Asurf = 0.0;                // Planet surface area (m2)
 	double Tsurf = 0.0;                // Surface temperature (K)
+	double Tsurf_old = 0.0;            // Memory surface temp (K) used to have the greenhouse effect parameterization converge
 
 	double *r = (double*) malloc((NR+1)*sizeof(double)); // Radius (m)
 	if (r == NULL) printf("Compression: Not enough memory to create r[NR+1]\n");
@@ -168,6 +169,10 @@ int main(int argc, char *argv[]) {
 	double S = 0.0;                    // Stellar flux at planet (W m-2)
 	double S0 = 0.0;                   // Initial stellar flux at planet (W m-2)
 	double albedo = 0.0;               // Average surface albedo (dimensionless)
+	double alb_ice = 0.65;             // Average albedo of ice-covered regions
+	double alb_def = 0.3;              // Average albedo of ice-free regions
+	double xs = 0.0;                   // Sine of latitude of ice sheet edge (Wang and Stone 1980, https://doi.org/10.1175/1520-0469(1980)037%3C0545:EOIAFO%3E2.0.CO;2)
+	double TGHEparam = 0.0;            // Temperature used in greenhouse effect parameterization, = max(Tsurf, Tfreeze)
 	double Teff = 0.0;                 // Effective temperature (K)
 	double DeltaTghe = 0.0;            // Temperature increase over effective temperature due to greenhouse effect (K)
 	double psi = 0.0;                  // log10(pCO2) (bar)
@@ -677,7 +682,7 @@ int main(int argc, char *argv[]) {
 
 	// Radiative transfer
 	S0 = 1368.0; // W m-2
-	albedo = 0.3;
+	albedo = alb_def;
 	
     // Ocean
 	pH = 8.22;
@@ -700,7 +705,7 @@ int main(int argc, char *argv[]) {
 			if (xgas[i] > 0.0 && xaq[i] == 0.0) xaq[i] = 1.0; // xaq must be >0 otherwise PHREEQC ignores it, set to 1 mol/kgw (initial guess).
 		}
 
-		AqueousChem(path, "io/OceanStart.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 1, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
+		AqueousChem(path, "io/OceanStart.txt", fmax(Tsurf, Tfreeze+0.01), &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 1, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
 
 		RCocean = (xaq[0]+xaq[1])*Mocean;
 		RCatmoc = RCatm + RCocean;
@@ -930,38 +935,53 @@ int main(int argc, char *argv[]) {
 		// Update surface temperature
 		//-------------------------------------------------------------------
 
-		// Parameterization of Caldeira & Kasting (1992) equation (4), valid between psi=-8 to -2 and T=0 to 100C
-		S = S0/(1.0-0.38*(realtime/Gyr2sec/4.55-1.0));
-//		S = S0;
-		if (Tsurf <= Tfreeze) albedo = 0.9; // Ice-albedo feedback
-		else albedo = 0.3; // No strong reason to vary otherwise: insignificant change with land fraction (from 0.28 to 0.3 for L=0 to 0.29), cloud fraction is 0.67. Cloud albedo (assumed 0.4 on avg) or areal fraction could vary, but non intuitively with temp and xH2O
+		if (realtime > tstart) {
+			// Parameterization of Caldeira & Kasting (1992) equation (4), valid between psi=-8 to -2 and T=0 to 100C
+			S = S0/(1.0-0.38*(realtime/Gyr2sec/4.55-1.0));
+	//		S = S0;
+	//		if (Tsurf <= Tfreeze) albedo = alb_ice; // Ice-albedo feedback
+	//		else if (Tsurf <= Tfreeze + 15.0) albedo = alb_ice - (Tsurf-Tfreeze)*(alb_ice-alb_def)/15.0;
+	//		else albedo = alb_def; // No strong reason to vary otherwise: insignificant change with land fraction (from 0.28 to 0.3 for L=0 to 0.29), cloud fraction is 0.67. Cloud albedo (assumed 0.4 on avg) or areal fraction could vary, but non intuitively with temp and xH2O
+			xs = fmin(1.0, sqrt(fmax(0.0, 0.6035 + 0.02078*(Tsurf-Tfreeze)))); // Wang and Stone (1980, eq. 3, https://doi.org/10.1175/1520-0469(1980)037%3C0545:EOIAFO%3E2.0.CO;2)
+			albedo = (alb_ice*(1.0-xs) + alb_def*xs) - 0.482*(alb_ice-alb_def)*(xs*(1.0-xs*xs))*0.5;
+			printf("Tsurf: %.1f K, Ice line latitude: %.1f degrees, Mean albedo: %.3g, log pCO2: %.2f, DeltaT_GHE: %.1f K\n", Tsurf, asin(xs)*180.0/PI_greek, albedo, psi, DeltaTghe);
+			
+			Teff = pow((1.0-albedo)*S/(4.0*sigStefBoltz),0.25);
+	
+			psi = log(xgas[0]*Psurf)/log(10.0);
+//			TGHEparam = fmax(Tsurf, Tfreeze+0.01);
+//			if (psi <= -2) DeltaTghe = 815.17 + 4.895e7/TGHEparam/TGHEparam - 3.9787e5/TGHEparam - 6.7084/psi/psi + 73.221/psi - 30882.0/TGHEparam/psi;
+//			else           DeltaTghe = 815.17 + 4.895e7/TGHEparam/TGHEparam - 3.9787e5/TGHEparam - 6.7084/4.0     - 73.221/2.0 + 30882.0/TGHEparam/2.0
+//									 + (psi+2.0)*10.0 + (TGHEparam - Tfreeze)*0.05; // Coarse extrapolation beyond pCO2=0.01 bar
+			
+			for (i=0;i<100;i++) {
+			
+				Tsurf_old = Tsurf;						 
+				if (psi <= -2) DeltaTghe = 815.17 + 4.895e7/Tsurf/Tsurf - 3.9787e5/Tsurf - 6.7084/psi/psi + 73.221/psi - 30882.0/Tsurf/psi;
+				else           DeltaTghe = 815.17 + 4.895e7/Tsurf/Tsurf - 3.9787e5/Tsurf - 6.7084/4.0     - 73.221/2.0 + 30882.0/Tsurf/2.0
+										 + (psi+2.0)*10.0 + (Tsurf - Tfreeze)*0.05; // Coarse extrapolation beyond pCO2=0.01 bar						 
 		
-		Teff = pow((1.0-albedo)*S/(4.0*sigStefBoltz),0.25);
-
-		psi = log(xgas[0]*Psurf)/log(10.0);
-		if (psi <= -2) DeltaTghe = 815.17 + 4.895e7/Tsurf/Tsurf - 3.9787e5/Tsurf - 6.7084/psi/psi + 73.221/psi - 30882.0/Tsurf/psi;
-		else           DeltaTghe = 815.17 + 4.895e7/Tsurf/Tsurf - 3.9787e5/Tsurf - 6.7084/4.0     - 73.221/2.0 + 30882.0/Tsurf/2.0
-								 + (psi+2.0)*10.0 + (Tsurf - Tfreeze)*0.05; // Coarse extrapolation beyond pCO2=0.01 bar
-
-		// Fancier parameterization including the effects of CH4 (GHE and haze), needs work
-//		if (xgas[1] < 0.1*xgas[0]) { // GHE due to CO2 and CH4 compound
-//			psi = log((xgas[0]+25.0*xgas[1])*Psurf)/log(10.0); // Equivalent log pCO2 = log (pCO2 + 25*pCH4)
-//
-//			if (psi <= -2) DeltaTghe = 815.17 + 4.895e7/Tsurf/Tsurf - 3.9787e5/Tsurf - 6.7084/psi/psi + 73.221/psi - 30882.0/Tsurf/psi;
-//			else           DeltaTghe = 815.17 + 4.895e7/Tsurf/Tsurf - 3.9787e5/Tsurf - 6.7084/4.0     - 73.221/2.0 + 30882.0/Tsurf/2.0
-//									 + (psi+2.0)*10.0 + (Tsurf - Tfreeze)*0.05;
-//		}
-//		else DeltaTghe = 0.0; // Pale orange dot, anti-GHE haze
-
-		Tsurf = Teff + DeltaTghe;
-
-		if (Tsurf <= Tfreeze+0.01) printf("ExoCcycleGeo: Surface temperature = %g K <= 0.01 C. DeltaTghe=%g K.\n", Tsurf, DeltaTghe);
+				// Fancier parameterization including the effects of CH4 (GHE and haze), needs work
+		//		if (xgas[1] < 0.1*xgas[0]) { // GHE due to CO2 and CH4 compound
+		//			psi = log((xgas[0]+25.0*xgas[1])*Psurf)/log(10.0); // Equivalent log pCO2 = log (pCO2 + 25*pCH4)
+		//
+		//			if (psi <= -2) DeltaTghe = 815.17 + 4.895e7/Tsurf/Tsurf - 3.9787e5/Tsurf - 6.7084/psi/psi + 73.221/psi - 30882.0/Tsurf/psi;
+		//			else           DeltaTghe = 815.17 + 4.895e7/Tsurf/Tsurf - 3.9787e5/Tsurf - 6.7084/4.0     - 73.221/2.0 + 30882.0/Tsurf/2.0
+		//									 + (psi+2.0)*10.0 + (Tsurf - Tfreeze)*0.05;
+		//		}
+		//		else DeltaTghe = 0.0; // Pale orange dot, anti-GHE haze
+		
+				Tsurf = Teff + DeltaTghe;
+				if (fabs(1.0 - Tsurf/Tsurf_old) < 1.0e-6) break;
+				if (i == 99) printf("Tsurf = %g K has not converged after 100 iterations. Previous iteration had Tsurf = %g K\n", Tsurf, Tsurf_old);
+			}
+		}
 
 		//-------------------------------------------------------------------
 		// Update atmosphere
 		//-------------------------------------------------------------------
 
-//		if (itime < 2) { // First 2 time steps: re-compute Vatm to avoid it being too influenced by ballpark initial conditions
+//		if (realtime <= tstart+2.0*dtime) { // First 2 time steps: re-compute Vatm to avoid it being too influenced by ballpark initial conditions
 			Vatm1 = nAir*R_G*Tsurf/(Psurf*bar2Pa);
 			Tsurf1 = Tsurf;
 //		}
@@ -1008,34 +1028,36 @@ int main(int argc, char *argv[]) {
 		//-------------------------------------------------------------------
 			
 //		if (realtime > tstart && Tsurf > Tfreeze+0.01) {
-		if (Tsurf > Tfreeze+0.01) {
+//		if (Tsurf > Tfreeze+0.01) {
+		if (realtime > tstart && xs > 0.0) {
 			printf("Equilibrating ocean and atmosphere... ");
-
-			AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
-
+	
+			// Always force T >= Tfreeze for this calculation, otherwise PHREEQC will not allow it. Assume T=Tfreeze for any exposed ocean on an otherwise ice-covered planet
+			AqueousChem(path, "io/OceanDiss.txt", fmax(Tsurf, Tfreeze+0.01), &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
+	
 			if (Psurf < 0.01) {
 				printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
 				exit(0);
 			}
-
-			// If CH4 mixing ratio > 1.0 CO2, organic haze (Haqq-Misra et al. 2008, https://doi.org/10.1089/ast.2007.0197) (really Photochem should be telling ExoCcycleGeo this)
-//			if (xgas[1] > 1.0*xgas[0]) {
-//				hChazeFallout += 1.0e-4*xgas[1]*nAir/128.0*1320.7*1.0e-6/Asurf; // 1320.7 cm3/mol is the molar volume of KerogenC128 (Helgeson et al. 2009, https://doi.org/10.1016/j.gca.2008.03.004)
-//				// Thickness of aerosol deposit, output, in what reservoir to put it?, decrease riverine flux accordingly
-//				xgas[1] -= 1.0e-4*xgas[1];
-//
-//				AqueousChem(path, "io/OceanDiss.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
-//
-//				if (Psurf < 0.01) {
-//					printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
-//					exit(0);
-//				}
-//			}
-
+	
+	//		// If CH4 mixing ratio > 1.0 CO2, organic haze (Haqq-Misra et al. 2008, https://doi.org/10.1089/ast.2007.0197) (really Photochem should be telling ExoCcycleGeo this)
+	//		if (xgas[1] > 1.0*xgas[0]) {
+	//			hChazeFallout += 1.0e-4*xgas[1]*nAir/128.0*1320.7*1.0e-6/Asurf; // 1320.7 cm3/mol is the molar volume of KerogenC128 (Helgeson et al. 2009, https://doi.org/10.1016/j.gca.2008.03.004)
+	//			// Thickness of aerosol deposit, output, in what reservoir to put it?, decrease riverine flux accordingly
+	//			xgas[1] -= 1.0e-4*xgas[1];
+	//
+	//			AqueousChem(path, "io/OceanDiss.txt", fmax(Tsurf, Tfreeze+0.01), &Psurf, &Vatm, &nAir, &pH, &pe, &Mocean, &xgas, &xaq, &xriver, 0, 0, 0.0, 1, nvarEq, 0.0, 0.0, &deltaCreac, staglid, dtime);
+	//
+	//			if (Psurf < 0.01) {
+	//				printf("ExoCcycleGeo: Pressure = %g bar too close to the triple point of H2O, oceans not stable at the surface. Exiting.\n", Psurf);
+	//				exit(0);
+	//			}
+	//		}
+	
 			RCatm = (xgas[0]+xgas[1])*nAir;
 			RCocean = (xaq[0]+xaq[1])*Mocean;
 			pHout = pH;
-
+	
 			cleanup(path); // Remove PHREEQC selected output file
 		}
 
@@ -1517,7 +1539,8 @@ int main(int argc, char *argv[]) {
 		//-------------------------------------------------------------------
 
 		FCcontW = 0.0;
-		if (Tsurf > Tfreeze+0.01 && realtime > tstart && realtime <= tend) {
+//		if (Tsurf > Tfreeze+0.01 && realtime > tstart && realtime <= tend) {
+		if (realtime > tstart && realtime <= tend) {
 			// Analytical calculation from Edson et al. (2012) Eq. 1; Abbot et al. (2012) Eq. 2
 //			FCcontW = -L * 0.5*deltaCcontwEarth*Asurf * pow(xgas[0]/xCO2g0,0.3) * runoff/runoff_Earth * exp((Tsurf-TsurfEarth)/17.7);
 			L = Lnow*realtime/(4.56*Gyr2sec);
@@ -1535,7 +1558,8 @@ int main(int argc, char *argv[]) {
 			WRcontW = 5000.0*runoff/runoff_Earth;
 
 			printf("Continental weathering... ");
-			AqueousChem(path, "io/ContWeather.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin, 0.0, 0.0, &deltaCreac, staglid, dtime);
+			// As for ocean-atm equilibrium, assume T=Tfreeze on exposed land (sin latitude < xs) on otherwise ice-covered planet. Neglects glacier grinding.
+			AqueousChem(path, "io/ContWeather.txt", fmax(Tsurf, Tfreeze+0.01), &Psurf, &Vatm, &nAir, &pH, &pe, &WRcontW, &xgas, &xaq, &xriver, 0, 1, kintime, kinsteps, nvarKin, 0.0, 0.0, &deltaCreac, staglid, dtime);
 
 			rainpH = xriver[1][3]; // xriver[0][3], the initial rain speciation, is returned as = 0, so this is as close as it gets (smallest reaction time)
 			massH2Oriver = xriver[iResTime][7];
@@ -1557,7 +1581,7 @@ int main(int argc, char *argv[]) {
 			Ca_sulf_consumed = - xriver[iResTime][nvarKin-4] - xriver[iResTime][nvarKin-3]; // Anhydrite and gypsum
 			Fe_sulf_consumed = - xriver[iResTime][nvarKin-2] - xriver[iResTime][nvarKin-1]; // Pyrite and pyrrhotite
 
-			Mriver = Asurf*L*runoff/(1.0-fracEvap)*rhoH2O*dtime; // TODO make fracEvap a function of x_H2O, i.e., Tsurf? Whould that offset changes in runoff (due to more humidity), or amplify them (due to higher temp)?
+			Mriver = Asurf*L*xs*runoff/(1.0-fracEvap)*rhoH2O*dtime; // Asurf*xs term is spherical surface area minus two frozen spherical caps above latitude arcsin(xs). TODO make fracEvap a function of x_H2O, i.e., Tsurf? Would that offset changes in runoff (due to more humidity), or amplify them (due to higher temp)?
 
 			// Individual carbon fluxes (mol/s). Rainout = (river runoff)/(1-fracEvap).
 			FC_Mg_carb =     Mg_carb_consumed/massH2Oriver*Mriver/dtime; // Factor of 1 because despite divalent cation vs. monovalent bicarbonate, 1 biarbonate is released in dissolution, so net 1
@@ -1582,7 +1606,7 @@ int main(int argc, char *argv[]) {
 //			printf("%g %g %g %g %g %g %g %g\n", xriver_Ca_evap, Ca_carb_consumed, Ca_sulf_consumed, massH2Oriver, FC_Ca_carb/1.0e12*Yr2sec, FC_Ca_sulf/1.0e12*Yr2sec, FC_Ca_sil/1.0e12*Yr2sec, FC_Ca/1.0e12*Yr2sec); // Tmol/yr
 //			printf("%g %g %g %g %g %g\n", xriver_Fe_evap, Fe_sulf_consumed, massH2Oriver, FC_Fe_sulf/1.0e12*Yr2sec, FC_Fe_sil/1.0e12*Yr2sec, FC_Fe/1.0e12*Yr2sec); // Tmol/yr
 		}
-		else if (Tsurf <= Tfreeze+0.01) printf("Surface temperature below freezing, no continental weathering\n"); // What about glacier grinding?
+//		else if (Tsurf <= Tfreeze+0.01) printf("Surface temperature below freezing, no continental weathering\n"); // What about glacier grinding?
 
 		// Runoff removes part of the haze deposit at erosion rate scaled from modern Earth (assuming physical erosion here)
 //		hChazeFallout -= 20.0e12/Yr2sec /2730.0 /0.29 /Asurf *dtime *runoff/runoff_Earth; // 20e12 kg: modern erosion rate on Earth (Borrelli et al. 2017, https://doi.org/10.1038/s41467-017-02142-7),
@@ -1594,7 +1618,8 @@ int main(int argc, char *argv[]) {
 		//-------------------------------------------------------------------
 
 		FCseafsubd = 0.0;
-		if (Tsurf > Tfreeze+0.01 && realtime > tstart && realtime <= tend) {
+//		if (Tsurf > Tfreeze+0.01 && realtime > tstart && realtime <= tend) {
+		if (Mriver > 0.0 && realtime > tstart && realtime <= tend) {
 
 			mix = Mocean/Mriver;
 
@@ -1606,6 +1631,7 @@ int main(int argc, char *argv[]) {
 
 //			zCrack = realtime/Myr2sec; // Reflects secular cooling below crust, which prevents cracks from healing as fast
 			zCrack = 600.0; // 600 m (Johnson and Pruis, 2003) to 6 km (Vance et al., 2007), see also Hasenclever et al. (2014)
+//			zCrack = 600.0*realtime/(4.5*Gyr2sec); // Today, 600 m (Johnson and Pruis, 2003) to 6 km (Vance et al., 2007), see also Hasenclever et al. (2014)
 
 //			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateRdg*vConv*zCrack*dtime;
 			volSeafCrust = (1.0-L)/(1.0-0.29) * LplateRdg*(vConv*fmin(1.0,realtime/(1.5*Gyr2sec)))*zCrack*dtime; // vConv*fmin() term represents sluggish convection until full plate tectonics
@@ -1619,7 +1645,7 @@ int main(int argc, char *argv[]) {
 
 			printf("Mixing river input into ocean...\n");
 			printf("Ocean will react with seafloor crust at W/R by vol. = %g\n", Mocean*dtime/tcirc / 1000.0 / volSeafCrust);
-			AqueousChem(path, "io/MixRiverOcean.txt", Tsurf, &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq, Pseaf, WRseafW, &deltaCreac, 0, dtime);
+			AqueousChem(path, "io/MixRiverOcean.txt", fmax(Tsurf, Tfreeze+0.1), &Psurf, &Vatm, &nAir, &pH, &pe, &mix, &xgas, &xaq, &xriver, iResTime, 0, 0.0, 1, nvarEq, Pseaf, WRseafW, &deltaCreac, 0, dtime);
 			printf("deltaCreac = %g mol/kg\n", deltaCreac);
 
 			// Reset aqueous C abundances as they'll be adjusted by ocean-atmosphere equilibrium at the next time step, when netFC C is added to {atmosphere+ocean}

@@ -73,7 +73,7 @@
 
 // Atmosphere parameters
 //#define xCO2g0 355.0e-6               // Reference atmospheric CO2 mixing ratio (ppmv)
-#define runoff_Earth 7.75e-9            // Reference runoff (m s-1) = 0.67e-3 m day-1 (Edson et al. 2012, http://dx.doi.org/10.1089/ast.2011.0762)
+#define runoff_Earth 7.75e-9            // Reference runoff (m s-1) = 0.67e-3 m day-1 (Edson et al. 2012, https://doi.org/10.1089/ast.2011.0762)
 
 // Geochem parameters
 #define nAtmSpecies 5                   // Number of atmospheric species whose abundances are passed between the physical and chemical models

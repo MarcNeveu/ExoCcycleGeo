@@ -2,46 +2,46 @@ TITLE ExoCcycleGeo River-ocean mixing
 
 SOLUTION 1 Planetary ocean surface waters (PHREEQC v3 manual p. 282)
 
-	pH 	 	9.00091 charge
-	temp 	 	1.10957
-	pressure 	0.702239
-	pe 	 	-6.19173
-	-water 	 	0.181257
+	pH 	 	9.2351 charge
+	temp 	 	0.1
+	pressure 	0.741942
+	pe 	 	-6.42864
+	-water 	 	1.31613
 	units		mol/kgw
-	Ca 		7.65413e-06 mol/kgw
-	Mg 		4.16334e-07 mol/kgw
-	Na 		0.385985 mol/kgw
+	Ca 		6.09999e-06 mol/kgw
+	Mg 		3.45546e-07 mol/kgw
+	Na 		0.235423 mol/kgw
 	K		0.01021
-	Fe 		2.70351e-08 mol/kgw
-	Si 		0.000156614 mol/kgw
-	Cl 		0.225041 mol/kgw
-	S(6) 		4.28475e-08 mol/kgw
-	C(4) 		0.153432 mol/kgw
-	Ntg 		0.000366312 mol/kgw
+	Fe 		1.27044e-08 mol/kgw
+	Si 		0.00011642 mol/kgw
+	Cl 		0 mol/kgw
+	S(6) 		4.58352e-08 mol/kgw
+	C(4) 		0.21847 mol/kgw
+	Ntg 		0.000387915 mol/kgw
 	O(0) 		0 mol/kgw
 
 SOLUTION 2 River inputs after continental weathering
 
-	pH 	 	7.63727 mol/kgw charge
-	temp 	 	1.10957 mol/kgw
-	pressure 	0.702239
-	pe 	 	-4.9206 mol/kgw
-	-water 	 	0.181257
+	pH 	 	8.54808 mol/kgw charge
+	temp 	 	0.01 mol/kgw
+	pressure 	0.741942
+	pe 	 	-5.98609 mol/kgw
+	-water 	 	1.31613
 	units		mol/kgw
-	Ca 		8.65099e-05 mol/kgw
-	Mg 		1.27241e-06 mol/kgw
-	Na 		3.26456e-05 mol/kgw
+	Ca 		0.00013017 mol/kgw
+	Mg 		1.43793e-06 mol/kgw
+	Na 		9.1004e-10 mol/kgw
 	K		0.0
-	Fe 		0.000149627 mol/kgw
-	Si 		0.000155254 mol/kgw
-	Cl 		5.93276e-05 mol/kgw
-	S(6) 		3.26456e-05 mol/kgw
-	C(4) 		0.00103042 mol/kgw
-	Ntg 		0.000366312 mol/kgw	Ntg(g) 	-0.411075
+	Fe 		1.27731e-05 mol/kgw
+	Si 		0.000518952 mol/kgw
+	Cl 		0 mol/kgw
+	S(6) 		9.1004e-10 mol/kgw
+	C(4) 		0.00114659 mol/kgw
+	Ntg 		0.000387915 mol/kgw	Ntg(g) 	-0.410469
 	O(0) 		0 mol/kgw	O2(g) 	0
 
 MIX 1 Mix river into ocean
-	1 	 0.181257
+	1 	 1.31613
 	2	1	
 
 SAVE solution 3
